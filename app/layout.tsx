@@ -1,10 +1,22 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
+import { Geist } from "next/font/google"
+import { Manrope } from "next/font/google"
 import { CursorBackground } from "@/components/cursor-background"
 import { BackgroundPattern } from "@/components/background-pattern"
 import "./globals.css"
+
+const geist = Geist({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-geist",
+})
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-manrope",
+})
 
 export const metadata: Metadata = {
   title: "TwinlyAI - Create a Personal Chatbot From Your Resume",
@@ -19,16 +31,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
-      </head>
+    <html lang="en" className={`${geist.variable} ${manrope.variable} antialiased dark`}>
       <body>
         <BackgroundPattern />
         <CursorBackground />

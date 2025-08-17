@@ -2,17 +2,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  MessageSquare,
-  FileText,
-  KeyRound,
-  Code,
-  BarChart,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react"
+import { MessageSquare, Bot, KeyRound, Code, BarChart, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
@@ -21,8 +11,8 @@ interface SidebarProps {
 }
 
 const navigationItems = [
-  { id: "chat", label: "Chat", icon: MessageSquare },
-  { id: "resume", label: "Manage Resume", icon: FileText },
+  { id: "playground", label: "Playground", icon: MessageSquare },
+  { id: "my-bots", label: "My Bots", icon: Bot },
   { id: "api-keys", label: "API Keys", icon: KeyRound },
   { id: "embed", label: "Embed Widget", icon: Code },
   { id: "usage", label: "Usage", icon: BarChart },

@@ -1,5 +1,7 @@
+"use client"
+
 import { ChatTab } from "./tabs/chat-tab"
-import { ResumeTab } from "./tabs/resume-tab"
+import { MyBotsTab } from "./tabs/my-bots-tab"
 import { ApiKeysTab } from "./tabs/api-keys-tab"
 import { EmbedTab } from "./tabs/embed-tab"
 import { UsageTab } from "./tabs/usage-tab"
@@ -8,32 +10,82 @@ import { SettingsTab } from "./tabs/settings-tab"
 interface MainContentProps {
   activeTab: string
   onTabChange: (tab: string) => void
-  hasUploadedResume: boolean
-  setHasUploadedResume: (uploaded: boolean) => void
+  currentTier: string
+  setCurrentTier: (tier: string) => void
+  bots: Array<{ id: number; name: string; status: string }>
+  setBots: (bots: Array<{ id: number; name: string; status: string }>) => void
+  activeBot: { id: number; name: string; status: string } | null
+  setActiveBot: (bot: { id: number; name: string; status: string } | null) => void
 }
 
-export function MainContent({ activeTab, onTabChange, hasUploadedResume, setHasUploadedResume }: MainContentProps) {
+export function MainContent({
+  activeTab,
+  onTabChange,
+  currentTier,
+  setCurrentTier,
+  bots,
+  setBots,
+  activeBot,
+  setActiveBot,
+}: MainContentProps) {
   const renderTabContent = () => {
     switch (activeTab) {
-      case "chat":
-        return <ChatTab onTabChange={onTabChange} hasUploadedResume={hasUploadedResume} />
-      case "resume":
-        return <ResumeTab setHasUploadedResume={setHasUploadedResume} />
+      case "playground":
+        return <ChatTab onTabChange={onTabChange} activeBot={activeBot} />
+      case "my-bots":
+        return (
+          <MyBotsTab
+            currentTier={currentTier}
+            bots={bots}
+            setBots={setBots}
+            activeBot={activeBot}
+            setActiveBot={setActiveBot}
+            onTabChange={onTabChange}
+          />
+        )
       case "api-keys":
-        return <ApiKeysTab />
+        return <ApiKeysTab activeBot={activeBot} onTabChange={onTabChange} />
       case "embed":
-        return <EmbedTab />
+        return <EmbedTab activeBot={activeBot} onTabChange={onTabChange} />
       case "usage":
-        return <UsageTab />
+        return <UsageTab activeBot={activeBot} onTabChange={onTabChange} />
       case "settings":
-        return <SettingsTab />
+        return <SettingsTab activeBot={activeBot} onTabChange={onTabChange} />
       default:
-        return <ChatTab onTabChange={onTabChange} hasUploadedResume={hasUploadedResume} />
+        return (
+          <MyBotsTab
+            currentTier={currentTier}
+            bots={bots}
+            setBots={setBots}
+            activeBot={activeBot}
+            setActiveBot={setActiveBot}
+            onTabChange={onTabChange}
+          />
+        )
     }
   }
 
   return (
     <main className="flex-1 overflow-hidden">
+      <div className="border-b border-border p-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Development Tier Switcher:</span>
+          {["Free", "Plus", "Pro"].map((tier) => (
+            <button
+              key={tier}
+              onClick={() => setCurrentTier(tier)}
+              className={`px-3 py-1 text-xs rounded-md border ${
+                currentTier === tier
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-background text-foreground border-border hover:bg-accent"
+              }`}
+            >
+              Set to {tier}
+            </button>
+          ))}
+          <span className="text-xs text-muted-foreground ml-2">Current: {currentTier}</span>
+        </div>
+      </div>
       <div className="h-full p-6">{renderTabContent()}</div>
     </main>
   )
