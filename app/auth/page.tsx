@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github } from "lucide-react";
 import Link from "next/link";
 import { WebsiteHeader } from "@/components/website-header";
-import { api } from "@/lib/api"; // Import your API helper
+import { api } from "@/lib/api"; // <-- Import your API helper
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
