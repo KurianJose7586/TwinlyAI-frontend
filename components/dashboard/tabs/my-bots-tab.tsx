@@ -13,23 +13,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Bot, Plus, Play, Settings, Trash2, Upload, FileText } from "lucide-react"
+import { Bot, Plus, Play, Settings, Trash2 } from "lucide-react"
+import { api } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 interface MyBotsTabProps {
   currentTier: string
-  bots: Array<{ id: number; name: string; status: string }>
-  setBots: (bots: Array<{ id: number; name: string; status: string }>) => void
-  activeBot: { id: number; name: string; status: string } | null
-  setActiveBot: (bot: { id: number; name: string; status: string } | null) => void
+  bots: Array<{ id: string; name: string; status: string }>
+  setBots: (bots: Array<{ id: string; name: string; status: string }>) => void
+  activeBot: { id: string; name: string; status: string } | null
+  setActiveBot: (bot: { id: string; name: string; status: string } | null) => void
   onTabChange: (tab: string) => void
 }
 
 export function MyBotsTab({ currentTier, bots, setBots, activeBot, setActiveBot, onTabChange }: MyBotsTabProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [newBotName, setNewBotName] = useState("")
-  const [jsonContent, setJsonContent] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
 
   const tierLimits = {
     Free: 1,
@@ -40,47 +43,68 @@ export function MyBotsTab({ currentTier, bots, setBots, activeBot, setActiveBot,
   const currentLimit = tierLimits[currentTier as keyof typeof tierLimits] || 1
   const isAtLimit = bots.length >= currentLimit
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const botName = file.name.replace(/\.[^/.]+$/, "") // Remove file extension
-      createBot(botName)
+  const handleCreateBot = async () => {
+    if (!newBotName.trim()) {
+      toast({
+        title: "Error",
+        description: "Bot name cannot be empty.",
+        variant: "destructive",
+      })
+      return
     }
-  }
 
-  const handleJsonUpload = () => {
-    if (jsonContent.trim() && newBotName.trim()) {
-      createBot(newBotName)
-      setJsonContent("")
+    setIsLoading(true)
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("Authentication token not found.")
+      }
+      const newBot = await api.post("/bots/create", { name: newBotName }, token)
+      // The backend returns the created bot object.
+      // The `id` is a MongoDB ObjectId.
+      const botToAdd = {
+        id: newBot._id, // Use the ID from the backend response
+        name: newBot.name,
+        status: "Ready", // You can enhance this with status from backend later
+      }
+      setBots([...bots, botToAdd])
+      setIsCreateModalOpen(false)
       setNewBotName("")
+      toast({
+        title: "Success",
+        description: `Bot "${newBot.name}" created successfully.`,
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error creating bot",
+        description: error.message || "An unexpected error occurred.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const createBot = (name: string) => {
-    const newBot = {
-      id: Date.now(),
-      name: name || `Bot ${bots.length + 1}`,
-      status: "Ready",
-    }
-    setBots([...bots, newBot])
-    setIsCreateModalOpen(false)
-  }
-
-  const deleteBot = (botId: number) => {
+  const deleteBot = (botId: string) => {
     if (confirm("Are you sure you want to delete this bot? This action cannot be undone.")) {
+      // **TODO**: Implement backend API call for deletion
       setBots(bots.filter((bot) => bot.id !== botId))
       if (activeBot?.id === botId) {
         setActiveBot(null)
       }
+      toast({
+        title: "Bot Deleted",
+        description: "The bot has been successfully deleted.",
+      })
     }
   }
 
-  const handlePlayground = (bot: { id: number; name: string; status: string }) => {
+  const handlePlayground = (bot: { id: string; name: string; status: string }) => {
     setActiveBot(bot)
     onTabChange("playground")
   }
 
-  const handleSettings = (bot: { id: number; name: string; status: string }) => {
+  const handleSettings = (bot: { id: string; name: string; status: string }) => {
     setActiveBot(bot)
     onTabChange("settings")
   }
@@ -112,74 +136,30 @@ export function MyBotsTab({ currentTier, bots, setBots, activeBot, setActiveBot,
                     Create New Bot
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Create New Bot</DialogTitle>
+                    <DialogTitle>Create a New Bot</DialogTitle>
                     <DialogDescription>
-                      Upload a resume or paste JSON content to create a new AI chatbot.
+                      Give your new AI assistant a name to get started. You can upload its knowledge base in the next
+                      step.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-6">
-                    {/* File Upload */}
-                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                      <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Drop your resume here or click to browse</p>
-                        <input
-                          type="file"
-                          accept=".pdf,.docx,.txt"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                          id="file-upload"
-                          data-testid="file-upload-input"
-                        />
-                        <Button asChild variant="outline" data-testid="select-file-button">
-                          <label htmlFor="file-upload" className="cursor-pointer">
-                            <FileText className="mr-2 h-4 w-4" />
-                            Select File (PDF, DOCX, TXT)
-                          </label>
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* JSON Input */}
-                    <div className="space-y-2">
-                      <label htmlFor="bot-name" className="text-sm font-medium">
-                        Bot Name:
-                      </label>
-                      <input
-                        id="bot-name"
-                        type="text"
-                        placeholder="Enter bot name..."
-                        value={newBotName}
-                        onChange={(e) => setNewBotName(e.target.value)}
-                        className="w-full px-3 py-2 border border-border rounded-md bg-background"
-                        data-testid="bot-name-input"
-                      />
-                      <label htmlFor="json-content" className="text-sm font-medium">
-                        Or paste JSON content directly:
-                      </label>
-                      <Textarea
-                        id="json-content"
-                        placeholder="Paste your resume data in JSON format..."
-                        value={jsonContent}
-                        onChange={(e) => setJsonContent(e.target.value)}
-                        rows={8}
-                        className="font-mono text-sm"
-                        data-testid="json-textarea"
-                      />
-                      {jsonContent.trim() && newBotName.trim() && (
-                        <Button
-                          onClick={handleJsonUpload}
-                          className="bg-blue-600 hover:bg-blue-700"
-                          data-testid="upload-json-button"
-                        >
-                          <Upload className="mr-2 h-4 w-4" />
-                          Create Bot
-                        </Button>
-                      )}
-                    </div>
+                  <div className="space-y-4 py-4">
+                    <label htmlFor="bot-name" className="text-sm font-medium">
+                      Bot Name
+                    </label>
+                    <Input
+                      id="bot-name"
+                      type="text"
+                      placeholder="e.g., 'My Portfolio Assistant'"
+                      value={newBotName}
+                      onChange={(e) => setNewBotName(e.target.value)}
+                      data-testid="bot-name-input"
+                    />
                   </div>
+                  <Button onClick={handleCreateBot} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700">
+                    {isLoading ? "Creating..." : "Create Bot"}
+                  </Button>
                 </DialogContent>
               </Dialog>
             </div>
@@ -198,7 +178,7 @@ export function MyBotsTab({ currentTier, bots, setBots, activeBot, setActiveBot,
             <Bot className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">No bots created yet</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Create your first AI chatbot by uploading a resume or JSON data.
+              Create your first AI chatbot to get started.
             </p>
           </CardContent>
         </Card>
