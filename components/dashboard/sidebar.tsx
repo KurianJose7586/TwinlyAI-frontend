@@ -2,29 +2,42 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { MessageSquare, Bot, KeyRound, Code, BarChart, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  MessageSquare,
+  Bot,
+  KeyRound,
+  Code,
+  BarChart,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  FileText, // <-- Import FileText icon
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
   activeTab: string
   onTabChange: (tab: string) => void
+  hasActiveBot: boolean // <-- Add this prop to receive the active bot status
 }
 
 const navigationItems = [
-  { id: "playground", label: "Playground", icon: MessageSquare },
-  { id: "my-bots", label: "My Bots", icon: Bot },
-  { id: "api-keys", label: "API Keys", icon: KeyRound },
-  { id: "embed", label: "Embed Widget", icon: Code },
-  { id: "usage", label: "Usage", icon: BarChart },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "my-bots", label: "My Bots", icon: Bot, requiresBot: false },
+  { id: "resume", label: "Resume", icon: FileText, requiresBot: true }, // <-- Add Resume tab
+  { id: "playground", label: "Playground", icon: MessageSquare, requiresBot: true },
+  { id: "embed", label: "Embed Widget", icon: Code, requiresBot: true },
+  { id: "api-keys", label: "API Keys", icon: KeyRound, requiresBot: true },
+  { id: "usage", label: "Usage", icon: BarChart, requiresBot: true },
+  { id: "settings", label: "Settings", icon: Settings, requiresBot: true },
 ]
 
-export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, hasActiveBot }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const handleLogout = () => {
-    // Simulate logout
-    window.location.href = "/"
+    localStorage.removeItem("token")
+    window.location.href = "/auth"
   }
 
   return (
@@ -52,6 +65,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       <div className="flex-1 p-4 space-y-2">
         {navigationItems.map((item) => {
           const Icon = item.icon
+          const isDisabled = item.requiresBot && !hasActiveBot
+
           return (
             <Button
               key={item.id}
@@ -64,6 +79,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                 isCollapsed && "justify-center px-2",
               )}
               onClick={() => onTabChange(item.id)}
+              disabled={isDisabled}
               data-testid={`nav-${item.id}`}
             >
               <Icon className="h-4 w-4 flex-shrink-0" />

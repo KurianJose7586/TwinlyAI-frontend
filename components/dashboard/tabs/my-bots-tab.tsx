@@ -55,24 +55,29 @@ export function MyBotsTab({ currentTier, bots, setBots, activeBot, setActiveBot,
 
     setIsLoading(true)
     try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication token not found.")
+      // The API call remains the same
+      const newBotData = await api.post("/bots/create", { name: newBotName })
+      
+      const newBot = {
+        id: newBotData._id,
+        name: newBotData.name,
+        status: "Ready",
       }
-      const newBot = await api.post("/bots/create", { name: newBotName }, token)
-      // The backend returns the created bot object.
-      // The `id` is a MongoDB ObjectId.
-      const botToAdd = {
-        id: newBot._id, // Use the ID from the backend response
-        name: newBot.name,
-        status: "Ready", // You can enhance this with status from backend later
-      }
-      setBots([...bots, botToAdd])
+
+      setBots([...bots, newBot])
+      
+      // --- THIS IS THE FIX ---
+      // After creating the bot, immediately set it as the active one
+      // and switch to the "Resume" tab for the next step.
+      setActiveBot(newBot);
+      onTabChange("resume");
+      // --- END OF FIX ---
+
       setIsCreateModalOpen(false)
       setNewBotName("")
       toast({
-        title: "Success",
-        description: `Bot "${newBot.name}" created successfully.`,
+        title: "Success!",
+        description: `Bot "${newBot.name}" created. Now, let's train it!`,
       })
     } catch (error: any) {
       toast({

@@ -4,116 +4,126 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Upload, FileText, RefreshCw, Trash2 } from "lucide-react"
+import { Upload, FileText, Bot } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface ResumeTabProps {
-  setHasUploadedResume: (uploaded: boolean) => void
+  activeBot: { id: string; name: string; status: string } | null
+  onTabChange: (tab: string) => void
 }
 
-export function ResumeTab({ setHasUploadedResume }: ResumeTabProps) {
-  const [botStatus, setBotStatus] = useState<"ready" | "indexing" | "error">("ready")
-  const [lastFile, setLastFile] = useState("resume.pdf")
-  const [jsonContent, setJsonContent] = useState("")
+export function ResumeTab({ activeBot, onTabChange }: ResumeTabProps) {
+  const [botStatus, setBotStatus] = useState<"ready" | "indexing" | "no_data">("no_data")
+  const [lastFile, setLastFile] = useState<File | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setBotStatus("indexing")
-      setLastFile(file.name)
-      setHasUploadedResume(true)
-      // Simulate processing
-      setTimeout(() => setBotStatus("ready"), 2000)
-    }
-  }
+    if (!file || !activeBot) return
 
-  const handleReIndex = () => {
+    setLastFile(file)
+    setIsLoading(true)
     setBotStatus("indexing")
-    setTimeout(() => setBotStatus("ready"), 2000)
-  }
+    toast({ title: "Uploading...", description: `Uploading "${file.name}" for bot "${activeBot.name}".` })
 
-  const handleDelete = () => {
-    if (confirm("Are you sure you want to delete all resume data? This action cannot be undone.")) {
-      setLastFile("")
-      setBotStatus("error")
-      setHasUploadedResume(false)
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) throw new Error("Authentication token not found.")
+
+      // Use the native fetch API for multipart/form-data
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/bots/${activeBot.id}/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Upload failed.")
+      }
+
+      const result = await response.json()
+      toast({ title: "Success!", description: result.message })
+      setBotStatus("ready")
+    } catch (error: any) {
+      toast({ title: "Upload Error", description: error.message, variant: "destructive" })
+      setBotStatus("no_data")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleJsonUpload = () => {
-    if (jsonContent.trim()) {
-      setBotStatus("indexing")
-      setLastFile("JSON Content")
-      setHasUploadedResume(true)
-      setTimeout(() => setBotStatus("ready"), 2000)
-    }
+  const handleGoToBots = () => {
+    onTabChange("my-bots")
+  }
+
+  if (!activeBot) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full space-y-4">
+        <Bot className="h-16 w-16 text-muted-foreground" />
+        <h2 className="text-xl font-semibold text-foreground">Please select a bot to manage its resume</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          Choose a bot from the 'My Bots' page to upload and manage its knowledge base.
+        </p>
+        <Button onClick={handleGoToBots} className="bg-blue-600 hover:bg-blue-700">
+          <Bot className="h-4 w-4 mr-2" />
+          Go to My Bots
+        </Button>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
+       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-center gap-2">
+          <Bot className="h-4 w-4 text-blue-600" />
+          <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Managing Resume for: {activeBot.name}</span>
+        </div>
+      </div>
+
       <div>
         <h1 className="text-2xl font-bold text-foreground">Manage Resume</h1>
-        <p className="text-muted-foreground">Upload and manage your resume data for the AI chatbot.</p>
+        <p className="text-muted-foreground">Upload and manage the resume data for "{activeBot.name}".</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Upload Resume</CardTitle>
-          <CardDescription>Choose how you want to provide your resume data</CardDescription>
+          <CardDescription>Upload a file to train your bot. Existing data will be overwritten.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* File Upload */}
+        <CardContent>
           <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
             <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Drop your resume here or click to browse</p>
               <input
                 type="file"
-                accept=".pdf,.docx,.txt"
+                accept=".pdf,.docx,.txt,.json"
                 onChange={handleFileUpload}
                 className="hidden"
                 id="file-upload"
                 data-testid="file-upload-input"
+                disabled={isLoading}
               />
-              <Button asChild variant="outline" data-testid="select-file-button">
+              <Button asChild variant="outline" data-testid="select-file-button" disabled={isLoading}>
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <FileText className="mr-2 h-4 w-4" />
-                  Select File (PDF, DOCX, TXT)
+                  {isLoading ? "Processing..." : "Select File (PDF, DOCX, TXT, JSON)"}
                 </label>
               </Button>
             </div>
           </div>
-
-          {/* JSON Input */}
-          <div className="space-y-2">
-            <label htmlFor="json-content" className="text-sm font-medium">
-              Or paste JSON content directly:
-            </label>
-            <Textarea
-              id="json-content"
-              placeholder="Paste your resume data in JSON format..."
-              value={jsonContent}
-              onChange={(e) => setJsonContent(e.target.value)}
-              rows={8}
-              className="font-mono text-sm"
-              data-testid="json-textarea"
-            />
-            {jsonContent.trim() && (
-              <Button
-                onClick={handleJsonUpload}
-                className="bg-blue-600 hover:bg-blue-700"
-                data-testid="upload-json-button"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Upload JSON Content
-              </Button>
-            )}
-          </div>
         </CardContent>
       </Card>
 
-      {/* Status Card */}
       <Card>
         <CardHeader>
           <CardTitle>Bot Status</CardTitle>
@@ -121,36 +131,22 @@ export function ResumeTab({ setHasUploadedResume }: ResumeTabProps) {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Current Status:</span>
-            <Badge variant={botStatus === "ready" ? "default" : botStatus === "indexing" ? "secondary" : "destructive"}>
+            <Badge
+              variant={botStatus === "ready" ? "default" : botStatus === "indexing" ? "secondary" : "destructive"}
+            >
               {botStatus === "ready" && "Ready"}
               {botStatus === "indexing" && "Indexing..."}
-              {botStatus === "error" && "Error"}
+              {botStatus === "no_data" && "No Data"}
             </Badge>
           </div>
-          {lastFile && (
+          {lastFile && botStatus !== "no_data" && (
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Last File:</span>
-              <span className="text-sm text-muted-foreground">{lastFile}</span>
+              <span className="text-sm font-medium">Last File Processed:</span>
+              <span className="text-sm text-muted-foreground">{lastFile.name}</span>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Button onClick={handleReIndex} variant="outline" data-testid="reindex-button">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Re-Index Bot
-        </Button>
-        <Button variant="outline" data-testid="replace-file-button">
-          <Upload className="mr-2 h-4 w-4" />
-          Replace File
-        </Button>
-        <Button onClick={handleDelete} variant="destructive" data-testid="delete-resume-button">
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete Resume Data
-        </Button>
-      </div>
     </div>
   )
 }
