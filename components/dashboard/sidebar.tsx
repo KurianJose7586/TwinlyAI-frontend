@@ -12,19 +12,20 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  FileText, // <-- Import FileText icon
+  FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge" // <-- Import the Badge component
 
 interface SidebarProps {
   activeTab: string
   onTabChange: (tab: string) => void
-  hasActiveBot: boolean // <-- Add this prop to receive the active bot status
+  hasActiveBot: boolean
 }
 
 const navigationItems = [
   { id: "my-bots", label: "My Bots", icon: Bot, requiresBot: false },
-  { id: "resume", label: "Resume", icon: FileText, requiresBot: true }, // <-- Add Resume tab
+  { id: "resume", label: "Resume", icon: FileText, requiresBot: true },
   { id: "playground", label: "Playground", icon: MessageSquare, requiresBot: true },
   { id: "embed", label: "Embed Widget", icon: Code, requiresBot: true },
   { id: "api-keys", label: "API Keys", icon: KeyRound, requiresBot: true },
@@ -49,7 +50,14 @@ export function Sidebar({ activeTab, onTabChange, hasActiveBot }: SidebarProps) 
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!isCollapsed && <h1 className="text-xl font-bold text-sidebar-foreground">TwinlyAI</h1>}
+        {!isCollapsed && (
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-sidebar-foreground">TwinlyAI</h1>
+            {/* --- THIS IS THE NEW BADGE --- */}
+            <Badge variant="secondary">v0.1 Beta</Badge>
+            {/* --- END OF NEW BADGE --- */}
+          </div>
+        )}
         <Button
           variant="ghost"
           size="sm"
