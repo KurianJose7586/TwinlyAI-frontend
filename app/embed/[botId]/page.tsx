@@ -16,19 +16,13 @@ export default function EmbedPage() {
 
   useEffect(() => {
     if (botId) {
-      // In the future, this will be a public endpoint.
-      // For now, we'll create a placeholder or assume it exists.
-      // Let's create a temporary public endpoint for this.
       const fetchBotInfo = async () => {
         try {
-          // This endpoint doesn't exist yet, we will create it in the backend next.
-          // const botInfo = await api.get(`/bots/public/${botId}`);
-          // setBotName(botInfo.name);
-
-          // For now, let's use a placeholder name.
-          setBotName("My Assistant") // Placeholder
+          // Call the new public endpoint we just created
+          const botInfo = await api.get(`/bots/public/${botId}`);
+          setBotName(botInfo.name);
         } catch (err: any) {
-          setError("Could not load bot information.")
+          setError("Could not load bot information. Please check the bot ID.")
         } finally {
           setIsLoading(false)
         }
@@ -38,7 +32,7 @@ export default function EmbedPage() {
   }, [botId])
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>
+    return <div className="flex items-center justify-center h-screen">Loading Chatbot...</div>
   }
 
   if (error) {
@@ -50,7 +44,7 @@ export default function EmbedPage() {
       <ChatInterface
         botId={botId}
         botName={botName}
-        initialMessage={`Hello! I am an AI assistant. How can I help you today?`}
+        initialMessage={`Hello! I am ${botName}, an AI assistant. How can I help you today?`}
       />
     </div>
   )
