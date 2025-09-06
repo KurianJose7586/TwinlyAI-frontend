@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Bot } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { api } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
@@ -18,9 +19,10 @@ interface ChatInterfaceProps {
   botId: string
   botName: string
   initialMessage?: string
+  apiKey?: string | null;
 }
 
-export function ChatInterface({ botId, botName, initialMessage }: ChatInterfaceProps) {
+export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -53,19 +55,16 @@ export function ChatInterface({ botId, botName, initialMessage }: ChatInterfaceP
     setIsLoading(true)
 
     try {
-      const token = localStorage.getItem("token") // This will be null for public embeds
-      
+      const token = localStorage.getItem("token")
       const historyToSend = currentMessages.slice(0, -1).map(({ id, ...rest }) => rest)
 
-      // We'll need a public API endpoint later, but for now, we can test with the existing one
-      // if you are logged in on the same browser.
       const response = await api.post(
         `/bots/${botId}/chat`,
         {
           message: userMessage.content,
           chat_history: historyToSend,
         },
-        token || undefined 
+        { apiKey, token }
       )
 
       const botMessage: Message = {
@@ -93,16 +92,32 @@ export function ChatInterface({ botId, botName, initialMessage }: ChatInterfaceP
   }
 
   return (
-    <div className="flex flex-col h-full bg-background p-4 rounded-lg">
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 mb-6 pr-4">
+    <div className="flex flex-col h-full bg-background rounded-lg">
+      <div className="p-4 border-b flex items-center gap-4">
+        <Avatar>
+          <AvatarFallback className="bg-blue-600 text-white">
+            <Bot className="h-5 w-5" />
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="font-semibold text-foreground">{botName}</p>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-green-500"></span>
+            <p className="text-xs text-muted-foreground">Online</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto space-y-4 p-4">
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`rounded-lg p-3 max-w-[80%] whitespace-pre-wrap ${
                 message.type === "user"
                   ? "bg-blue-600 text-white"
+                  // --- THIS IS THE FIX ---
                   : "bg-muted text-muted-foreground"
+                // --- END OF FIX ---
               }`}
             >
               <p>{message.content}</p>
@@ -119,19 +134,31 @@ export function ChatInterface({ botId, botName, initialMessage }: ChatInterfaceP
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Chat Input */}
-      <form onSubmit={handleSendMessage} className="flex gap-2 border-t pt-4">
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder={`Ask ${botName} something...`}
-          className="flex-1"
-          disabled={isLoading}
-        />
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </form>
+      <div className="border-t p-4">
+        <form onSubmit={handleSendMessage} className="flex gap-2">
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder={`Ask ${botName} something...`}
+            className="flex-1"
+            disabled={isLoading}
+          />
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+
+        <div className="text-center mt-2">
+            <a 
+              href="http://localhost:3000"
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Powered by TwinlyAI
+            </a>
+        </div>
+      </div>
     </div>
   )
 }

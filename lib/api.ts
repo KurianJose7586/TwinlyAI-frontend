@@ -2,24 +2,37 @@
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
-// Helper to get headers, including Authorization if token exists
-const getAuthHeaders = (token?: string) => {
-  const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem("token") : null);
+interface AuthOptions {
+  token?: string | null;
+  apiKey?: string | null;
+}
+
+// Helper to get headers
+const getHeaders = (options: AuthOptions = {}) => {
+  const { token, apiKey } = options;
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
+
+  const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem("token") : null);
+
   if (authToken) {
     headers["Authorization"] = `Bearer ${authToken}`;
   }
+  
+  // Add the API Key header if it exists
+  if (apiKey) {
+    headers["X-API-Key"] = apiKey;
+  }
+  
   return headers;
 };
 
 export const api = {
-  // --- ADD THIS 'GET' METHOD ---
   get: async (endpoint: string, token?: string) => {
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: "GET",
-      headers: getAuthHeaders(token),
+      headers: getHeaders({ token }),
     });
 
     if (!response.ok) {
@@ -29,17 +42,31 @@ export const api = {
     return response.json();
   },
 
-  post: async (endpoint: string, data: any, token?: string) => {
+  post: async (endpoint: string, data: any, authOptions: AuthOptions = {}) => {
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: "POST",
-      headers: getAuthHeaders(token),
+      headers: getHeaders(authOptions),
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || "An API error occurred");
+      throw new Error(error.detail || `API Error: ${response.statusText}`);
     }
     return response.json();
   },
+  
+  delete: async (endpoint: string, token?: string) => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'DELETE',
+        headers: getHeaders({ token }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'An API error occurred');
+    }
+    // DELETE might not return a body, so we don't call .json()
+    return response;
+  }
 };
