@@ -55,8 +55,8 @@ export function MyBotsTab({ currentTier, bots, setBots, activeBot, setActiveBot,
 
     setIsLoading(true)
     try {
-      // The API call remains the same
-      const newBotData = await api.post("/bots/create", { name: newBotName })
+      const token = localStorage.getItem("token")
+      const newBotData = await api.post("/bots/create", { name: newBotName }, { token })
       
       const newBot = {
         id: newBotData._id,
@@ -64,14 +64,9 @@ export function MyBotsTab({ currentTier, bots, setBots, activeBot, setActiveBot,
         status: "Ready",
       }
 
-      setBots([...bots, newBot])
-      
-      // --- THIS IS THE FIX ---
-      // After creating the bot, immediately set it as the active one
-      // and switch to the "Resume" tab for the next step.
+      setBots([...bots, newBot]);
       setActiveBot(newBot);
       onTabChange("resume");
-      // --- END OF FIX ---
 
       setIsCreateModalOpen(false)
       setNewBotName("")
@@ -90,19 +85,32 @@ export function MyBotsTab({ currentTier, bots, setBots, activeBot, setActiveBot,
     }
   }
 
-  const deleteBot = (botId: string) => {
+  // --- THIS IS THE FIX ---
+  const deleteBot = async (botId: string) => {
     if (confirm("Are you sure you want to delete this bot? This action cannot be undone.")) {
-      // **TODO**: Implement backend API call for deletion
-      setBots(bots.filter((bot) => bot.id !== botId))
-      if (activeBot?.id === botId) {
-        setActiveBot(null)
+      try {
+        const token = localStorage.getItem("token");
+        await api.delete(`/bots/${botId}`, token || undefined);
+
+        // Update the UI after successful deletion
+        setBots(bots.filter((bot) => bot.id !== botId));
+        if (activeBot?.id === botId) {
+          setActiveBot(null);
+        }
+        toast({
+          title: "Bot Deleted",
+          description: "The bot and its data have been successfully deleted.",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error Deleting Bot",
+          description: error.message || "Could not delete the bot.",
+          variant: "destructive",
+        });
       }
-      toast({
-        title: "Bot Deleted",
-        description: "The bot has been successfully deleted.",
-      })
     }
-  }
+  };
+  // --- END OF FIX ---
 
   const handlePlayground = (bot: { id: string; name: string; status: string }) => {
     setActiveBot(bot)

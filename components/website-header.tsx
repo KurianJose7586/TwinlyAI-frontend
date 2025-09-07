@@ -15,13 +15,14 @@ export function WebsiteHeader({ currentPage = "home" }: WebsiteHeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-zinc-900/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/60">
-        <div className="container relative flex h-16 items-center justify-between px-6">
+        <div className="container flex h-16 items-center justify-between px-6">
           {/* Logo (Left) */}
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-xl font-bold text-white">TwinlyAI</span>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+          {/* Centered Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
             <Link
               href="/"
               className={`text-sm font-medium transition-colors hover:text-blue-400 ${

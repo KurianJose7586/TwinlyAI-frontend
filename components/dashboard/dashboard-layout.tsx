@@ -1,10 +1,10 @@
 "use client"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation" // <-- Import useRouter
 import { Sidebar } from "./sidebar"
 import { MainContent } from "./main-content"
 import { api } from "@/lib/api"
 
-// Define the Bot type
 interface Bot {
   id: string
   name: string
@@ -17,13 +17,13 @@ export function DashboardLayout() {
   const [bots, setBots] = useState<Bot[]>([])
   const [activeBot, setActiveBot] = useState<Bot | null>(null)
   const [isLoadingBots, setIsLoadingBots] = useState(true)
+  const router = useRouter() // <-- Initialize the router
 
   useEffect(() => {
     const fetchBots = async () => {
       const token = localStorage.getItem("token")
       if (!token) {
-        // Handle case where user is not logged in, maybe redirect
-        setIsLoadingBots(false)
+        router.push("/auth") // Redirect if no token
         return
       }
       try {
@@ -31,19 +31,25 @@ export function DashboardLayout() {
         const formattedBots = fetchedBots.map((bot: any) => ({
           id: bot._id,
           name: bot.name,
-          status: "Ready", // Or derive from backend if available
+          status: "Ready",
         }));
         setBots(formattedBots)
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch bots:", error)
-        // Optionally, show a toast notification
+        // --- THIS IS THE FIX ---
+        // If credentials fail, clear the token and redirect to login
+        if (error.message.includes("Could not validate credentials")) {
+            localStorage.removeItem("token");
+            router.push("/auth");
+        }
+        // --- END OF FIX ---
       } finally {
         setIsLoadingBots(false)
       }
     }
 
     fetchBots()
-  }, [])
+  }, [router]) // <-- Add router to dependency array
 
   return (
     <div className="flex h-screen bg-background">
