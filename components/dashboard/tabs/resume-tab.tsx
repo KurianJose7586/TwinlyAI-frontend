@@ -20,45 +20,45 @@ export function ResumeTab({ activeBot, onTabChange }: ResumeTabProps) {
   const { toast } = useToast()
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !activeBot) return
+  const file = e.target.files?.[0];
+  if (!file || !activeBot) return;
 
-    setLastFile(file)
-    setIsLoading(true)
-    setBotStatus("indexing")
-    toast({ title: "Uploading...", description: `Uploading "${file.name}" for bot "${activeBot.name}".` })
+  setLastFile(file);
+  setIsLoading(true);
+  setBotStatus("indexing");
+  toast({ title: "Uploading...", description: `Uploading "${file.name}" for bot "${activeBot.name}".` });
 
-    const formData = new FormData()
-    formData.append("file", file)
+  const formData = new FormData();
+  formData.append("file", file);
 
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) throw new Error("Authentication token not found.")
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Authentication token not found.");
 
-      // Use the native fetch API for multipart/form-data
-      const response = await fetch(`http://127.0.0.1:8000/api/v1/bots/${activeBot.id}/upload`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      })
+    // THIS IS THE FIX: Use the native fetch but with the correct live URL
+    const response = await fetch(`https://joserman-twinlyaibackend.hf.space/api/v1/bots/${activeBot.id}/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || "Upload failed.")
-      }
-
-      const result = await response.json()
-      toast({ title: "Success!", description: result.message })
-      setBotStatus("ready")
-    } catch (error: any) {
-      toast({ title: "Upload Error", description: error.message, variant: "destructive" })
-      setBotStatus("no_data")
-    } finally {
-      setIsLoading(false)
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Upload failed.");
     }
+
+    const result = await response.json();
+    toast({ title: "Success!", description: result.message });
+    setBotStatus("ready");
+  } catch (error: any) {
+    toast({ title: "Upload Error", description: error.message, variant: "destructive" });
+    setBotStatus("no_data");
+  } finally {
+    setIsLoading(false);
   }
+};
 
   const handleGoToBots = () => {
     onTabChange("my-bots")

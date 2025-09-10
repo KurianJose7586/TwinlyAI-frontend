@@ -1,7 +1,6 @@
 // lib/api.ts
 
-const API_URL = "https://joserman-twinlyaibackend.hf.space";
-
+const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
 interface AuthOptions {
   token?: string | null;
   apiKey?: string | null;
