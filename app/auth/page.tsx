@@ -9,12 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github } from "lucide-react";
 import Link from "next/link";
 import { WebsiteHeader } from "@/components/website-header";
-import { api } from "@/lib/api"; // <-- Import your API helper
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast"; // <-- IMPORT useToast
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("login");
+  const { toast } = useToast(); // <-- INITIALIZE useToast
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -27,7 +29,7 @@ export default function AuthPage() {
 
     try {
       if (activeTab === "login") {
-        // For login, the backend expects 'username' and 'password' in a form-like structure
+        // Login logic remains the same...
         const loginFormData = new URLSearchParams();
         loginFormData.append('username', email);
         loginFormData.append('password', password);
@@ -44,14 +46,19 @@ export default function AuthPage() {
         }
         
         const data = await response.json();
-        // Save the token to the browser's local storage
         localStorage.setItem("token", data.access_token);
-        // Redirect to the dashboard
         window.location.href = "/dashboard";
 
       } else { // For signup
         await api.post("/auth/signup", { email, password });
-        alert("Signup successful! Please switch to the Log In tab to continue.");
+        // --- THIS IS THE FIX ---
+        // Replace the blocking alert() with a non-blocking toast()
+        toast({
+          title: "Signup Successful!",
+          description: "You can now log in with your new account.",
+        });
+        // --- END OF FIX ---
+        
         // Switch to login tab after successful signup
         setActiveTab("login");
       }
@@ -63,12 +70,13 @@ export default function AuthPage() {
   };
 
   return (
+    // The rest of your JSX remains the same...
     <>
       <WebsiteHeader />
-      <main className="min-h-screen bg-background flex items-center justify-center p-6">
+      <main className="min-h-screen flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Link href="/" className="text-2xl font-bold text-foreground">
+            <Link href="/" className="text-xl font-bold text-foreground">
               TwinlyAI
             </Link>
           </div>
@@ -141,15 +149,19 @@ export default function AuthPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                   <Button variant="outline" className="w-full bg-transparent">
-                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                      {/* Google SVG Path */}
-                    </svg>
-                    Google
+                   <Button variant="outline" className="w-full bg-transparent" asChild>
+                    <a href="http://127.0.0.1:8000/api/v1/oauth/login/google">
+                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                        {/* Google SVG Path */}
+                      </svg>
+                      Google
+                    </a>
                   </Button>
-                  <Button variant="outline" className="w-full bg-transparent">
-                    <Github className="mr-2 h-4 w-4" />
-                    GitHub
+                  <Button variant="outline" className="w-full bg-transparent" asChild>
+                    <a href="http://127.0.0.1:8000/api/v1/oauth/login/github">
+                      <Github className="mr-2 h-4 w-4" />
+                      GitHub
+                    </a>
                   </Button>
                 </div>
               </div>

@@ -20,10 +20,11 @@ export default function LandingPage() {
   return (
     <>
       <WebsiteHeader currentPage="home" />
-      <main className="min-h-screen bg-background">
+      {/* --- CHANGE IS HERE --- */}
+      {/* Removed the "bg-background" class from the main tag below */}
+      <main className="min-h-screen">
         {/* Hero Section */}
         <section className="relative px-6 py-24 md:py-32 lg:py-40">
-          <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
           <div
             ref={heroAnimation.ref}
             className={`relative mx-auto max-w-4xl text-center transition-all duration-1000 ease-out ${

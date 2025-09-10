@@ -2,10 +2,10 @@ import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { AuthProvider } from "./context/AuthContext" // <-- IMPORT
-import { useAuth } from '../context/AuthContext';     // Correct
+import { AuthProvider } from "./context/AuthContext"
 import { CursorBackground } from "@/components/cursor-background"
 import { BackgroundPattern } from "@/components/background-pattern"
+import { Toaster } from "@/components/ui/toaster" // <-- IMPORT THE TOASTER
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -32,11 +32,12 @@ html {
         `}</style>
       </head>
       <body>
-        <AuthProvider> {/* <--- WRAPPER START */}
+        <AuthProvider> 
           <BackgroundPattern />
           <CursorBackground />
           <div className="relative z-10">{children}</div>
-        </AuthProvider> {/* <--- WRAPPER END */}
+          <Toaster /> {/* <--- ADD THE TOASTER HERE */}
+        </AuthProvider> 
       </body>
     </html>
   )

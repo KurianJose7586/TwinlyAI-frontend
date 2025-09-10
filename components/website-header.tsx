@@ -15,39 +15,43 @@ export function WebsiteHeader({ currentPage = "home" }: WebsiteHeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-zinc-900/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/60">
-        <div className="container flex h-16 items-center justify-between px-6">
-          {/* Logo (Left) */}
+        {/* --- START OF FINAL FIX --- */}
+        {/* Added "mx-auto" to the container class to center it. This is required in Tailwind v4. */}
+        <div className="container mx-auto relative flex h-16 items-center justify-between px-6">
+          {/* Left Section (Logo) */}
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-xl font-bold text-white">TwinlyAI</span>
           </Link>
 
-          {/* Centered Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className={`text-sm font-medium transition-colors hover:text-blue-400 ${
-                currentPage === "home" ? "text-blue-500" : "text-gray-300"
-              }`}
-            >
-              Home
-            </Link>
-            <button
-              onClick={() => setIsAboutModalOpen(true)}
-              className={`text-sm font-medium transition-colors hover:text-blue-400 ${
-                currentPage === "about" ? "text-blue-500" : "text-gray-300"
-              }`}
-            >
-              About
-            </button>
-            <Link
-              href="/pricing"
-              className={`text-sm font-medium transition-colors hover:text-blue-400 ${
-                currentPage === "pricing" ? "text-blue-500" : "text-gray-300"
-              }`}
-            >
-              Pricing
-            </Link>
-          </nav>
+          {/* Centered Navigation (Absolute Positioning) */}
+          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <nav className="flex items-center space-x-8">
+              <Link
+                href="/"
+                className={`text-sm font-medium transition-colors hover:text-blue-400 ${
+                  currentPage === "home" ? "text-blue-500" : "text-gray-300"
+                }`}
+              >
+                Home
+              </Link>
+              <button
+                onClick={() => setIsAboutModalOpen(true)}
+                className={`text-sm font-medium transition-colors hover:text-blue-400 ${
+                  currentPage === "about" ? "text-blue-500" : "text-gray-300"
+                }`}
+              >
+                About
+              </button>
+              <Link
+                href="/pricing"
+                className={`text-sm font-medium transition-colors hover:text-blue-400 ${
+                  currentPage === "pricing" ? "text-blue-500" : "text-gray-300"
+                }`}
+              >
+                Pricing
+              </Link>
+            </nav>
+          </div>
 
           {/* Action Buttons (Right) */}
           <div className="flex items-center space-x-3">
@@ -59,6 +63,7 @@ export function WebsiteHeader({ currentPage = "home" }: WebsiteHeaderProps) {
             </Button>
           </div>
         </div>
+        {/* --- END OF FINAL FIX --- */}
       </header>
 
       {/* About Modal */}
