@@ -1,6 +1,6 @@
 // lib/api.ts
 
-const API_URL = "http://127.0.0.1:8000/api/v1";
+const API_URL = "https://joserman-twinlyai-backend.hf.space";
 
 interface AuthOptions {
   token?: string | null;
