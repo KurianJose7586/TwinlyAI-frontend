@@ -1,30 +1,48 @@
-# No content
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+# TwinlyAI Frontend
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/kurianjose005-7205s-projects/v0-no-content)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/53R0sKHyqwj)
+This is the frontend for TwinlyAI, a platform that allows you to create a personal AI chatbot from your resume.
 
-## Overview
+## 🤖 About The Project
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+TwinlyAI transforms your resume into an intelligent AI assistant that can answer questions about your career, skills, and experience. It's perfect for embedding on portfolios, personal websites, or sharing with potential employers. Built with cutting-edge AI technology, TwinlyAI makes your professional story accessible and interactive, helping you stand out in today's competitive job market.
 
-## Deployment
+## ✨ Features
 
-Your project is live at:
+* **AI-Powered Chatbot:** Upload your resume and get an intelligent assistant that knows your career history.
+* **Embeddable Widget:** Easily embed your personal chatbot on your portfolio or website.
+* **Developer API:** Integrate your chatbot into any application with secure API keys.
+* **Customizable:** Tailor the chatbot's initial message and appearance.
+* **Multiple File Formats Supported:** Upload your resume in PDF, DOCX, TXT, or JSON format.
+* **User Authentication:** Secure sign-up and login functionality.
 
-**[https://vercel.com/kurianjose005-7205s-projects/v0-no-content](https://vercel.com/kurianjose005-7205s-projects/v0-no-content)**
+## 🚀 Getting Started
 
-## Build your app
+To get a local copy up and running, follow these simple steps.
 
-Continue building your app on:
+### Prerequisites
 
-**[https://v0.app/chat/projects/53R0sKHyqwj](https://v0.app/chat/projects/53R0sKHyqwj)**
+Make sure you have npm installed.
 
-## How It Works
+* npm
+    ```sh
+    npm install npm@latest -g
+    ```
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+### Installation
+
+1.  Clone the repo
+    ```sh
+    git clone [https://github.com/twinlyai/twinlyai-frontend.git](https://github.com/twinlyai/twinlyai-frontend.git)
+    ```
+2.  Install NPM packages
+    ```sh
+    npm install
+    ```
+
+### Running the Development Server
+
+Run the following command to start the development server:
+
+```bash
+npm run dev
