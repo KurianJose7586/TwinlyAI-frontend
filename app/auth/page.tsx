@@ -29,12 +29,15 @@ export default function AuthPage() {
 
     try {
       if (activeTab === "login") {
-        // Login logic remains the same...
         const loginFormData = new URLSearchParams();
         loginFormData.append('username', email);
         loginFormData.append('password', password);
 
-        const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+        // NOTE: We keep the direct fetch here because the backend's login
+        // is specifically set up to handle 'x-www-form-urlencoded' data,
+        // which the api.ts helper doesn't do by default. We just need to
+        // make sure it's pointing to the right place.
+        const response = await fetch("https://joserman-twinlyaibackend.hf.space/api/v1/auth/login", {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: loginFormData,
@@ -50,16 +53,14 @@ export default function AuthPage() {
         window.location.href = "/dashboard";
 
       } else { // For signup
+        // Use the centralized api helper for signup
         await api.post("/auth/signup", { email, password });
-        // --- THIS IS THE FIX ---
-        // Replace the blocking alert() with a non-blocking toast()
+        
         toast({
           title: "Signup Successful!",
           description: "You can now log in with your new account.",
         });
-        // --- END OF FIX ---
         
-        // Switch to login tab after successful signup
         setActiveTab("login");
       }
     } catch (err: any) {
