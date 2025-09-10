@@ -27,7 +27,6 @@ export function ApiKeysTab({ activeBot, onTabChange }: ApiKeysTabProps) {
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
-  // Fetch API keys on component mount
   useEffect(() => {
     const fetchKeys = async () => {
       setIsLoading(true)
@@ -52,7 +51,6 @@ export function ApiKeysTab({ activeBot, onTabChange }: ApiKeysTabProps) {
       const response = await api.post("/api-keys/", {})
       setNewlyGeneratedKey(response.api_key)
       setIsKeyModalOpen(true)
-      // Refresh the list of keys after creating a new one
       const fetchedKeys = await api.get("/api-keys/")
       setKeys(fetchedKeys)
     } catch (error: any) {
@@ -83,6 +81,7 @@ export function ApiKeysTab({ activeBot, onTabChange }: ApiKeysTabProps) {
     }
   }
 
+  // --- THIS FUNCTION MAKES THE COPY BUTTON WORK ---
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     toast({ title: "Copied to clipboard!" })
@@ -168,7 +167,6 @@ export function ApiKeysTab({ activeBot, onTabChange }: ApiKeysTabProps) {
         </CardContent>
       </Card>
 
-      {/* Modal to display the newly generated key */}
       <Dialog open={isKeyModalOpen} onOpenChange={setIsKeyModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -181,6 +179,7 @@ export function ApiKeysTab({ activeBot, onTabChange }: ApiKeysTabProps) {
             <pre className="text-sm overflow-x-auto">
               <code>{newlyGeneratedKey}</code>
             </pre>
+            {/* THIS IS THE COPY BUTTON */}
             <Button variant="ghost" size="sm" onClick={() => newlyGeneratedKey && copyToClipboard(newlyGeneratedKey)}>
               <Copy className="h-4 w-4" />
             </Button>

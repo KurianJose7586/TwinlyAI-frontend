@@ -7,7 +7,6 @@ interface AuthOptions {
   apiKey?: string | null;
 }
 
-// Helper to get headers
 const getHeaders = (options: AuthOptions = {}) => {
   const { token, apiKey } = options;
   const headers: HeadersInit = {
@@ -20,7 +19,6 @@ const getHeaders = (options: AuthOptions = {}) => {
     headers["Authorization"] = `Bearer ${authToken}`;
   }
   
-  // Add the API Key header if it exists
   if (apiKey) {
     headers["X-API-Key"] = apiKey;
   }
@@ -56,6 +54,21 @@ export const api = {
     return response.json();
   },
   
+  // --- NEW: Add the PATCH method ---
+  patch: async (endpoint: string, data: any, token?: string) => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'PATCH',
+      headers: getHeaders({ token }),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'An API error occurred');
+    }
+    return response.json();
+  },
+  
   delete: async (endpoint: string, token?: string) => {
     const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'DELETE',
@@ -64,9 +77,11 @@ export const api = {
 
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'An API error occurred');
+        if (error.detail) {
+            throw new Error(error.detail);
+        }
+        throw new Error('An API error occurred');
     }
-    // DELETE might not return a body, so we don't call .json()
     return response;
   }
 };

@@ -1,9 +1,10 @@
 "use client"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation" // <-- Import useRouter
+import { useRouter } from "next/navigation"
 import { Sidebar } from "./sidebar"
 import { MainContent } from "./main-content"
 import { api } from "@/lib/api"
+import { useAuth } from "@/app/context/AuthContext" // <-- Import useAuth
 
 interface Bot {
   id: string
@@ -17,13 +18,14 @@ export function DashboardLayout() {
   const [bots, setBots] = useState<Bot[]>([])
   const [activeBot, setActiveBot] = useState<Bot | null>(null)
   const [isLoadingBots, setIsLoadingBots] = useState(true)
-  const router = useRouter() // <-- Initialize the router
+  const router = useRouter()
+  const { user, isLoading: isAuthLoading } = useAuth() // <-- Get user from context
 
   useEffect(() => {
     const fetchBots = async () => {
       const token = localStorage.getItem("token")
       if (!token) {
-        router.push("/auth") // Redirect if no token
+        router.push("/auth")
         return
       }
       try {
@@ -36,24 +38,32 @@ export function DashboardLayout() {
         setBots(formattedBots)
       } catch (error: any) {
         console.error("Failed to fetch bots:", error)
-        // --- THIS IS THE FIX ---
-        // If credentials fail, clear the token and redirect to login
         if (error.message.includes("Could not validate credentials")) {
             localStorage.removeItem("token");
             router.push("/auth");
         }
-        // --- END OF FIX ---
       } finally {
         setIsLoadingBots(false)
       }
     }
 
-    fetchBots()
-  }, [router]) // <-- Add router to dependency array
+    // Only fetch bots if authentication is resolved and a user exists
+    if (!isAuthLoading && user) {
+      fetchBots()
+    } else if (!isAuthLoading && !user) {
+      // If auth is resolved and there's no user, redirect to login
+      router.push("/auth");
+    }
+  }, [router, user, isAuthLoading])
+
+  if (isAuthLoading) {
+    return <div>Loading...</div> // Or a proper loading spinner component
+  }
 
   return (
     <div className="flex h-screen bg-background">
       <Sidebar 
+        user={user} // <-- Pass user object to Sidebar
         activeTab={activeTab} 
         onTabChange={setActiveTab}
         hasActiveBot={!!activeBot}

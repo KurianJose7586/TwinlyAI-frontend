@@ -1,69 +1,68 @@
-"use client";
+"use client"
+import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { api } from "@/lib/api"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-// Define the shape of the user object and the context
 interface User {
-  email: string;
-  id: string;
+  id: string
+  email: string
 }
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  isLoading: boolean;
-  login: (token: string) => void;
-  logout: () => void;
+  user: User | null
+  login: (token: string) => Promise<void>
+  logout: () => void
+  isLoading: boolean
 }
 
-// Create the context with a default value
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Create the provider component
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      setToken(storedToken);
-      // Here you would typically fetch the user's profile from a /me endpoint
-      // For now, we'll decode the token or use placeholder data
-      // This is a simplified version. A real app would verify the token with the backend.
-      setUser({ email: "user@example.com", id: "123" });
+    const initializeUser = async () => {
+      const token = localStorage.getItem("token")
+      if (token) {
+        try {
+          const userData = await api.get("/users/me", token)
+          setUser({ id: userData._id, email: userData.email })
+        } catch (error) {
+          console.error("Failed to fetch user on initial load", error)
+          localStorage.removeItem("token") // Clear invalid token
+        }
+      }
+      setIsLoading(false)
     }
-    setIsLoading(false);
-  }, []);
+    initializeUser()
+  }, [])
 
-  const login = (newToken: string) => {
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-    // Again, fetch user profile here
-    setUser({ email: "user@example.com", id: "123" });
-    window.location.href = '/dashboard';
-  };
+  const login = async (token: string) => {
+    localStorage.setItem("token", token)
+    try {
+      const userData = await api.get("/users/me", token)
+      setUser({ id: userData._id, email: userData.email })
+    } catch (error) {
+      console.error("Failed to fetch user after login", error)
+    }
+  }
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setToken(null);
-    window.location.href = '/auth';
-  };
+    localStorage.removeItem("token")
+    setUser(null)
+  }
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
-// Create a custom hook for easy access to the context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider")
   }
-  return context;
-};
+  return context
+}

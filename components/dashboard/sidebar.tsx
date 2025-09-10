@@ -15,9 +15,17 @@ import {
   FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge" // <-- Import the Badge component
+import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/app/context/AuthContext" // Import useAuth to handle logout
+
+// Define a type for the user object
+interface User {
+  id: string;
+  email: string;
+}
 
 interface SidebarProps {
+  user: User | null; // <-- Accept the user object as a prop
   activeTab: string
   onTabChange: (tab: string) => void
   hasActiveBot: boolean
@@ -33,12 +41,13 @@ const navigationItems = [
   { id: "settings", label: "Settings", icon: Settings, requiresBot: true },
 ]
 
-export function Sidebar({ activeTab, onTabChange, hasActiveBot }: SidebarProps) {
+export function Sidebar({ user, activeTab, onTabChange, hasActiveBot }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const { logout } = useAuth(); // Get logout function from context
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    window.location.href = "/auth"
+    logout();
+    window.location.href = "/auth" // Redirect after logout
   }
 
   return (
@@ -48,14 +57,11 @@ export function Sidebar({ activeTab, onTabChange, hasActiveBot }: SidebarProps) 
         isCollapsed ? "w-16" : "w-64",
       )}
     >
-      {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-sidebar-foreground">TwinlyAI</h1>
-            {/* --- THIS IS THE NEW BADGE --- */}
             <Badge variant="secondary">v0.1 Beta</Badge>
-            {/* --- END OF NEW BADGE --- */}
           </div>
         )}
         <Button
@@ -69,7 +75,6 @@ export function Sidebar({ activeTab, onTabChange, hasActiveBot }: SidebarProps) 
         </Button>
       </div>
 
-      {/* Navigation */}
       <div className="flex-1 p-4 space-y-2">
         {navigationItems.map((item) => {
           const Icon = item.icon
@@ -97,15 +102,20 @@ export function Sidebar({ activeTab, onTabChange, hasActiveBot }: SidebarProps) 
         })}
       </div>
 
-      {/* User Profile */}
       <div className="p-4 border-t border-sidebar-border">
         <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">U</AvatarFallback>
+            {/* Display the first letter of the user's email */}
+            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">
+              {user?.email ? user.email[0].toUpperCase() : "U"}
+            </AvatarFallback>
           </Avatar>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">user@example.com</p>
+              {/* Display the full user email, or a loading state */}
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {user?.email || "Loading..."}
+              </p>
             </div>
           )}
         </div>

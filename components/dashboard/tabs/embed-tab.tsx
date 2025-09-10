@@ -20,7 +20,6 @@ export function EmbedTab({ activeBot, onTabChange }: EmbedTabProps) {
   const [apiKey, setApiKey] = useState("")
   const { toast } = useToast()
 
-  // Generate the iframe embed code whenever customizations change
   useEffect(() => {
     if (activeBot && apiKey) {
       const code = `<iframe
@@ -36,6 +35,7 @@ export function EmbedTab({ activeBot, onTabChange }: EmbedTabProps) {
     }
   }, [activeBot, apiKey, initialMessage])
 
+  // --- THIS FUNCTION MAKES THE COPY BUTTON WORK ---
   const handleCopyToClipboard = () => {
     if (!embedCode || !apiKey) {
       toast({ title: "Please provide an API key first", variant: "destructive" })
@@ -98,6 +98,7 @@ export function EmbedTab({ activeBot, onTabChange }: EmbedTabProps) {
             <CardHeader><CardTitle>Embed Code</CardTitle></CardHeader>
             <CardContent>
               <pre className="bg-muted p-4 rounded-md text-sm overflow-x-auto"><code>{embedCode}</code></pre>
+              {/* THIS IS THE COPY BUTTON */}
               <Button onClick={handleCopyToClipboard} className="w-full mt-4 bg-blue-600 hover:bg-blue-700"><Copy className="mr-2 h-4 w-4" />Copy Code</Button>
             </CardContent>
           </Card>
@@ -112,7 +113,7 @@ export function EmbedTab({ activeBot, onTabChange }: EmbedTabProps) {
                 height="100%"
                 style={{ border: "none" }}
                 title="Chatbot Preview"
-                key={`${activeBot.id}-${apiKey}`} // Key forces re-render
+                key={`${activeBot.id}-${apiKey}`}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground p-8 text-center">

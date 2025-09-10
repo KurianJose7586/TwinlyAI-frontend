@@ -1,9 +1,13 @@
-import type React from "react"
+import { AuthProvider } from "@/app/context/AuthContext";
 
-export default function DashboardLayout({
+export default function DashboardAppLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  return <>{children}</>
+  return (
+    <AuthProvider>
+      <section>{children}</section>
+    </AuthProvider>
+  );
 }

@@ -1,98 +1,110 @@
 "use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trash2, Bot } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Bot, Save } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { api } from "@/lib/api"
 
 interface SettingsTabProps {
-  activeBot: { id: number; name: string; status: string } | null
+  activeBot: { id: string; name: string; status: string } | null
+  // We need access to the global state setters to update the UI in real-time
+  setActiveBot: (bot: { id: string; name: string; status: string } | null) => void;
+  bots: Array<{ id: string; name: string; status: string }>;
+  setBots: (bots: Array<{ id: string; name: string; status: string }>) => void;
   onTabChange: (tab: string) => void
 }
 
-export function SettingsTab({ activeBot, onTabChange }: SettingsTabProps) {
-  const handleDeleteBot = () => {
-    if (!activeBot) return
+export function SettingsTab({ activeBot, setActiveBot, bots, setBots, onTabChange }: SettingsTabProps) {
+  const [botName, setBotName] = useState(activeBot?.name || "")
+  const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
 
-    if (
-      confirm(
-        `Are you sure you want to delete "${activeBot.name}" and all associated data? This action cannot be undone and will permanently remove all resume data, chat history, and API keys for this bot.`,
-      )
-    ) {
-      // Simulate deletion
-      alert(`"${activeBot.name}" and all data would be deleted. Returning to My Bots...`)
-      onTabChange("my-bots")
+  // When the activeBot prop changes, update the local state
+  useEffect(() => {
+    if (activeBot) {
+      setBotName(activeBot.name)
+    }
+  }, [activeBot])
+
+  const handleSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!activeBot || !botName.trim()) {
+      toast({ title: "Bot name cannot be empty.", variant: "destructive" })
+      return
+    }
+    if (botName.trim() === activeBot.name) {
+      toast({ title: "No changes to save."})
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const token = localStorage.getItem("token")
+      const updatedBot = await api.patch(`/bots/${activeBot.id}`, { name: botName }, token || undefined)
+
+      // Update the global state to reflect the name change instantly
+      setActiveBot({ ...activeBot, name: updatedBot.name })
+      setBots(bots.map(bot => bot.id === updatedBot._id ? { ...bot, name: updatedBot.name } : bot))
+
+      toast({
+        title: "Success!",
+        description: "Your bot has been renamed.",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error saving changes",
+        description: error.message || "Could not rename the bot.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
     }
   }
 
   const handleGoToBots = () => {
     onTabChange("my-bots")
   }
-
+  
   if (!activeBot) {
     return (
       <div className="flex flex-col items-center justify-center h-full space-y-4">
         <Bot className="h-16 w-16 text-muted-foreground" />
-        <h2 className="text-xl font-semibold text-foreground">
-          Please select a bot from the 'My Bots' page to continue
-        </h2>
-        <p className="text-muted-foreground text-center max-w-md">
-          You need to select a bot before you can manage its settings.
-        </p>
-        <Button onClick={handleGoToBots} className="bg-blue-600 hover:bg-blue-700">
-          <Bot className="h-4 w-4 mr-2" />
-          Go to My Bots
-        </Button>
+        <h2 className="text-xl font-semibold">Please select a bot to manage its settings</h2>
+        <Button onClick={handleGoToBots} className="bg-blue-600 hover:bg-blue-700">Go to My Bots</Button>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div className="flex items-center gap-2">
-          <Bot className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Settings for: {activeBot.name}</span>
-        </div>
-      </div>
-
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Manage settings for "{activeBot.name}".</p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Bot Settings</CardTitle>
-          <CardDescription>Manage preferences and configuration for "{activeBot.name}"</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-6">
-            Bot-specific settings and preferences will be available here.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Danger Zone */}
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>Irreversible actions that will permanently delete this bot's data</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-medium text-foreground">Delete "{activeBot.name}" and All Associated Data</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                This will permanently delete "{activeBot.name}", its resume data, chat history, API keys, and all
-                associated information. This action cannot be undone.
-              </p>
+      <h1 className="text-2xl font-bold">Settings for "{activeBot.name}"</h1>
+      <form onSubmit={handleSaveChanges}>
+        <Card>
+          <CardHeader>
+            <CardTitle>General Settings</CardTitle>
+            <CardDescription>Update your bot's name and other general settings.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="bot-name">Bot Name</Label>
+              <Input
+                id="bot-name"
+                value={botName}
+                onChange={(e) => setBotName(e.target.value)}
+                placeholder="Enter a name for your bot"
+              />
             </div>
-            <Button onClick={handleDeleteBot} variant="destructive" data-testid="delete-bot-button">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete "{activeBot.name}" and All Associated Data
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        <Button type="submit" disabled={isSaving} className="mt-4 bg-blue-600 hover:bg-blue-700">
+          <Save className="mr-2 h-4 w-4" />
+          {isSaving ? "Saving..." : "Save Changes"}
+        </Button>
+      </form>
     </div>
   )
 }
