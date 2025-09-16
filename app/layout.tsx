@@ -5,7 +5,8 @@ import { GeistMono } from "geist/font/mono"
 import { AuthProvider } from "./context/AuthContext"
 import { CursorBackground } from "@/components/cursor-background"
 import { BackgroundPattern } from "@/components/background-pattern"
-import { Toaster } from "@/components/ui/toaster" // <-- IMPORT THE TOASTER
+import { Toaster } from "@/components/ui/toaster"
+import { Analytics } from '@vercel/analytics/react'; // <-- IMPORT aNALYTICS
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -32,12 +33,13 @@ html {
         `}</style>
       </head>
       <body>
-        <AuthProvider> 
+        <AuthProvider>
           <BackgroundPattern />
           <CursorBackground />
           <div className="relative z-10">{children}</div>
-          <Toaster /> {/* <--- ADD THE TOASTER HERE */}
-        </AuthProvider> 
+          <Toaster />
+          <Analytics /> {/* <--- ADD THE ANALYTICS COMPONENT HERE */}
+        </AuthProvider>
       </body>
     </html>
   )
