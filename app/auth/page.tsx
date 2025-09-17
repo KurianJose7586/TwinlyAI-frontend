@@ -151,7 +151,7 @@ export default function AuthPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                    <Button variant="outline" className="w-full bg-transparent" asChild>
-                    <a href="http://127.0.0.1:8000/api/v1/oauth/login/google">
+                    <a href="https://joserman-twinlyaibackend.hf.space/api/v1/oauth/login/google">
                       <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                         {/* Google SVG Path */}
                       </svg>
@@ -159,7 +159,7 @@ export default function AuthPage() {
                     </a>
                   </Button>
                   <Button variant="outline" className="w-full bg-transparent" asChild>
-                    <a href="http://127.0.0.1:8000/api/v1/oauth/login/github">
+                    <a href="https://joserman-twinlyaibackend.hf.space/api/v1/oauth/login/github">
                       <Github className="mr-2 h-4 w-4" />
                       GitHub
                     </a>
