@@ -65,8 +65,6 @@ export function MainContent({
       case "usage":
         return <UsageTab activeBot={activeBot} onTabChange={onTabChange} />
       case "settings":
-        // --- THIS IS THE FIX ---
-        // Pass all required props to the SettingsTab component
         return (
           <SettingsTab
             activeBot={activeBot}
@@ -76,7 +74,6 @@ export function MainContent({
             onTabChange={onTabChange}
           />
         )
-        // --- END OF FIX ---
       default:
         return (
           <MyBotsTab

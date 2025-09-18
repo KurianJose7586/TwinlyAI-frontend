@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // <-- ADD THIS IMPORT
+import { useRouter } from 'next/navigation'; // <-- ADDED IMPORT
 import { useAuth } from '../context/AuthContext'; 
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
-  const router = useRouter(); // <-- INITIALIZE THE HOOK
+  const router = useRouter(); // <-- INITIALIZED HOOK
 
   useEffect(() => {
     if (!isLoading && !user) {
