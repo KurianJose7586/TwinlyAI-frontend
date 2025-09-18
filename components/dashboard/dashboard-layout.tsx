@@ -1,10 +1,12 @@
 "use client"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "./sidebar"
 import { MainContent } from "./main-content"
 import { api } from "@/lib/api"
-import { useAuth } from "@/app/context/AuthContext" // <-- Import useAuth
+import { useAuth } from "@/app/context/AuthContext"
+import { CommandPalette } from "../command-palette"
 
 interface Bot {
   id: string
@@ -18,8 +20,9 @@ export function DashboardLayout() {
   const [bots, setBots] = useState<Bot[]>([])
   const [activeBot, setActiveBot] = useState<Bot | null>(null)
   const [isLoadingBots, setIsLoadingBots] = useState(true)
+  const [isCommandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const router = useRouter()
-  const { user, isLoading: isAuthLoading } = useAuth() // <-- Get user from context
+  const { user, isLoading: isAuthLoading } = useAuth()
 
   useEffect(() => {
     const fetchBots = async () => {
@@ -36,6 +39,9 @@ export function DashboardLayout() {
           status: "Ready",
         }));
         setBots(formattedBots)
+        if (formattedBots.length > 0 && !activeBot) {
+            setActiveBot(formattedBots[0]);
+        }
       } catch (error: any) {
         console.error("Failed to fetch bots:", error)
         if (error.message.includes("Could not validate credentials")) {
@@ -47,23 +53,40 @@ export function DashboardLayout() {
       }
     }
 
-    // Only fetch bots if authentication is resolved and a user exists
     if (!isAuthLoading && user) {
       fetchBots()
     } else if (!isAuthLoading && !user) {
-      // If auth is resolved and there's no user, redirect to login
       router.push("/auth");
     }
-  }, [router, user, isAuthLoading])
+  }, [router, user, isAuthLoading, activeBot])
+  
+  // Keyboard listener for the Command Palette
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setCommandPaletteOpen((open) => !open)
+      }
+    }
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
+  }, [])
 
-  if (isAuthLoading) {
-    return <div>Loading...</div> // Or a proper loading spinner component
+  if (isAuthLoading || isLoadingBots) {
+    // You can add a more sophisticated loading screen here
+    return <div>Loading Dashboard...</div>
   }
 
   return (
     <div className="flex h-screen bg-background">
+      <CommandPalette 
+        open={isCommandPaletteOpen} 
+        setOpen={setCommandPaletteOpen} 
+        onTabChange={setActiveTab}
+        hasActiveBot={!!activeBot}
+      />
       <Sidebar 
-        user={user} // <-- Pass user object to Sidebar
+        user={user}
         activeTab={activeTab} 
         onTabChange={setActiveTab}
         hasActiveBot={!!activeBot}
