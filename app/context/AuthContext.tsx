@@ -1,87 +1,97 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { api } from "@/lib/api"
 import { useRouter, usePathname } from "next/navigation"
-import { getUser, User } from "@/lib/api"
+
+interface User {
+  id: string
+  email: string
+}
 
 interface AuthContextType {
   user: User | null
-  loading: boolean
+  isLoading: boolean
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
 
+
   useEffect(() => {
-    // Handle OAuth token from URL
-    const urlParams = new URLSearchParams(window.location.search)
-    const tokenFromUrl = urlParams.get("token")
+    const initializeAuth = async () => {
+      // --- THIS IS THE FIX ---
+      // First, check for a token in the URL from the OAuth redirect
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get('token');
 
-    if (tokenFromUrl) {
-      localStorage.setItem("token", tokenFromUrl)
-      // Clean the URL by removing the token, then redirect to dashboard
-      window.history.replaceState({}, document.title, "/dashboard")
-    }
-
-    const initializeUser = async () => {
-      const token = localStorage.getItem("token")
-      const isAuthPage = pathname === "/auth"
-      const isEmbedPage = pathname.startsWith("/embed")
-      const isPricingPage = pathname === "/pricing"
-      const isHomePage = pathname === "/"
-
-      if (isEmbedPage) {
-        setLoading(false)
-        return
+      if (tokenFromUrl) {
+        // If a token is found, save it and clean the URL
+        localStorage.setItem("token", tokenFromUrl);
+        // We use router.replace to clean the URL without a page reload
+        router.replace(pathname); 
       }
+      // --- END OF FIX ---
+
+      // Now, proceed with checking for a token in localStorage
+      const token = localStorage.getItem("token");
+      const isAuthPage = pathname === "/auth";
+      const isPublicPage = isAuthPage || pathname === "/" || pathname === "/pricing";
 
       if (token) {
         try {
-          const userData = await getUser()
-          setUser(userData)
-          if (isAuthPage || isHomePage) {
-            router.push("/dashboard")
+          // If there's a token, fetch the user
+          const userData = await api.get("/users/me");
+          // The API returns _id, so we map it to id
+          setUser({ id: userData._id, email: userData.email });
+          // If the user is on an auth page but is logged in, send to dashboard
+          if (isAuthPage) {
+            router.push("/dashboard");
           }
         } catch (error) {
-          console.error("Failed to fetch user", error)
-          localStorage.removeItem("token")
-          if (!isHomePage && !isPricingPage) {
-            router.push("/auth")
+          console.error("Token validation failed", error);
+          localStorage.removeItem("token");
+          // If token is invalid, redirect to login unless on a public page
+          if (!isPublicPage) {
+            router.push("/auth");
           }
         }
       } else {
-        if (!isAuthPage && !isHomePage && !isPricingPage) {
-          router.push("/auth")
+         // If there's no token, redirect to login unless on a public page
+        if (!isPublicPage) {
+            router.push("/auth");
         }
       }
-      setLoading(false)
-    }
-    initializeUser()
-  }, [pathname, router])
+      
+      setIsLoading(false);
+    };
+
+    initializeAuth();
+  }, [pathname, router]);
 
   const logout = () => {
-    localStorage.removeItem("token")
-    setUser(null)
-    router.push("/auth")
-  }
+    localStorage.removeItem("token");
+    setUser(null);
+    router.push("/auth");
+  };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
-  )
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
 }
