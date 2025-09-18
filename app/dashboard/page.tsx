@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // <-- ADD THIS IMPORT
 import { useAuth } from '../context/AuthContext'; 
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import { LoadingSpinner } from '@/components/ui/loading-spinner'; // <-- IMPORT THE SPINNER
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const router = useRouter(); // <-- INITIALIZE THE HOOK
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -15,8 +16,6 @@ export default function DashboardPage() {
     }
   }, [isLoading, user, router]);
 
-  // --- START OF NEW DESIGN ---
-  // Replace the simple "Loading..." text with the new component
   if (isLoading || !user) {
     return (
         <div className="flex h-screen items-center justify-center bg-background flex-col gap-4">
@@ -25,7 +24,6 @@ export default function DashboardPage() {
         </div>
     );
   }
-  // --- END OF NEW DESIGN ---
 
   return <DashboardLayout />;
 }

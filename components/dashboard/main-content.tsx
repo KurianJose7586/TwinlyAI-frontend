@@ -6,7 +6,7 @@ import { ApiKeysTab } from "./tabs/api-keys-tab"
 import { EmbedTab } from "./tabs/embed-tab"
 import { UsageTab } from "./tabs/usage-tab"
 import { SettingsTab } from "./tabs/settings-tab"
-import { ResumeTab } from "./tabs/resume-tab" // <-- Import the new tab
+import { ResumeTab } from "./tabs/resume-tab"
 
 interface Bot {
   id: string
@@ -56,7 +56,6 @@ export function MainContent({
             onTabChange={onTabChange}
           />
         )
-      // Add the new case for 'resume'
       case "resume":
         return <ResumeTab activeBot={activeBot} onTabChange={onTabChange} />
       case "api-keys":
@@ -66,7 +65,18 @@ export function MainContent({
       case "usage":
         return <UsageTab activeBot={activeBot} onTabChange={onTabChange} />
       case "settings":
-        return <SettingsTab activeBot={activeBot} onTabChange={onTabChange} />
+        // --- THIS IS THE FIX ---
+        // Pass all required props to the SettingsTab component
+        return (
+          <SettingsTab
+            activeBot={activeBot}
+            setActiveBot={setActiveBot}
+            bots={bots}
+            setBots={setBots}
+            onTabChange={onTabChange}
+          />
+        )
+        // --- END OF FIX ---
       default:
         return (
           <MyBotsTab
