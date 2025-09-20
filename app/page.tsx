@@ -1,13 +1,14 @@
+// app/page.tsx
 "use client"
 
 import type React from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Upload, MessageSquare, Globe, Code, KeyRound, FileText, Trash } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { WebsiteHeader } from "@/components/website-header"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
+import { GradientButton } from "@/components/ui/gradient-button"
 
 export default function LandingPage() {
   const heroAnimation = useScrollAnimation(0.1)
@@ -20,8 +21,6 @@ export default function LandingPage() {
   return (
     <>
       <WebsiteHeader currentPage="home" />
-      {/* --- CHANGE IS HERE --- */}
-      {/* Removed the "bg-background" class from the main tag below */}
       <main className="min-h-screen">
         {/* Hero Section */}
         <section className="relative px-6 py-24 md:py-32 lg:py-40">
@@ -39,14 +38,9 @@ export default function LandingPage() {
               embedded on your portfolio.
             </p>
             <div className="mt-10">
-              <Button
-                asChild
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
-                data-testid="get-started-button"
-              >
+              <GradientButton asChild variant="variant">
                 <Link href="/auth">Get Started for Free</Link>
-              </Button>
+              </GradientButton>
             </div>
           </div>
         </section>
@@ -191,14 +185,9 @@ export default function LandingPage() {
             }`}
           >
             <h2 className="text-4xl font-bold text-foreground md:text-5xl mb-8">Ready to Build Your AI Assistant?</h2>
-            <Button
-              asChild
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 text-xl"
-              data-testid="final-cta-button"
-            >
+            <GradientButton asChild variant="variant">
               <Link href="/auth">Get Started for Free</Link>
-            </Button>
+            </GradientButton>
           </div>
         </section>
       </main>
