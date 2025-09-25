@@ -24,14 +24,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
-      </head>
+    <link rel="icon" href="/favicon.ico" />
+    <style>{`
+        html {
+          font-family: ${GeistSans.style.fontFamily};
+          --font-sans: ${GeistSans.variable};
+          --font-mono: ${GeistMono.variable};
+        }
+    `}</style>
+</head>
       <body>
         <AuthProvider>
           <BackgroundPattern />
