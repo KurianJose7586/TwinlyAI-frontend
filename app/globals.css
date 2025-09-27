@@ -324,3 +324,6 @@
     --border-color-2: hsla(320, 50%, 90%, 0.75);
   }
 }
+.text-shadow-dark {
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+}
