@@ -9,7 +9,7 @@ import Image from "next/image"
 import { WebsiteHeader } from "@/components/website-header"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { GradientButton } from "@/components/ui/gradient-button"
-import LightRays from "@/components/light-rays" // <-- ADD THIS IMPORT
+import LightRays from "@/components/light-rays" 
 
 export default function LandingPage() {
   const heroAnimation = useScrollAnimation(0.1)
@@ -42,7 +42,6 @@ export default function LandingPage() {
             />
           </div>
           {/* --- END: ADDED LIGHTRAYS OVERLAY --- */}
-
           <div
             ref={heroAnimation.ref}
             className={`relative mx-auto max-w-4xl text-center transition-all duration-1000 ease-out ${
