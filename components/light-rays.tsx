@@ -3,7 +3,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { Renderer, Program, Triangle, Mesh } from 'ogl';
-import './LightRays.css'; // This CSS file will be created in the next step
+import './lightRays.css'; 
 
 const DEFAULT_COLOR = '#ffffff';
 
