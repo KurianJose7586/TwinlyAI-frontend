@@ -25,6 +25,13 @@ interface ChatInterfaceProps {
 
 const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
 
+// --- FIX START ---
+// Helper function to strip <think> tags from a string.
+const stripThinkTags = (text: string): string => {
+  return text.replace(/<think>.*?<\/think>/gs, "").trim();
+};
+// --- FIX END ---
+
 export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
@@ -51,15 +58,13 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
       content: messageContent,
     };
 
-    // --- FIX START ---
     const botMessageId = `bot-${Date.now()}`;
-    // Add user message and an empty bot message with a unique ID
+    // Add user message and an empty bot message placeholder
     setMessages((prev) => [
       ...prev,
       userMessage,
       { id: botMessageId, type: "bot", content: "" },
     ]);
-    // --- FIX END ---
 
     setIsLoading(true);
 
@@ -90,18 +95,29 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
       const decoder = new TextDecoder();
 
       if (reader) {
+        // --- FIX START ---
+        // We will accumulate the raw response here to properly clean it.
+        let rawBotContent = "";
+        // --- FIX END ---
+        
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value);
+          const chunk = decoder.decode(value, { stream: true });
           
           // --- FIX START ---
-          // Update the bot message with the unique ID
+          // Append the raw chunk to our accumulator
+          rawBotContent += chunk;
+
+          // Clean the accumulated content
+          const cleanedContent = stripThinkTags(rawBotContent);
+
+          // Update the bot message with the cleaned content
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === botMessageId
-                ? { ...msg, content: msg.content + chunk }
+                ? { ...msg, content: cleanedContent }
                 : msg
             )
           );
@@ -114,12 +130,10 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
         description: error.message || "Failed to get a response from the bot.",
         variant: "destructive",
       });
-      // --- FIX START ---
       // Remove the failed bot message placeholder
       setMessages((prev) =>
         prev.filter((msg) => msg.id !== botMessageId)
       );
-      // --- FIX END ---
     } finally {
       setIsLoading(false);
     }
