@@ -23,8 +23,6 @@ interface ChatInterfaceProps {
   apiKey?: string | null;
 }
 
-// NOTE: We are moving the API call out of the `lib/api.ts` file for this
-// specific streaming case, as it requires a different handling logic.
 const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
 
 export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatInterfaceProps) {
@@ -44,22 +42,25 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, isLoading])
 
-  // --- START: REWRITTEN sendMessage FOR STREAMING ---
   const sendMessage = async (messageContent: string) => {
     if (!messageContent.trim() || isLoading) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}`,
       type: "user",
       content: messageContent,
     };
-    
-    // Add the user message and an empty bot message to start
+
+    // --- FIX START ---
+    const botMessageId = `bot-${Date.now()}`;
+    // Add user message and an empty bot message with a unique ID
     setMessages((prev) => [
       ...prev,
       userMessage,
-      { id: "bot-response", type: "bot", content: "" },
+      { id: botMessageId, type: "bot", content: "" },
     ]);
+    // --- FIX END ---
+
     setIsLoading(true);
 
     try {
@@ -70,14 +71,18 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
       } else if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
+      
+      const chatHistory = messages.map(m => ({ type: m.type, content: m.content }));
 
       const response = await fetch(`${API_URL}/bots/${botId}/chat/stream`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ message: messageContent }),
+        body: JSON.stringify({ message: messageContent, chat_history: chatHistory }),
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Server error:", errorText);
         throw new Error("Failed to get a response from the server.");
       }
 
@@ -90,13 +95,17 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
           if (done) break;
 
           const chunk = decoder.decode(value);
+          
+          // --- FIX START ---
+          // Update the bot message with the unique ID
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === "bot-response"
+              msg.id === botMessageId
                 ? { ...msg, content: msg.content + chunk }
                 : msg
             )
           );
+          // --- FIX END ---
         }
       }
     } catch (error: any) {
@@ -105,15 +114,17 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
         description: error.message || "Failed to get a response from the bot.",
         variant: "destructive",
       });
+      // --- FIX START ---
+      // Remove the failed bot message placeholder
       setMessages((prev) =>
-        prev.filter((msg) => msg.id !== "bot-response")
+        prev.filter((msg) => msg.id !== botMessageId)
       );
+      // --- FIX END ---
     } finally {
       setIsLoading(false);
     }
   };
-  // --- END: REWRITTEN sendMessage FOR STREAMING ---
-  
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(inputValue);
@@ -125,8 +136,7 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
   };
 
   return (
-    // The rest of your JSX remains the same as the previous version...
-    <div className="flex flex-col h-full bg-background rounded-lg border">
+     <div className="flex flex-col h-full bg-background rounded-lg border">
       <div className="p-4 border-b flex items-center gap-4">
         <Avatar>
           <AvatarFallback className="bg-blue-600 text-white">
@@ -173,8 +183,6 @@ export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatIn
                 </div>
             </div>
         )}
-
-        {/* We no longer need the separate "Typing..." indicator */}
         <div ref={messagesEndRef} />
       </div>
 
