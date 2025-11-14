@@ -6,19 +6,20 @@ import {
   Users,
   Mic,
   ChevronRight,
-  Loader2, // <-- Import loading spinner icon
+  Loader2,
+  AlertTriangle, // <-- Make sure this is imported
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api"; // <-- Import the API helper
-import { useAuth } from "@/app/context/AuthContext"; // <-- Import useAuth
+import { api } from "@/lib/api";
+import { useAuth } from "@/app/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
+import { useRouter } from "next/navigation"; // <-- 1. Import useRouter
 
-// --- Define the Bot (Candidate) type ---
-// This matches the schema from your backend
+// ... (Keep the Candidate interface and deDuplicateCandidates function as they are)
 interface Candidate {
   _id: string;
   name: string;
@@ -27,37 +28,33 @@ interface Candidate {
   skills: string[];
   experience_years: number;
 }
-// --- MOCK DATA IS NOW REMOVED ---
-
-/**
- * Helper Function: De-duplicate candidates
- * This groups the results by name, showing only one profile per person.
- */
 const deDuplicateCandidates = (candidates: Candidate[]): Candidate[] => {
   const uniqueCandidates = new Map<string, Candidate>();
-  
   for (const candidate of candidates) {
     if (!uniqueCandidates.has(candidate.name)) {
-      // If we haven't seen this name, add it.
       uniqueCandidates.set(candidate.name, candidate);
     }
-    // If we have seen this name, we ignore the duplicate.
-    // (In the future, we could add logic here to pick the *best* profile)
   }
-  
   return Array.from(uniqueCandidates.values());
 };
+// ...
 
 /**
  * CandidateCard Component: Displays a single candidate's profile.
- * (No changes here, but it's part of the file)
  */
 function CandidateCard({ candidate }: { candidate: Candidate }) {
+  const router = useRouter(); // <-- 2. Initialize the router
+  
   const avatarFallback = candidate.name
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase();
+
+  const handleStartInterview = () => {
+    // 3. This button now links to the new dynamic lobby page
+    router.push(`/interview/${candidate._id}`);
+  };
 
   return (
     <div className="flex flex-col md:flex-row items-start gap-4 p-6 bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -95,7 +92,11 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
       </div>
 
       <div className="w-full md:w-auto flex flex-col items-stretch md:items-end gap-3 self-stretch justify-center border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-6 mt-4 md:mt-0">
-        <Button className="w-full bg-primary/10 text-primary hover:bg-primary/20">
+        {/* 4. This button is now wired up */}
+        <Button 
+          className="w-full bg-primary/10 text-primary hover:bg-primary/20"
+          onClick={handleStartInterview} 
+        >
           <Mic className="h-4 w-4 mr-2" />
           Start Voice Interview
         </Button>
@@ -110,15 +111,15 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
 
 /**
  * RecruiterPage Component: The main search dashboard.
+ * (This part is unchanged from the previous step)
  */
 export default function RecruiterPage() {
-  const { user } = useAuth(); // Get user for auth checks
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [candidates, setCandidates] = React.useState<Candidate[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // This function now calls our live backend API
   const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchQuery.trim() === "") {
@@ -130,15 +131,11 @@ export default function RecruiterPage() {
     setError(null);
 
     try {
-      // Call the live API
       const results: Candidate[] = await api.post("/recruiter/search", {
         query: searchQuery,
       });
-      
-      // De-duplicate the results before setting state
       const uniqueResults = deDuplicateCandidates(results);
       setCandidates(uniqueResults);
-
     } catch (err: any) {
       console.error("Search failed:", err);
       setError(err.message || "An unknown error occurred during search.");
@@ -147,7 +144,6 @@ export default function RecruiterPage() {
     }
   };
   
-  // If user isn't loaded yet, show a spinner
   if (!user) {
     return (
         <div className="flex h-screen items-center justify-center bg-background flex-col gap-4">
@@ -159,7 +155,7 @@ export default function RecruiterPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground w-full">
-      {/* Page Header */}
+      {/* Header */}
       <header className="sticky top-0 z-10 w-full bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
           <div className="flex items-center justify-between h-20">
@@ -176,7 +172,6 @@ export default function RecruiterPage() {
                 </p>
               </div>
             </div>
-            {/* This button will be functional once we update the sidebar */}
             <Button variant="outline" onClick={() => window.location.href = "/dashboard"}>Back to My Bots</Button>
           </div>
         </div>
@@ -193,15 +188,15 @@ export default function RecruiterPage() {
             type="search"
             placeholder="e.g., 'Python engineer with fintech experience'"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery(e.g.target.value)}
             className="h-14 pl-12 pr-28 rounded-full text-base"
-            disabled={isLoading} // Disable input while loading
+            disabled={isLoading}
           />
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Button
             type="submit"
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-10 px-6"
-            disabled={isLoading} // Disable button while loading
+            disabled={isLoading}
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
