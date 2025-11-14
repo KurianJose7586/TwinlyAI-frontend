@@ -42,7 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Now, proceed with checking for a token in localStorage
       const token = localStorage.getItem("token");
       const isAuthPage = pathname === "/auth";
+
+      // --- REVERTED CHANGE ---
+      // "/recruiter" is no longer listed here. It is now a protected route.
       const isPublicPage = isAuthPage || pathname === "/" || pathname === "/pricing";
+      // --- END OF REVERTED CHANGE ---
 
       if (token) {
         try {

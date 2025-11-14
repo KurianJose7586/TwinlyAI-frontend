@@ -4,79 +4,65 @@ import * as React from "react";
 import {
   Search,
   Users,
-  Briefcase,
-  Code,
-  Star,
   Mic,
   ChevronRight,
+  Loader2, // <-- Import loading spinner icon
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api"; // <-- Import the API helper
+import { useAuth } from "@/app/context/AuthContext"; // <-- Import useAuth
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 
-// --- MOCK DATA ---
-const MOCK_CANDIDATES = [
-  {
-    id: "1",
-    name: "Dr. Evelyn Reed",
-    summary:
-      "Ph.D. in Computer Science with 12+ years experience in large-scale distributed systems and real-time data pipelines. Proven leader in ML infrastructure.",
-    skills: [
-      "Python",
-      "Go",
-      "Kafka",
-      "Kubernetes",
-      "TensorFlow",
-      "GCP",
-      "Distributed Systems",
-    ],
-    experience_years: 12.5,
-    avatar: "/professional-female-product-manager-avatar.png",
-  },
-  {
-    id: "2",
-    name: "Marcus Chen",
-    summary:
-      "Full-stack engineer with a passion for building beautiful, user-centric interfaces. 5 years at a high-growth fintech startup.",
-    skills: ["React", "TypeScript", "Node.js", "FastAPI", "PostgreSQL", "AWS"],
-    experience_years: 5.0,
-    avatar: "/professional-male-developer-avatar.png",
-  },
-  {
-    id: "3",
-    name: "Jasmine Al-Farsi",
-    summary:
-      "Open-source contributor and Python developer. Specialized in building and maintaining backend APIs for financial services. Strong background in data validation.",
-    skills: ["Python", "FastAPI", "SQLAlchemy", "MongoDB", "Pytest", "Docker"],
-    experience_years: 3.0,
-    avatar: "https://placehold.co/128x128/7F56D9/FFFFFF?text=JA",
-  },
-  {
-    id: "4",
-    name: "Kenji Tanaka",
-    summary:
-      "DevOps and Cloud Infrastructure expert. Manages CI/CD pipelines and production environments for over 50 microservices. Certified Kubernetes Administrator.",
-    skills: ["Kubernetes", "Terraform", "Ansible", "AWS", "Prometheus", "Grafana"],
-    experience_years: 7.0,
-    avatar: "https://placehold.co/128x128/027A48/FFFFFF?text=KT",
-  },
-];
+// --- Define the Bot (Candidate) type ---
+// This matches the schema from your backend
+interface Candidate {
+  _id: string;
+  name: string;
+  user_id: string;
+  summary: string;
+  skills: string[];
+  experience_years: number;
+}
+// --- MOCK DATA IS NOW REMOVED ---
 
-type Candidate = (typeof MOCK_CANDIDATES)[0];
-// --- END MOCK DATA ---
+/**
+ * Helper Function: De-duplicate candidates
+ * This groups the results by name, showing only one profile per person.
+ */
+const deDuplicateCandidates = (candidates: Candidate[]): Candidate[] => {
+  const uniqueCandidates = new Map<string, Candidate>();
+  
+  for (const candidate of candidates) {
+    if (!uniqueCandidates.has(candidate.name)) {
+      // If we haven't seen this name, add it.
+      uniqueCandidates.set(candidate.name, candidate);
+    }
+    // If we have seen this name, we ignore the duplicate.
+    // (In the future, we could add logic here to pick the *best* profile)
+  }
+  
+  return Array.from(uniqueCandidates.values());
+};
 
+/**
+ * CandidateCard Component: Displays a single candidate's profile.
+ * (No changes here, but it's part of the file)
+ */
 function CandidateCard({ candidate }: { candidate: Candidate }) {
+  const avatarFallback = candidate.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+
   return (
     <div className="flex flex-col md:flex-row items-start gap-4 p-6 bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
       <Avatar className="h-16 w-16 md:h-20 md:w-20 border-2 border-primary/20">
-        <AvatarImage src={candidate.avatar} alt={candidate.name} />
-        <AvatarFallback>
-          {candidate.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")}
-        </AvatarFallback>
+        <AvatarFallback>{avatarFallback}</AvatarFallback>
       </Avatar>
 
       <div className="flex-1">
@@ -122,29 +108,58 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
   );
 }
 
+/**
+ * RecruiterPage Component: The main search dashboard.
+ */
 export default function RecruiterPage() {
+  const { user } = useAuth(); // Get user for auth checks
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [filteredCandidates, setFilteredCandidates] =
-    React.useState(MOCK_CANDIDATES);
+  const [candidates, setCandidates] = React.useState<Candidate[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+  // This function now calls our live backend API
+  const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchQuery.trim() === "") {
-      setFilteredCandidates(MOCK_CANDIDATES);
+      setCandidates([]);
       return;
     }
-    const lowerQuery = searchQuery.toLowerCase();
-    const results = MOCK_CANDIDATES.filter(
-      (c) =>
-        c.name.toLowerCase().includes(lowerQuery) ||
-        c.summary.toLowerCase().includes(lowerQuery) ||
-        c.skills.some((s) => s.toLowerCase().includes(lowerQuery))
-    );
-    setFilteredCandidates(results);
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Call the live API
+      const results: Candidate[] = await api.post("/recruiter/search", {
+        query: searchQuery,
+      });
+      
+      // De-duplicate the results before setting state
+      const uniqueResults = deDuplicateCandidates(results);
+      setCandidates(uniqueResults);
+
+    } catch (err: any) {
+      console.error("Search failed:", err);
+      setError(err.message || "An unknown error occurred during search.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+  
+  // If user isn't loaded yet, show a spinner
+  if (!user) {
+    return (
+        <div className="flex h-screen items-center justify-center bg-background flex-col gap-4">
+            <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+            <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground w-full">
+      {/* Page Header */}
       <header className="sticky top-0 z-10 w-full bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
           <div className="flex items-center justify-between h-20">
@@ -161,12 +176,15 @@ export default function RecruiterPage() {
                 </p>
               </div>
             </div>
-            <Button variant="outline">Sign Out</Button>
+            {/* This button will be functional once we update the sidebar */}
+            <Button variant="outline" onClick={() => window.location.href = "/dashboard"}>Back to My Bots</Button>
           </div>
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="container mx-auto max-w-7xl p-4 md:p-8">
+        {/* Search Bar */}
         <form
           onSubmit={handleSearch}
           className="relative mb-8 w-full max-w-3xl mx-auto"
@@ -177,29 +195,50 @@ export default function RecruiterPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="h-14 pl-12 pr-28 rounded-full text-base"
+            disabled={isLoading} // Disable input while loading
           />
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Button
             type="submit"
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-10 px-6"
+            disabled={isLoading} // Disable button while loading
           >
-            Search
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Search"
+            )}
           </Button>
         </form>
 
+        {/* Error Message */}
+        {error && (
+          <Alert variant="destructive" className="mb-6 max-w-3xl mx-auto">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Search Failed</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Candidate List */}
         <div className="space-y-6">
           <h2 className="text-lg font-semibold text-muted-foreground">
-            Showing {filteredCandidates.length} results
+            {isLoading ? "Searching..." : `Showing ${candidates.length} results`}
           </h2>
-          {filteredCandidates.length > 0 ? (
-            filteredCandidates.map((candidate) => (
-              <CandidateCard key={candidate.id} candidate={candidate} />
+          
+          {!isLoading && candidates.length > 0 && (
+            candidates.map((candidate) => (
+              <CandidateCard key={candidate._id} candidate={candidate} />
             ))
-          ) : (
+          )}
+          
+          {!isLoading && candidates.length === 0 && (
             <div className="text-center py-20 bg-card rounded-lg border border-border">
               <p className="text-muted-foreground">No candidates found.</p>
               <p className="text-sm text-muted-foreground/80">
-                Try a different search query.
+                Try a different search query or upload more resumes.
               </p>
             </div>
           )}
