@@ -50,7 +50,9 @@ export default function InterviewPage() {
         // We use the public bot info endpoint
         const botData = await api.get(`/bots/public/${botId}`);
         setCandidate(botData);
-      } catch (err)_ {
+      // --- THIS IS THE FIX ---
+      } catch (err) { // The extra "_" has been removed
+      // --- END OF FIX ---
         console.error("Failed to fetch bot info", err);
         setError("Could not find the candidate you are trying to call.");
       } finally {
