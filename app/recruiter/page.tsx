@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 // --- MOCK DATA ---
-// When the backend is fixed, we will replace this with an API call.
 const MOCK_CANDIDATES = [
   {
     id: "1",
@@ -67,10 +66,6 @@ const MOCK_CANDIDATES = [
 type Candidate = (typeof MOCK_CANDIDATES)[0];
 // --- END MOCK DATA ---
 
-/**
- * CandidateCard Component: Displays a single candidate's profile.
- * All components are in this file for a single-file drop-in.
- */
 function CandidateCard({ candidate }: { candidate: Candidate }) {
   return (
     <div className="flex flex-col md:flex-row items-start gap-4 p-6 bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -127,16 +122,11 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
   );
 }
 
-/**
- * RecruiterPage Component: The main search dashboard.
- */
 export default function RecruiterPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filteredCandidates, setFilteredCandidates] =
     React.useState(MOCK_CANDIDATES);
 
-  // A simple mock search.
-  // This will be replaced by an API call.
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchQuery.trim() === "") {
@@ -155,7 +145,6 @@ export default function RecruiterPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground w-full">
-      {/* Page Header */}
       <header className="sticky top-0 z-10 w-full bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
           <div className="flex items-center justify-between h-20">
@@ -177,9 +166,7 @@ export default function RecruiterPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto max-w-7xl p-4 md:p-8">
-        {/* Search Bar */}
         <form
           onSubmit={handleSearch}
           className="relative mb-8 w-full max-w-3xl mx-auto"
@@ -200,7 +187,6 @@ export default function RecruiterPage() {
           </Button>
         </form>
 
-        {/* Candidate List */}
         <div className="space-y-6">
           <h2 className="text-lg font-semibold text-muted-foreground">
             Showing {filteredCandidates.length} results
