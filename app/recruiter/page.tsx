@@ -7,7 +7,7 @@ import {
   Mic,
   ChevronRight,
   Loader2,
-  AlertTriangle, // <-- Make sure this is imported
+  AlertTriangle,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +17,9 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/app/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
-import { useRouter } from "next/navigation"; // <-- 1. Import useRouter
+import { useRouter } from "next/navigation";
 
-// ... (Keep the Candidate interface and deDuplicateCandidates function as they are)
+// --- Define the Bot (Candidate) type ---
 interface Candidate {
   _id: string;
   name: string;
@@ -28,22 +28,28 @@ interface Candidate {
   skills: string[];
   experience_years: number;
 }
+// ---
+
+/**
+ * Helper Function: De-duplicate candidates
+ */
 const deDuplicateCandidates = (candidates: Candidate[]): Candidate[] => {
   const uniqueCandidates = new Map<string, Candidate>();
+  
   for (const candidate of candidates) {
     if (!uniqueCandidates.has(candidate.name)) {
       uniqueCandidates.set(candidate.name, candidate);
     }
   }
+  
   return Array.from(uniqueCandidates.values());
 };
-// ...
 
 /**
  * CandidateCard Component: Displays a single candidate's profile.
  */
 function CandidateCard({ candidate }: { candidate: Candidate }) {
-  const router = useRouter(); // <-- 2. Initialize the router
+  const router = useRouter(); 
   
   const avatarFallback = candidate.name
     .split(" ")
@@ -52,14 +58,14 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
     .toUpperCase();
 
   const handleStartInterview = () => {
-    // 3. This button now links to the new dynamic lobby page
     router.push(`/interview/${candidate._id}`);
   };
 
   return (
     <div className="flex flex-col md:flex-row items-start gap-4 p-6 bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
       <Avatar className="h-16 w-16 md:h-20 md:w-20 border-2 border-primary/20">
-        <AvatarFallback>{avatarFallback}</AvatarFallback>
+        {/* Note: Using AvatarFallback as the primary display */}
+        <AvatarFallback className="text-3xl">{avatarFallback}</AvatarFallback>
       </Avatar>
 
       <div className="flex-1">
@@ -92,7 +98,6 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
       </div>
 
       <div className="w-full md:w-auto flex flex-col items-stretch md:items-end gap-3 self-stretch justify-center border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-6 mt-4 md:mt-0">
-        {/* 4. This button is now wired up */}
         <Button 
           className="w-full bg-primary/10 text-primary hover:bg-primary/20"
           onClick={handleStartInterview} 
@@ -111,7 +116,6 @@ function CandidateCard({ candidate }: { candidate: Candidate }) {
 
 /**
  * RecruiterPage Component: The main search dashboard.
- * (This part is unchanged from the previous step)
  */
 export default function RecruiterPage() {
   const { user } = useAuth();
@@ -188,7 +192,9 @@ export default function RecruiterPage() {
             type="search"
             placeholder="e.g., 'Python engineer with fintech experience'"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.g.target.value)}
+            // --- THIS IS THE FIX ---
+            onChange={(e) => setSearchQuery(e.target.value)} // Changed "e.g." to "e"
+            // --- END OF FIX ---
             className="h-14 pl-12 pr-28 rounded-full text-base"
             disabled={isLoading}
           />
