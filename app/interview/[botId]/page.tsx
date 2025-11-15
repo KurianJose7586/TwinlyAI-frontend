@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/app/context/AuthContext";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils"; // <-- Import cn
 
 // Define the Bot (Candidate) type
 interface Candidate {
@@ -23,7 +24,11 @@ interface Candidate {
 }
 
 export default function InterviewPage() {
+  // --- THIS IS THE FIX ---
+  // Removed the extra "}"
   const { user } = useAuth();
+  // --- END OF FIX ---
+  
   const router = useRouter();
   const params = useParams();
   const botId = params.botId as string;
@@ -50,9 +55,7 @@ export default function InterviewPage() {
         // We use the public bot info endpoint
         const botData = await api.get(`/bots/public/${botId}`);
         setCandidate(botData);
-      // --- THIS IS THE FIX ---
-      } catch (err) { // The extra "_" has been removed
-      // --- END OF FIX ---
+      } catch (err) { // This fix is also included
         console.error("Failed to fetch bot info", err);
         setError("Could not find the candidate you are trying to call.");
       } finally {
@@ -132,16 +135,25 @@ export default function InterviewPage() {
     </div>
   );
   
-  const renderInCall = () => (
+  const renderInCall = () => {
+    // This fix for the 'split' error is also included
+    const candidateName = candidate?.name || "AI";
+    const avatarFallback = candidateName
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase();
+    
+    return (
      <div className="w-full h-full max-w-5xl bg-card border border-border rounded-2xl shadow-xl p-8 flex flex-col">
         {/* Main Call View - The AI Bot */}
         <div className="flex-1 flex flex-col items-center justify-center">
             <Avatar className="h-48 w-48 border-4 border-primary/20">
                 <AvatarFallback className="text-7xl">
-                    {candidate?.name.split(" ").map(n => n[0]).join("").toUpperCase()}
+                    {avatarFallback}
                 </AvatarFallback>
             </Avatar>
-            <h2 className="text-4xl font-bold mt-6">{candidate?.name} (AI)</h2>
+            <h2 className="text-4xl font-bold mt-6">{candidateName} (AI)</h2>
             <p className="text-xl text-primary mt-2">Listening...</p>
         </div>
         
@@ -170,7 +182,8 @@ export default function InterviewPage() {
             </Button>
         </div>
      </div>
-  );
+    );
+  };
 
   // Main render logic
   const renderContent = () => {
