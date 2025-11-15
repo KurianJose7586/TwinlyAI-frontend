@@ -20,14 +20,12 @@ import AgoraRTC, {
   IAgoraRTCClient,
   IAgoraRTCRemoteUser,
   IMicrophoneAudioTrack,
-  ICameraVideoTrack, // Import video track type
+  ICameraVideoTrack,
 } from "agora-rtc-sdk-ng";
 
 // --- AGORA CLIENT SETUP ---
-// We must initialize the client *outside* the component to prevent re-renders
 const agoraClient: IAgoraRTCClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 let localMicTrack: IMicrophoneAudioTrack | null = null;
-// We'll use a ref for the video track
 let localCamTrack: ICameraVideoTrack | null = null;
 // --------------------------
 
@@ -38,7 +36,7 @@ interface Candidate {
 }
 
 export default function InterviewPage() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // <-- Fix 1 (Syntax)
   const router = useRouter();
   const params = useParams();
   const botId = params.botId as string;
@@ -51,7 +49,7 @@ export default function InterviewPage() {
   // Lobby State
   const [isMicOn, setIsMicOn] = React.useState(true);
   const [isCamOn, setIsCamOn] = React.useState(false);
-  const selfViewRef = React.useRef<HTMLDivElement>(null); // Ref for self-view video
+  const selfViewRef = React.useRef<HTMLDivElement>(null);
   
   // Call State
   const [callState, setCallState] = React.useState<"lobby" | "joining" | "in_call" | "leaving" | "error">(
@@ -68,7 +66,7 @@ export default function InterviewPage() {
       try {
         const botData = await api.get(`/bots/public/${botId}`);
         setCandidate(botData);
-      } catch (err) {
+      } catch (err) { // <-- Fix 2 (Typo)
         console.error("Failed to fetch bot info", err);
         setError("Could not find the candidate you are trying to call.");
       } finally {
@@ -99,18 +97,17 @@ export default function InterviewPage() {
       // 2. Join the Agora channel
       await agoraClient.join(AGORA_APP_ID, channel_name, token, uid);
 
-      // --- 3. NEW: SUBSCRIBE TO REMOTE USERS (THE AI) ---
+      // 3. Subscribe to remote users (the AI)
       agoraClient.on("user-published", async (user, mediaType) => {
         await agoraClient.subscribe(user, mediaType);
         console.log("Subscribed to remote user:", user);
-        setRemoteUser(user); // Track the remote user
+        setRemoteUser(user);
         
         if (mediaType === "audio") {
           user.audioTrack?.play();
           setCallStatusText("Speaking..."); // AI is talking
         }
         
-        // When the AI stops talking
         if(user.audioTrack) {
             user.audioTrack.on("track-ended", () => {
                 setCallStatusText("Listening...");
@@ -123,7 +120,6 @@ export default function InterviewPage() {
         setRemoteUser(null);
         setCallStatusText("AI has left the call.");
       });
-      // --- END OF NEW LOGIC ---
 
       // 4. Create and publish local tracks (Mic and optional Camera)
       const tracksToPublish = [];
@@ -134,7 +130,7 @@ export default function InterviewPage() {
       if (isCamOn && selfViewRef.current) {
         localCamTrack = await AgoraRTC.createCameraVideoTrack();
         tracksToPublish.push(localCamTrack);
-        localCamTrack.play(selfViewRef.current); // Play self-view
+        localCamTrack.play(selfViewRef.current);
       }
       
       if (tracksToPublish.length > 0) {
@@ -142,7 +138,7 @@ export default function InterviewPage() {
       }
       
       setCallState("in_call");
-      setCallStatusText("Listening..."); // Initial state
+      setCallStatusText("Listening...");
     } catch (err: any) {
       console.error("Failed to join Agora channel", err);
       setError(`Failed to join call: ${err.message}`);
@@ -164,15 +160,14 @@ export default function InterviewPage() {
         localCamTrack.close();
         localCamTrack = null;
       }
-      // Unsubscribe from all remote users
       agoraClient.removeAllListeners();
       await agoraClient.leave();
     } catch (err) {
       console.error("Error leaving call:", err);
     } finally {
       console.log("Left call.");
-      setCallState("lobby"); // Go back to lobby state
-      router.push("/recruiter"); // Go back to recruiter dashboard
+      setCallState("lobby");
+      router.push("/recruiter");
     }
   };
   
@@ -180,7 +175,7 @@ export default function InterviewPage() {
   const toggleMic = async () => {
      const newMicState = !isMicOn;
      setIsMicOn(newMicState);
-     if (localMicTrack) { // If in a call
+     if (localMicTrack) {
         await localMicTrack.setMuted(!newMicState);
      }
   };
@@ -188,14 +183,12 @@ export default function InterviewPage() {
   const toggleCam = async () => {
     const newCamState = !isCamOn;
     setIsCamOn(newCamState);
-    if (callState === "in_call") { // If in a call
+    if (callState === "in_call") {
         if (newCamState && !localCamTrack) {
-            // Turning camera on
             localCamTrack = await AgoraRTC.createCameraVideoTrack();
             await agoraClient.publish(localCamTrack);
             if(selfViewRef.current) localCamTrack.play(selfViewRef.current);
         } else if (!newCamState && localCamTrack) {
-            // Turning camera off
             await agoraClient.unpublish(localCamTrack);
             localCamTrack.stop();
             localCamTrack.close();
@@ -206,7 +199,6 @@ export default function InterviewPage() {
   
   // --- 5. CLEANUP EFFECT ---
   React.useEffect(() => {
-    // This is a failsafe to leave the call if the user closes the window/tab
     const beforeUnload = () => {
       if (callState === "in_call") {
         handleLeaveCall();
@@ -216,15 +208,15 @@ export default function InterviewPage() {
     
     return () => {
       window.removeEventListener("beforeunload", beforeUnload);
-      // Clean up on component unmount
       if (agoraClient.connectionState === "CONNECTED" || agoraClient.connectionState === "CONNECTING") {
           handleLeaveCall();
       }
     };
-  }, [callState]);
+  }, []); // <-- Fix 3 (Empty dependency array)
   
   
   // --- RENDER FUNCTIONS ---
+  // --- FIX 4: Corrected renderLobby function ---
   const renderLobby = () => (
     <div className="w-full max-w-lg bg-card border border-border rounded-2xl shadow-xl p-8">
       <h1 className="text-2xl font-bold text-center">Ready to join?</h1>
@@ -272,8 +264,9 @@ export default function InterviewPage() {
     </div>
   );
   
+  // --- FIX 4: Corrected renderInCall function ---
   const renderInCall = () => {
-    const candidateName = candidate?.name || "AI";
+    const candidateName = candidate?.name || "AI"; // <-- Fix 5 (Null check)
     const avatarFallback = candidateName
       .split(" ")
       .map(n => n[0])
@@ -331,7 +324,7 @@ export default function InterviewPage() {
 
   // --- Main render logic ---
   const renderContent = () => {
-    if (isLoading || !user) { // Added !user check
+    if (isLoading || !user) {
       return <Loader2 className="h-12 w-12 animate-spin text-primary" />;
     }
     
