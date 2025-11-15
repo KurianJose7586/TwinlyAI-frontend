@@ -36,7 +36,7 @@ interface Candidate {
 }
 
 export default function InterviewPage() {
-  const { user } = useAuth(); // <-- Fix 1 (Syntax)
+  const { user } = useAuth(); // <-- Corrected
   const router = useRouter();
   const params = useParams();
   const botId = params.botId as string;
@@ -66,7 +66,7 @@ export default function InterviewPage() {
       try {
         const botData = await api.get(`/bots/public/${botId}`);
         setCandidate(botData);
-      } catch (err) { // <-- Fix 2 (Typo)
+      } catch (err) { // <-- Corrected
         console.error("Failed to fetch bot info", err);
         setError("Could not find the candidate you are trying to call.");
       } finally {
@@ -137,6 +137,11 @@ export default function InterviewPage() {
         await agoraClient.publish(tracksToPublish);
       }
       
+      // 5. Tell the backend to start the AI bot
+      await api.post("/agora/start-call", {
+        channel_name: botId,
+      });
+
       setCallState("in_call");
       setCallStatusText("Listening...");
     } catch (err: any) {
@@ -200,7 +205,7 @@ export default function InterviewPage() {
   // --- 5. CLEANUP EFFECT ---
   React.useEffect(() => {
     const beforeUnload = () => {
-      if (callState === "in_call") {
+      if (agoraClient.connectionState === "CONNECTED") {
         handleLeaveCall();
       }
     };
@@ -212,11 +217,10 @@ export default function InterviewPage() {
           handleLeaveCall();
       }
     };
-  }, []); // <-- Fix 3 (Empty dependency array)
+  }, []); // <-- Corrected
   
   
   // --- RENDER FUNCTIONS ---
-  // --- FIX 4: Corrected renderLobby function ---
   const renderLobby = () => (
     <div className="w-full max-w-lg bg-card border border-border rounded-2xl shadow-xl p-8">
       <h1 className="text-2xl font-bold text-center">Ready to join?</h1>
@@ -262,11 +266,10 @@ export default function InterviewPage() {
         Join Now
       </Button>
     </div>
-  );
+  ); // <-- Corrupted tag removed
   
-  // --- FIX 4: Corrected renderInCall function ---
   const renderInCall = () => {
-    const candidateName = candidate?.name || "AI"; // <-- Fix 5 (Null check)
+    const candidateName = candidate?.name || "AI";
     const avatarFallback = candidateName
       .split(" ")
       .map(n => n[0])
@@ -319,7 +322,7 @@ export default function InterviewPage() {
             </Button>
         </div>
      </div>
-    );
+    ); // <-- Corrupted tag removed
   };
 
   // --- Main render logic ---
