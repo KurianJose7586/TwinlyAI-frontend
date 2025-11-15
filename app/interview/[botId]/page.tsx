@@ -20,20 +20,22 @@ import AgoraRTC, {
   IAgoraRTCClient,
   IAgoraRTCRemoteUser,
   IMicrophoneAudioTrack,
+  ICameraVideoTrack, // Import video track type
 } from "agora-rtc-sdk-ng";
+
+// --- AGORA CLIENT SETUP ---
+// We must initialize the client *outside* the component to prevent re-renders
+const agoraClient: IAgoraRTCClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+let localMicTrack: IMicrophoneAudioTrack | null = null;
+// We'll use a ref for the video track
+let localCamTrack: ICameraVideoTrack | null = null;
+// --------------------------
 
 // Define the Bot (Candidate) type
 interface Candidate {
   _id: string;
   name: string;
 }
-
-// --- AGORA CLIENT SETUP ---
-// Use a ref to hold the Agora client and tracks, as they are not serializable
-// and should not be in React state.
-const agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-let localMicTrack: IMicrophoneAudioTrack | null = null;
-// --------------------------
 
 export default function InterviewPage() {
   const { user } = useAuth();
@@ -49,17 +51,18 @@ export default function InterviewPage() {
   // Lobby State
   const [isMicOn, setIsMicOn] = React.useState(true);
   const [isCamOn, setIsCamOn] = React.useState(false);
+  const selfViewRef = React.useRef<HTMLDivElement>(null); // Ref for self-view video
   
   // Call State
   const [callState, setCallState] = React.useState<"lobby" | "joining" | "in_call" | "leaving" | "error">(
     "lobby"
   );
-  const [callStatusText, setCallStatusText] = React.useState("Listening...");
+  const [callStatusText, setCallStatusText] = React.useState("Connecting...");
+  const [remoteUser, setRemoteUser] = React.useState<IAgoraRTCRemoteUser | null>(null);
 
   // --- 1. FETCH CANDIDATE INFO ---
   React.useEffect(() => {
     if (!botId) return;
-
     const fetchBotInfo = async () => {
       setIsLoading(true);
       try {
@@ -79,7 +82,6 @@ export default function InterviewPage() {
   const handleJoinCall = async () => {
     setCallState("joining");
     
-    // Check for App ID
     const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID;
     if (!AGORA_APP_ID) {
         setError("Agora App ID is not configured. Please contact support.");
@@ -88,25 +90,59 @@ export default function InterviewPage() {
     }
 
     try {
-      // 1. Fetch the Agora token from our backend
+      // 1. Fetch the Agora token
       const tokenResponse = await api.post("/agora/token", {
-        channel_name: botId, // Use the botId as the channel name
+        channel_name: botId,
       });
-      
       const { token, channel_name, uid } = tokenResponse;
 
       // 2. Join the Agora channel
       await agoraClient.join(AGORA_APP_ID, channel_name, token, uid);
 
-      // 3. Create and publish the microphone track
+      // --- 3. NEW: SUBSCRIBE TO REMOTE USERS (THE AI) ---
+      agoraClient.on("user-published", async (user, mediaType) => {
+        await agoraClient.subscribe(user, mediaType);
+        console.log("Subscribed to remote user:", user);
+        setRemoteUser(user); // Track the remote user
+        
+        if (mediaType === "audio") {
+          user.audioTrack?.play();
+          setCallStatusText("Speaking..."); // AI is talking
+        }
+        
+        // When the AI stops talking
+        if(user.audioTrack) {
+            user.audioTrack.on("track-ended", () => {
+                setCallStatusText("Listening...");
+            });
+        }
+      });
+
+      agoraClient.on("user-left", (user) => {
+        console.log("Remote user left:", user);
+        setRemoteUser(null);
+        setCallStatusText("AI has left the call.");
+      });
+      // --- END OF NEW LOGIC ---
+
+      // 4. Create and publish local tracks (Mic and optional Camera)
+      const tracksToPublish = [];
       if (isMicOn) {
         localMicTrack = await AgoraRTC.createMicrophoneAudioTrack();
-        await agoraClient.publish(localMicTrack);
+        tracksToPublish.push(localMicTrack);
+      }
+      if (isCamOn && selfViewRef.current) {
+        localCamTrack = await AgoraRTC.createCameraVideoTrack();
+        tracksToPublish.push(localCamTrack);
+        localCamTrack.play(selfViewRef.current); // Play self-view
       }
       
-      // 4. Set "in_call" state
+      if (tracksToPublish.length > 0) {
+        await agoraClient.publish(tracksToPublish);
+      }
+      
       setCallState("in_call");
-
+      setCallStatusText("Listening..."); // Initial state
     } catch (err: any) {
       console.error("Failed to join Agora channel", err);
       setError(`Failed to join call: ${err.message}`);
@@ -123,33 +159,66 @@ export default function InterviewPage() {
         localMicTrack.close();
         localMicTrack = null;
       }
+      if (localCamTrack) {
+        localCamTrack.stop();
+        localCamTrack.close();
+        localCamTrack = null;
+      }
+      // Unsubscribe from all remote users
+      agoraClient.removeAllListeners();
       await agoraClient.leave();
     } catch (err) {
       console.error("Error leaving call:", err);
     } finally {
       console.log("Left call.");
+      setCallState("lobby"); // Go back to lobby state
       router.push("/recruiter"); // Go back to recruiter dashboard
     }
   };
   
-  // --- 4. HANDLE MIC TOGGLE ---
+  // --- 4. HANDLE MIC/CAM TOGGLE ---
   const toggleMic = async () => {
-     if (localMicTrack) {
-        // We're in a call, so mute/unmute the track
-        await localMicTrack.setMuted(!isMicOn);
-        setIsMicOn(!isMicOn);
-     } else {
-        // We're in the lobby, just toggle the state
-        setIsMicOn(!isMicOn);
+     const newMicState = !isMicOn;
+     setIsMicOn(newMicState);
+     if (localMicTrack) { // If in a call
+        await localMicTrack.setMuted(!newMicState);
      }
+  };
+
+  const toggleCam = async () => {
+    const newCamState = !isCamOn;
+    setIsCamOn(newCamState);
+    if (callState === "in_call") { // If in a call
+        if (newCamState && !localCamTrack) {
+            // Turning camera on
+            localCamTrack = await AgoraRTC.createCameraVideoTrack();
+            await agoraClient.publish(localCamTrack);
+            if(selfViewRef.current) localCamTrack.play(selfViewRef.current);
+        } else if (!newCamState && localCamTrack) {
+            // Turning camera off
+            await agoraClient.unpublish(localCamTrack);
+            localCamTrack.stop();
+            localCamTrack.close();
+            localCamTrack = null;
+        }
+    }
   };
   
   // --- 5. CLEANUP EFFECT ---
-  // Ensure we leave the call if the component is unmounted (e.g., tab close)
   React.useEffect(() => {
-    return () => {
+    // This is a failsafe to leave the call if the user closes the window/tab
+    const beforeUnload = () => {
       if (callState === "in_call") {
         handleLeaveCall();
+      }
+    };
+    window.addEventListener("beforeunload", beforeUnload);
+    
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload);
+      // Clean up on component unmount
+      if (agoraClient.connectionState === "CONNECTED" || agoraClient.connectionState === "CONNECTING") {
+          handleLeaveCall();
       }
     };
   }, [callState]);
@@ -163,22 +232,27 @@ export default function InterviewPage() {
         You are about to start a live voice interview with {candidate?.name || "the AI candidate"}.
       </p>
 
-      <div className="w-full aspect-video bg-muted rounded-lg my-6 flex items-center justify-center">
-        <p className="text-muted-foreground">Camera is {isCamOn ? "on" : "off"}</p>
+      {/* "Self-View" Placeholder / Video feed */}
+      <div 
+        ref={selfViewRef} 
+        className="w-full aspect-video bg-muted rounded-lg my-6 flex items-center justify-center overflow-hidden"
+      >
+        {!isCamOn && <p className="text-muted-foreground">Camera is off</p>}
       </div>
 
+      {/* Controls */}
       <div className="flex justify-center gap-4">
         <Button
           size="icon"
           className={cn("rounded-full h-12 w-12", isMicOn ? "bg-primary" : "bg-muted text-muted-foreground")}
-          onClick={toggleMic} // Use new toggle function
+          onClick={toggleMic}
         >
           {isMicOn ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
         </Button>
         <Button
           size="icon"
           className={cn("rounded-full h-12 w-12", isCamOn ? "bg-primary" : "bg-muted text-muted-foreground")}
-          onClick={() => setIsCamOn(!isCamOn)}
+          onClick={toggleCam}
         >
           {isCamOn ? <Video className="h-6 w-6" /> : <VideoOff className="h-6 w-6" />}
         </Button>
@@ -208,6 +282,7 @@ export default function InterviewPage() {
     
     return (
      <div className="w-full h-full max-w-5xl bg-card border border-border rounded-2xl shadow-xl p-8 flex flex-col">
+        {/* Main Call View - The AI Bot */}
         <div className="flex-1 flex flex-col items-center justify-center">
             <Avatar className="h-48 w-48 border-4 border-primary/20">
                 <AvatarFallback className="text-7xl">
@@ -215,18 +290,28 @@ export default function InterviewPage() {
                 </AvatarFallback>
             </Avatar>
             <h2 className="text-4xl font-bold mt-6">{candidateName} (AI)</h2>
-            <p className="text-xl text-primary mt-2">{callStatusText}</p>
+            <p className={cn(
+                "text-xl mt-2 transition-colors",
+                callStatusText === "Speaking..." ? "text-green-500" : "text-primary"
+            )}>
+                {callStatusText}
+            </p>
         </div>
         
-        <div className="w-48 h-28 bg-muted rounded-lg absolute bottom-24 right-12 border border-border flex items-center justify-center text-sm text-muted-foreground">
-            {isCamOn ? "Your Camera" : "Cam Off"}
+        {/* Recruiter's "Self-View" Placeholder */}
+        <div 
+            ref={selfViewRef} 
+            className="w-48 h-28 bg-muted rounded-lg absolute bottom-24 right-12 border border-border flex items-center justify-center text-sm text-muted-foreground overflow-hidden"
+        >
+            {!isCamOn && "Cam Off"}
         </div>
         
+        {/* Call Controls */}
         <div className="flex justify-center gap-4 mt-8">
             <Button
               size="icon"
               className={cn("rounded-full h-12 w-12", isMicOn ? "bg-primary" : "bg-muted text-muted-foreground")}
-              onClick={toggleMic} // Use new toggle function
+              onClick={toggleMic}
             >
               {isMicOn ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
             </Button>
@@ -246,7 +331,7 @@ export default function InterviewPage() {
 
   // --- Main render logic ---
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading || !user) { // Added !user check
       return <Loader2 className="h-12 w-12 animate-spin text-primary" />;
     }
     
