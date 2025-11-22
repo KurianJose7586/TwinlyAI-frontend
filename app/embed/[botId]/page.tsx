@@ -9,25 +9,32 @@ export default function EmbedPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const botId = params.botId as string
-  const apiKey = searchParams.get("apiKey") // <-- Read apiKey from URL
+  const apiKey = searchParams.get("apiKey") 
 
   const [botName, setBotName] = useState("Chatbot")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!apiKey) {
+    // --- DELETE OR COMMENT OUT THIS BLOCK ---
+    /* if (!apiKey) {
       setError("API Key is missing. This chatbot cannot be loaded.")
       setIsLoading(false)
       return
     }
+    */
+    // ----------------------------------------
+
     if (botId) {
       const fetchBotInfo = async () => {
         try {
+          // Note: Ensure you use the public endpoint that doesn't require Auth headers
+          // if this page is meant to be public.
           const botInfo = await api.get(`/bots/public/${botId}`);
           setBotName(botInfo.name);
         } catch (err: any) {
-          setError("Could not load bot information. Please check the bot ID.")
+          console.error(err);
+          setError("Could not load bot information.")
         } finally {
           setIsLoading(false)
         }
@@ -48,8 +55,8 @@ export default function EmbedPage() {
     <div className="h-screen w-screen bg-transparent">
       <ChatInterface
         botId={botId}
-        botName={botName}
-        apiKey={apiKey} // <-- Pass the apiKey to the chat interface
+        // botName={botName} // Note: Your ChatInterface component doesn't seem to accept botName prop anymore, you might want to check that.
+        apiKey={apiKey}
         initialMessage={`Hello! I am ${botName}, an AI assistant. How can I help?`}
       />
     </div>
