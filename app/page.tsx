@@ -9,7 +9,7 @@ import Image from "next/image"
 import { WebsiteHeader } from "@/components/website-header"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { GradientButton } from "@/components/ui/gradient-button"
-import LightRays from "@/components/light-rays" 
+import LightRays from "@/components/light-rays"
 
 export default function LandingPage() {
   const heroAnimation = useScrollAnimation(0.1)
@@ -25,31 +25,35 @@ export default function LandingPage() {
       <main className="min-h-screen">
         {/* Hero Section */}
         <section className="relative px-6 py-24 md:py-32 lg:py-40 overflow-hidden">
-          {/* --- START: ADDED LIGHTRAYS OVERLAY --- */}
-          <div className="absolute inset-0 w-full h-full">
+          {/* Ambient Light Background */}
+          <div className="absolute inset-0 w-full h-full opacity-30 pointer-events-none">
             <LightRays
               raysOrigin="top-center"
-              raysColor="#fffff"
-              raysSpeed={1.5}
-              lightSpread={0.8}
-              rayLength={1.2}
+              raysColor="#ffffff"
+              raysSpeed={0.2}
+              lightSpread={10}
+              rayLength={0.6}
               followMouse={true}
               mouseInfluence={0.1}
-              noiseAmount={0.1}
-              distortion={0.05}
-              pulsating={false} 
+              noiseAmount={0.02}
+              distortion={0.02}
+              pulsating={false}
               className="custom-rays"
             />
           </div>
-          {/* --- END: ADDED LIGHTRAYS OVERLAY --- */}
+          
           <div
             ref={heroAnimation.ref}
-            className={`relative mx-auto max-w-4xl text-center transition-all duration-1000 ease-out ${
+            className={`relative mx-auto max-w-5xl text-center transition-all duration-1000 ease-out ${
               heroAnimation.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl text-shadow-dark">
-              Create a Personal Chatbot From Your Resume
+            <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl text-shadow-dark leading-tight">
+              No More Keyword Matching. <br className="hidden md:block" />
+              {/* UPDATED: Changed to a vibrant Blue Gradient for better visibility */}
+              <span>
+                Start Semantic Recruiting
+              </span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-foreground/80 md:text-xl">
               Upload your resume and get an intelligent AI assistant that knows your career history, ready to be
