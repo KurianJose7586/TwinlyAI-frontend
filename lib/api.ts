@@ -2,6 +2,7 @@
 
 //const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
 interface AuthOptions {
   token?: string | null;
   apiKey?: string | null;
@@ -9,8 +10,11 @@ interface AuthOptions {
 
 const getHeaders = (options: AuthOptions = {}) => {
   const { token, apiKey } = options;
+  
+  // --- FIX: Add Ngrok bypass header ---
   const headers: HeadersInit = {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
   };
 
   const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem("token") : null);

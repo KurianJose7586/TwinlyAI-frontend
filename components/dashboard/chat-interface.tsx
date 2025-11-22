@@ -1,225 +1,203 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import ReactMarkdown from "react-markdown"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Bot } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Send, Bot, User as UserIcon, AlertCircle, Loader2 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { api } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
 
+// Define Message Interface
 interface Message {
-  id: string
-  type: "user" | "bot"
+  role: "user" | "assistant"
   content: string
 }
 
 interface ChatInterfaceProps {
   botId: string
-  botName: string
   initialMessage?: string
-  apiKey?: string | null;
+  apiKey?: string | null // apiKey is now optional
 }
 
-//const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-
-// --- FIX START ---
-// Helper function to strip <think> tags from a string.
-const stripThinkTags = (text: string): string => {
-  return text.replace(/<think>.*?<\/think>/gs, "").trim();
-};
-// --- FIX END ---
-
-export function ChatInterface({ botId, botName, initialMessage, apiKey }: ChatInterfaceProps) {
+export function ChatInterface({ botId, initialMessage, apiKey }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
-  const [inputValue, setInputValue] = useState("")
+  const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // 1. REMOVED THE BLOCKING CHECK:
+  // Previously: if (!apiKey) return <Error ... />
+  // Now: We proceed. The backend will block us if we really aren't auth'd.
 
   useEffect(() => {
     if (initialMessage) {
-      setMessages([{ id: "init", type: "bot", content: initialMessage }])
+      setMessages([{ role: "assistant", content: initialMessage }])
     }
   }, [initialMessage])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, isLoading])
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
+    }
+  }, [messages])
 
-  const sendMessage = async (messageContent: string) => {
-    if (!messageContent.trim() || isLoading) return;
+  const handleSendMessage = async () => {
+    if (!input.trim()) return
 
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      type: "user",
-      content: messageContent,
-    };
-
-    const botMessageId = `bot-${Date.now()}`;
-    // Add user message and an empty bot message placeholder
-    setMessages((prev) => [
-      ...prev,
-      userMessage,
-      { id: botMessageId, type: "bot", content: "" },
-    ]);
-
-    setIsLoading(true);
+    const userMessage = input.trim()
+    setInput("")
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }])
+    setIsLoading(true)
+    setError(null)
 
     try {
-      const token = localStorage.getItem("token");
-      const headers: HeadersInit = { "Content-Type": "application/json" };
-      if (apiKey) {
-        headers["X-API-Key"] = apiKey;
-      } else if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-      
-      const chatHistory = messages.map(m => ({ type: m.type, content: m.content }));
+      // 2. CONSTRUCT HEADERS DYNAMICALLY
+      // If apiKey exists, use it. If not, standard 'api.post' uses the Bearer token automatically.
+      const authOptions = apiKey ? { apiKey } : {};
 
-      const response = await fetch(`${API_URL}/bots/${botId}/chat/stream`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ message: messageContent, chat_history: chatHistory }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Server error:", errorText);
-        throw new Error("Failed to get a response from the server.");
-      }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (reader) {
-        // --- FIX START ---
-        // We will accumulate the raw response here to properly clean it.
-        let rawBotContent = "";
-        // --- FIX END ---
-        
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          
-          // --- FIX START ---
-          // Append the raw chunk to our accumulator
-          rawBotContent += chunk;
-
-          // Clean the accumulated content
-          const cleanedContent = stripThinkTags(rawBotContent);
-
-          // Update the bot message with the cleaned content
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === botMessageId
-                ? { ...msg, content: cleanedContent }
-                : msg
-            )
-          );
-          // --- FIX END ---
-        }
-      }
-    } catch (error: any) {
-      toast({
-        title: "Chat Error",
-        description: error.message || "Failed to get a response from the bot.",
-        variant: "destructive",
-      });
-      // Remove the failed bot message placeholder
-      setMessages((prev) =>
-        prev.filter((msg) => msg.id !== botMessageId)
+      // 3. SEND REQUEST
+      // We use api.post from lib/api.ts which handles the 'ngrok' header and 'Authorization'
+      const response = await api.post(
+        `/bots/${botId}/chat`,
+        {
+          message: userMessage,
+          chat_history: messages, // Send history for context
+        },
+        authOptions
       );
+
+      const botResponse = response.response || response.message;
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: botResponse },
+      ])
+    } catch (err: any) {
+      console.error("Chat Error:", err)
+      setError(err.message || "Failed to send message")
+      toast({
+        title: "Error",
+        description: err.message || "Could not connect to the chatbot.",
+        variant: "destructive",
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
-
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    sendMessage(inputValue);
-    setInputValue("");
-  };
-
-  const handleSuggestedQuestion = (question: string) => {
-    sendMessage(question);
-  };
+  }
 
   return (
-     <div className="flex flex-col h-full bg-background rounded-lg border">
-      <div className="p-4 border-b flex items-center gap-4">
-        <Avatar>
-          <AvatarFallback className="bg-blue-600 text-white">
-            <Bot className="h-5 w-5" />
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="font-semibold text-foreground">{botName}</p>
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-green-500"></span>
-            <p className="text-xs text-muted-foreground">Online</p>
-          </div>
+    <div className="flex flex-col h-[600px] border rounded-lg overflow-hidden bg-background shadow-sm">
+      <div className="p-4 border-b bg-muted/30 flex justify-between items-center">
+        <h3 className="font-semibold flex items-center gap-2">
+          <Bot className="w-5 h-5 text-primary" />
+          Chat with TwinlyAI
+        </h3>
+        {/* Optional: Show status indicator */}
+        <div className="flex items-center gap-1.5">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+            </span>
+            <span className="text-xs text-muted-foreground">Online</span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4 p-4">
-        {messages.map((message) => (
-          <div key={message.id} className={cn("flex", message.type === "user" ? "justify-end" : "justify-start")}>
+      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+        <div className="space-y-4 pr-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {messages.length === 0 && !error && (
+             <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground text-center opacity-50">
+                <Bot className="w-12 h-12 mb-2" />
+                <p>Start the conversation...</p>
+             </div>
+          )}
+
+          {messages.map((msg, index) => (
             <div
-              className={cn(
-                "rounded-lg p-3 max-w-[80%] prose prose-sm dark:prose-invert prose-p:my-0 prose-headings:my-2 prose-ul:my-2",
-                message.type === "user" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground"
-              )}
+              key={index}
+              className={`flex ${
+                msg.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
-              {message.type === "bot" ? (
-                <ReactMarkdown>{message.content || "..."}</ReactMarkdown>
-              ) : (
-                <p>{message.content}</p>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {messages.length <= 1 && !isLoading && (
-            <div className="p-4 bg-muted/40 rounded-lg border border-dashed">
-                <p className="text-sm font-medium text-muted-foreground mb-3 text-center">Try asking a question or select a suggestion</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleSuggestedQuestion('What are their key skills?')}>
-                        What are their key skills?
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleSuggestedQuestion('Summarize their professional experience.')}>
-                        Summarize their experience
-                    </Button>
+              <div
+                className={`flex gap-3 max-w-[80%] ${
+                  msg.role === "user" ? "flex-row-reverse" : "flex-row"
+                }`}
+              >
+                <Avatar className="w-8 h-8 border">
+                  {msg.role === "user" ? (
+                    <>
+                      <AvatarImage src="/placeholder-user.jpg" />
+                      <AvatarFallback><UserIcon className="w-4 h-4" /></AvatarFallback>
+                    </>
+                  ) : (
+                    <>
+                      <AvatarImage src="/placeholder-logo.png" />
+                      <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+                    </>
+                  )}
+                </Avatar>
+                <div
+                  className={`p-3 rounded-lg text-sm ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted border"
+                  }`}
+                >
+                  {msg.content}
                 </div>
+              </div>
             </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="flex gap-3 max-w-[80%]">
+                <Avatar className="w-8 h-8 border">
+                  <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
+                </Avatar>
+                <div className="bg-muted border p-3 rounded-lg flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-xs text-muted-foreground">Thinking...</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
 
-      <div className="border-t p-4">
-        <form onSubmit={handleFormSubmit} className="flex gap-2">
+      <div className="p-4 border-t bg-background">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleSendMessage()
+          }}
+          className="flex gap-2"
+        >
           <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder={`Ask ${botName} something...`}
-            className="flex-1"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
             disabled={isLoading}
+            className="flex-1"
           />
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-            <Send className="h-4 w-4" />
+          <Button type="submit" disabled={isLoading || !input.trim()}>
+            <Send className="w-4 h-4" />
+            <span className="sr-only">Send</span>
           </Button>
         </form>
-        <div className="text-center mt-2">
-          <a href="https://twinly-ai.vercel.app" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            Powered by TwinlyAI
-          </a>
-        </div>
       </div>
     </div>
-  );
+  )
 }

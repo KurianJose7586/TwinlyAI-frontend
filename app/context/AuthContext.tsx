@@ -40,10 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (token) {
         try {
+          // Fetch user data
           const userData = await api.get("/users/me");
           
+          // --- FIX: Handle both 'id' and '_id' ---
           const currentUser: User = { 
-            id: userData._id, 
+            id: userData.id || userData._id, 
             email: userData.email, 
             role: userData.role || "candidate"
           };
