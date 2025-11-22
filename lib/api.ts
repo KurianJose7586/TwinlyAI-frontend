@@ -1,6 +1,7 @@
 // lib/api.ts
 
-const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
+//const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 interface AuthOptions {
   token?: string | null;
   apiKey?: string | null;

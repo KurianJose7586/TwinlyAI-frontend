@@ -23,7 +23,8 @@ interface ChatInterfaceProps {
   apiKey?: string | null;
 }
 
-const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
+//const API_URL = "https://joserman-twinlyaibackend.hf.space/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 // --- FIX START ---
 // Helper function to strip <think> tags from a string.

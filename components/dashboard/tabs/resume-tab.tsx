@@ -36,7 +36,9 @@ export function ResumeTab({ activeBot, onTabChange }: ResumeTabProps) {
     if (!token) throw new Error("Authentication token not found.");
 
     // THIS IS THE FIX: Use the native fetch but with the correct live URL
-    const response = await fetch(`https://joserman-twinlyaibackend.hf.space/api/v1/bots/${activeBot.id}/upload`, {
+    //const response = await fetch(`https://joserman-twinlyaibackend.hf.space/api/v1/bots/${activeBot.id}/upload`,
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+    const response = await fetch(`${baseUrl}/bots/${activeBot.id}/upload`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
