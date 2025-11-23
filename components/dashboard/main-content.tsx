@@ -11,10 +11,11 @@ import {
   Key, 
   FileText, 
   Zap,
+  MoreVertical,
   Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/app/context/AuthContext";
 import { api } from "@/lib/api";
@@ -22,9 +23,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 // Import your existing tab components
-// Ensure these files export the components exactly as named here
 import { MyBotsTab } from "./tabs/my-bots-tab";
 import { RecruiterSearchTab } from "./tabs/recruiter-search-tab";
 import { ResumeTab } from "./tabs/resume-tab";
@@ -40,32 +42,11 @@ export function MainContent() {
   const [newBotContext, setNewBotContext] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Simplified stats configuration to avoid runtime errors
+  // --- Mock Stats for Premium Feel ---
   const stats = [
-    { 
-      title: "Active Twins", 
-      value: "4", 
-      icon: Bot, 
-      color: "text-blue-400", 
-      bg: "bg-blue-500/10",
-      gradient: "to-blue-500/10"
-    },
-    { 
-      title: "Interviews", 
-      value: "28", 
-      icon: Users, 
-      color: "text-purple-400", 
-      bg: "bg-purple-500/10",
-      gradient: "to-purple-500/10" 
-    },
-    { 
-      title: "Efficiency", 
-      value: "94%", 
-      icon: Zap, 
-      color: "text-green-400", 
-      bg: "bg-green-500/10",
-      gradient: "to-green-500/10" 
-    },
+    { title: "Active Twins", value: "4", icon: Bot, color: "text-blue-400", bg: "bg-blue-500/10" },
+    { title: "Interviews", value: "28", icon: Users, color: "text-purple-400", bg: "bg-purple-500/10" },
+    { title: "Efficiency", value: "94%", icon: Zap, color: "text-green-400", bg: "bg-green-500/10" },
   ];
 
   const handleCreateBot = async () => {
@@ -75,6 +56,7 @@ export function MainContent() {
       setIsCreateDialogOpen(false);
       setNewBotName("");
       setNewBotContext("");
+      // Force refresh logic here if needed, or use a context/swr
       window.location.reload(); 
     } catch (error) {
       console.error("Failed to create bot", error);
@@ -95,9 +77,7 @@ export function MainContent() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
-            <p className="text-slate-400 mt-1">
-              Welcome back, <span className="text-blue-400 font-medium">{user?.full_name || "Recruiter"}</span>
-            </p>
+            <p className="text-slate-400 mt-1">Welcome back, <span className="text-blue-400 font-medium">{user?.full_name || "Recruiter"}</span></p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -146,7 +126,7 @@ export function MainContent() {
         <div className="grid gap-4 md:grid-cols-3">
           {stats.map((stat, i) => (
             <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-md shadow-lg relative overflow-hidden group">
-                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-transparent ${stat.gradient}`} />
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-transparent to-${stat.color.split('-')[1]}-500/10`} />
                 <CardContent className="p-6 flex items-center justify-between relative z-10">
                     <div>
                         <p className="text-sm font-medium text-slate-400">{stat.title}</p>
@@ -163,49 +143,12 @@ export function MainContent() {
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white/5 border border-white/10 p-1 rounded-lg w-full md:w-auto overflow-x-auto flex justify-start md:inline-flex">
-            
-            <TabsTrigger 
-                value="my-bots"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-white transition-all px-4 py-2 rounded-md flex items-center gap-2"
-            >
-                <Bot className="h-4 w-4" /> My Twins
-            </TabsTrigger>
-
-            <TabsTrigger 
-                value="recruiter-search"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-white transition-all px-4 py-2 rounded-md flex items-center gap-2"
-            >
-                <Search className="h-4 w-4" /> Search
-            </TabsTrigger>
-
-            <TabsTrigger 
-                value="resume"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-white transition-all px-4 py-2 rounded-md flex items-center gap-2"
-            >
-                <FileText className="h-4 w-4" /> Resumes
-            </TabsTrigger>
-
-            <TabsTrigger 
-                value="usage"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-white transition-all px-4 py-2 rounded-md flex items-center gap-2"
-            >
-                <BarChart3 className="h-4 w-4" /> Usage
-            </TabsTrigger>
-
-            <TabsTrigger 
-                value="api-keys"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-white transition-all px-4 py-2 rounded-md flex items-center gap-2"
-            >
-                <Key className="h-4 w-4" /> API Keys
-            </TabsTrigger>
-
-            <TabsTrigger 
-                value="settings"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-white transition-all px-4 py-2 rounded-md flex items-center gap-2"
-            >
-                <Settings className="h-4 w-4" /> Settings
-            </TabsTrigger>
-
+            <PremiumTabTrigger value="my-bots" icon={Bot} label="My Twins" />
+            <PremiumTabTrigger value="recruiter-search" icon={Search} label="Search" />
+            <PremiumTabTrigger value="resume" icon={FileText} label="Resumes" />
+            <PremiumTabTrigger value="usage" icon={BarChart3} label="Usage" />
+            <PremiumTabTrigger value="api-keys" icon={Key} label="API Keys" />
+            <PremiumTabTrigger value="settings" icon={Settings} label="Settings" />
           </TabsList>
 
           <div className="min-h-[400px] mt-6">
@@ -237,4 +180,16 @@ export function MainContent() {
       </div>
     </div>
   );
+}
+
+function PremiumTabTrigger({ value, icon: Icon, label }: { value: string, icon: any, label: string }) {
+    return (
+        <TabsTrigger 
+            value={value}
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-white transition-all px-4 py-2 rounded-md flex items-center gap-2"
+        >
+            <Icon className="h-4 w-4" />
+            {label}
+        </TabsTrigger>
+    );
 }
