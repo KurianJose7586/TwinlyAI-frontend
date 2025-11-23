@@ -9,7 +9,9 @@ import {
   Key, 
   FileText, 
   Zap,
-  Bot
+  Bot,
+  MessageSquare, // Added for Playground
+  Code // Added for Embed
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,8 +31,12 @@ import { ResumeTab } from "./tabs/resume-tab";
 import { UsageTab } from "./tabs/usage-tab";
 import { SettingsTab } from "./tabs/settings-tab";
 import { ApiKeysTab } from "./tabs/api-keys-tab";
+// --- ADDED MISSING IMPORTS ---
+import { ChatTab } from "./tabs/chat-tab"; 
+import { EmbedTab } from "./tabs/embed-tab"; 
+// -----------------------------
 
-// --- REQUIRED INTERFACE FOR STATE PASSING (Fixes Candidate Dashboard) ---
+// --- REQUIRED INTERFACE FOR STATE PASSING ---
 interface MainContentProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -49,8 +55,8 @@ export function MainContent({
   currentTier,
   bots,
   setBots,
-  activeBot,
-  setActiveBot
+  activeBot, // Critical prop
+  setActiveBot // Critical prop
 }: MainContentProps) {
   
   const { user } = useAuth();
@@ -162,6 +168,10 @@ export function MainContent({
             <PremiumTabTrigger value="my-bots" icon={Bot} label="My Twins" />
             <PremiumTabTrigger value="search-talent" icon={Search} label="Search" />
             <PremiumTabTrigger value="resume" icon={FileText} label="Resumes" />
+            {/* RESTORED CANDIDATE TABS */}
+            <PremiumTabTrigger value="playground" icon={MessageSquare} label="Playground" /> 
+            <PremiumTabTrigger value="embed" icon={Code} label="Embed Widget" /> 
+            {/* END RESTORED CANDIDATE TABS */}
             <PremiumTabTrigger value="usage" icon={BarChart3} label="Usage" />
             <PremiumTabTrigger value="api-keys" icon={Key} label="API Keys" />
             <PremiumTabTrigger value="settings" icon={Settings} label="Settings" />
@@ -184,9 +194,27 @@ export function MainContent({
             </TabsContent>
 
             <TabsContent value="resume" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
-              <ResumeTab />
+              {/* CRITICAL FIX APPLIED HERE */}
+              <ResumeTab 
+                activeBot={activeBot}
+                onTabChange={onTabChange}
+              />
             </TabsContent>
             
+            {/* RESTORED CANDIDATE TABS CONTENT */}
+            <TabsContent value="playground" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <ChatTab 
+                activeBot={activeBot}
+              />
+            </TabsContent>
+
+            <TabsContent value="embed" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <EmbedTab 
+                activeBot={activeBot}
+              />
+            </TabsContent>
+            {/* END RESTORED CANDIDATE TABS CONTENT */}
+
             <TabsContent value="usage" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
               <UsageTab />
             </TabsContent>
