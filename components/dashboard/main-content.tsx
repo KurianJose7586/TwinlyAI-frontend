@@ -1,150 +1,195 @@
-"use client"
+"use client";
 
-import { ChatTab } from "./tabs/chat-tab"
-import { MyBotsTab } from "./tabs/my-bots-tab"
-import { ApiKeysTab } from "./tabs/api-keys-tab"
-import { EmbedTab } from "./tabs/embed-tab"
-import { UsageTab } from "./tabs/usage-tab"
-import { SettingsTab } from "./tabs/settings-tab"
-import { ResumeTab } from "./tabs/resume-tab"
-// Import the new Recruiter Tab
-import { RecruiterSearchTab } from "./tabs/recruiter-search-tab"
+import { useEffect, useState } from "react";
+import { 
+  Plus, 
+  Search, 
+  Settings, 
+  Users, 
+  BarChart3, 
+  Cpu, 
+  Key, 
+  FileText, 
+  Zap,
+  MoreVertical,
+  Bot
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/app/context/AuthContext";
+import { api } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
-interface Bot {
-  id: string
-  name: string
-  status: string
-}
+// Import your existing tab components
+import { MyBotsTab } from "./tabs/my-bots-tab";
+import { RecruiterSearchTab } from "./tabs/recruiter-search-tab";
+import { ResumeTab } from "./tabs/resume-tab";
+import { UsageTab } from "./tabs/usage-tab";
+import { SettingsTab } from "./tabs/settings-tab";
+import { ApiKeysTab } from "./tabs/api-keys-tab";
 
-interface MainContentProps {
-  activeTab: string
-  onTabChange: (tab: string) => void
-  currentTier: string
-  setCurrentTier: (tier: string) => void
-  bots: Bot[]
-  setBots: (bots: Bot[]) => void
-  activeBot: Bot | null
-  setActiveBot: (bot: Bot | null) => void
-  isLoadingBots: boolean
-}
+export function MainContent() {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("my-bots");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newBotName, setNewBotName] = useState("");
+  const [newBotContext, setNewBotContext] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-export function MainContent({
-  activeTab,
-  onTabChange,
-  currentTier,
-  setCurrentTier,
-  bots,
-  setBots,
-  activeBot,
-  setActiveBot,
-  isLoadingBots,
-}: MainContentProps) {
-  
-  const renderTabContent = () => {
-    // --- 1. RECRUITER VIEWS ---
-    if (activeTab === "search-talent") {
-        return <RecruiterSearchTab />
+  // --- Mock Stats for Premium Feel ---
+  const stats = [
+    { title: "Active Twins", value: "4", icon: Bot, color: "text-blue-400", bg: "bg-blue-500/10" },
+    { title: "Interviews", value: "28", icon: Users, color: "text-purple-400", bg: "bg-purple-500/10" },
+    { title: "Efficiency", value: "94%", icon: Zap, color: "text-green-400", bg: "bg-green-500/10" },
+  ];
+
+  const handleCreateBot = async () => {
+    setIsLoading(true);
+    try {
+      await api.post("/bots", { name: newBotName, context: newBotContext });
+      setIsCreateDialogOpen(false);
+      setNewBotName("");
+      setNewBotContext("");
+      // Force refresh logic here if needed, or use a context/swr
+      window.location.reload(); 
+    } catch (error) {
+      console.error("Failed to create bot", error);
+    } finally {
+      setIsLoading(false);
     }
-    if (activeTab === "interviews") {
-        return (
-            <div className="flex flex-col items-center justify-center h-[60vh] text-muted-foreground">
-                <p className="text-lg font-medium">Interview History</p>
-                <p className="text-sm">This feature is coming in the next update.</p>
-            </div>
-        )
-    }
-
-    // --- 2. CANDIDATE LOADING STATE ---
-    // Only show loading if we are NOT on a recruiter tab and bots are loading
-    if (isLoadingBots && activeTab === "my-bots") {
-        return <div className="text-center p-10 text-muted-foreground">Loading your AI Twins...</div>;
-    }
-    
-    // --- 3. CANDIDATE VIEWS ---
-    switch (activeTab) {
-      case "playground":
-        return <ChatTab onTabChange={onTabChange} activeBot={activeBot} />
-      case "my-bots":
-        return (
-          <MyBotsTab
-            currentTier={currentTier}
-            bots={bots}
-            setBots={setBots}
-            activeBot={activeBot}
-            setActiveBot={setActiveBot}
-            onTabChange={onTabChange}
-          />
-        )
-      case "resume":
-        return <ResumeTab activeBot={activeBot} onTabChange={onTabChange} />
-      case "api-keys":
-        return <ApiKeysTab activeBot={activeBot} onTabChange={onTabChange} />
-      case "embed":
-        return <EmbedTab activeBot={activeBot} onTabChange={onTabChange} />
-      case "usage":
-        return <UsageTab activeBot={activeBot} onTabChange={onTabChange} />
-      case "settings":
-        return (
-          <SettingsTab
-            activeBot={activeBot}
-            setActiveBot={setActiveBot}
-            bots={bots}
-            setBots={setBots}
-            onTabChange={onTabChange}
-          />
-        )
-      default:
-        return (
-          <MyBotsTab
-            currentTier={currentTier}
-            bots={bots}
-            setBots={setBots}
-            activeBot={activeBot}
-            setActiveBot={setActiveBot}
-            onTabChange={onTabChange}
-          />
-        )
-    }
-  }
+  };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-muted/10 relative h-full">
-      {/* UI POLISH: Subtle Background Pattern */}
-      <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50 pointer-events-none" />
+    <div className="flex-1 p-8 overflow-y-auto bg-slate-950 min-h-screen text-slate-100 relative">
       
-      {/* Header Bar */}
-      <div className="border-b border-border/50 bg-background/50 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold capitalize text-foreground/80 tracking-wide">
-                {activeTab.replace("-", " ")}
-            </h2>
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950 pointer-events-none" />
+
+      <div className="relative z-10 max-w-7xl mx-auto space-y-8">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
+            <p className="text-slate-400 mt-1">Welcome back, <span className="text-blue-400 font-medium">{user?.full_name || "Recruiter"}</span></p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] border border-blue-400/20 transition-all">
+                  <Plus className="mr-2 h-4 w-4" /> Create Twin
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-slate-900 border-white/10 text-white">
+                <DialogHeader>
+                  <DialogTitle>Create New AI Twin</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Candidate Name</Label>
+                    <Input 
+                        placeholder="e.g. John Doe" 
+                        className="bg-slate-950 border-white/10 focus:border-blue-500"
+                        value={newBotName}
+                        onChange={(e) => setNewBotName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Context / Role</Label>
+                    <Textarea 
+                        placeholder="e.g. Senior React Developer with 5 years experience..." 
+                        className="bg-slate-950 border-white/10 focus:border-blue-500 resize-none h-32"
+                        value={newBotContext}
+                        onChange={(e) => setNewBotContext(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setIsCreateDialogOpen(false)} className="hover:bg-white/5">Cancel</Button>
+                  <Button onClick={handleCreateBot} disabled={isLoading} className="bg-blue-600">
+                    {isLoading ? "Creating..." : "Create Twin"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
-        {/* Only show Tier Switcher for non-search tabs (optional UX choice) */}
-        {activeTab !== "search-talent" && (
-            <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-300">
-            <span className="text-xs font-medium text-muted-foreground">Dev Mode:</span>
-            {["Free", "Plus", "Pro"].map((tier) => (
-                <button
-                key={tier}
-                onClick={() => setCurrentTier(tier)}
-                className={`px-2 py-0.5 text-[10px] rounded-md border ${
-                    currentTier === tier
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-background text-foreground border-border hover:bg-accent"
-                }`}
-                >
-                {tier}
-                </button>
-            ))}
-            </div>
-        )}
-      </div>
+        {/* Stats Grid */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {stats.map((stat, i) => (
+            <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-md shadow-lg relative overflow-hidden group">
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-transparent to-${stat.color.split('-')[1]}-500/10`} />
+                <CardContent className="p-6 flex items-center justify-between relative z-10">
+                    <div>
+                        <p className="text-sm font-medium text-slate-400">{stat.title}</p>
+                        <div className="text-3xl font-bold text-white mt-1">{stat.value}</div>
+                    </div>
+                    <div className={`h-12 w-12 rounded-full ${stat.bg} flex items-center justify-center ${stat.color}`}>
+                        <stat.icon className="h-6 w-6" />
+                    </div>
+                </CardContent>
+            </Card>
+          ))}
+        </div>
 
-      {/* Content Area */}
-      <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-[calc(100vh-65px)]">
-        {renderTabContent()}
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-lg w-full md:w-auto overflow-x-auto flex justify-start md:inline-flex">
+            <PremiumTabTrigger value="my-bots" icon={Bot} label="My Twins" />
+            <PremiumTabTrigger value="recruiter-search" icon={Search} label="Search" />
+            <PremiumTabTrigger value="resume" icon={FileText} label="Resumes" />
+            <PremiumTabTrigger value="usage" icon={BarChart3} label="Usage" />
+            <PremiumTabTrigger value="api-keys" icon={Key} label="API Keys" />
+            <PremiumTabTrigger value="settings" icon={Settings} label="Settings" />
+          </TabsList>
+
+          <div className="min-h-[400px] mt-6">
+            <TabsContent value="my-bots" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <MyBotsTab />
+            </TabsContent>
+            
+            <TabsContent value="recruiter-search" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <RecruiterSearchTab />
+            </TabsContent>
+
+            <TabsContent value="resume" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <ResumeTab />
+            </TabsContent>
+            
+            <TabsContent value="usage" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <UsageTab />
+            </TabsContent>
+
+            <TabsContent value="api-keys" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <ApiKeysTab />
+            </TabsContent>
+
+            <TabsContent value="settings" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <SettingsTab />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
-    </main>
-  )
+    </div>
+  );
+}
+
+function PremiumTabTrigger({ value, icon: Icon, label }: { value: string, icon: any, label: string }) {
+    return (
+        <TabsTrigger 
+            value={value}
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-white transition-all px-4 py-2 rounded-md flex items-center gap-2"
+        >
+            <Icon className="h-4 w-4" />
+            {label}
+        </TabsTrigger>
+    );
 }
