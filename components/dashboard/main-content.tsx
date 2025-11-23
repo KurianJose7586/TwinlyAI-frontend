@@ -10,8 +10,8 @@ import {
   FileText, 
   Zap,
   Bot,
-  MessageSquare, // Added for Playground
-  Code // Added for Embed
+  MessageSquare, 
+  Code 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,10 +31,8 @@ import { ResumeTab } from "./tabs/resume-tab";
 import { UsageTab } from "./tabs/usage-tab";
 import { SettingsTab } from "./tabs/settings-tab";
 import { ApiKeysTab } from "./tabs/api-keys-tab";
-// --- ADDED MISSING IMPORTS ---
 import { ChatTab } from "./tabs/chat-tab"; 
 import { EmbedTab } from "./tabs/embed-tab"; 
-// -----------------------------
 
 // --- REQUIRED INTERFACE FOR STATE PASSING ---
 interface MainContentProps {
@@ -55,8 +53,8 @@ export function MainContent({
   currentTier,
   bots,
   setBots,
-  activeBot, // Critical prop
-  setActiveBot // Critical prop
+  activeBot, 
+  setActiveBot 
 }: MainContentProps) {
   
   const { user } = useAuth();
@@ -102,7 +100,8 @@ export function MainContent({
             <p className="text-slate-400 mt-1">Welcome back, <span className="text-blue-400 font-medium">{user?.full_name || "User"}</span></p>
           </div>
           
-          <div className="flex items-center gap-3">
+          {/* FIX: Added relative z-30 to ensure the button renders above all background elements */}
+          <div className="flex items-center gap-3 relative z-30"> 
              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] border border-blue-400/20 transition-all">
@@ -168,10 +167,8 @@ export function MainContent({
             <PremiumTabTrigger value="my-bots" icon={Bot} label="My Twins" />
             <PremiumTabTrigger value="search-talent" icon={Search} label="Search" />
             <PremiumTabTrigger value="resume" icon={FileText} label="Resumes" />
-            {/* RESTORED CANDIDATE TABS */}
             <PremiumTabTrigger value="playground" icon={MessageSquare} label="Playground" /> 
             <PremiumTabTrigger value="embed" icon={Code} label="Embed Widget" /> 
-            {/* END RESTORED CANDIDATE TABS */}
             <PremiumTabTrigger value="usage" icon={BarChart3} label="Usage" />
             <PremiumTabTrigger value="api-keys" icon={Key} label="API Keys" />
             <PremiumTabTrigger value="settings" icon={Settings} label="Settings" />
@@ -194,14 +191,12 @@ export function MainContent({
             </TabsContent>
 
             <TabsContent value="resume" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
-              {/* CRITICAL FIX APPLIED HERE */}
               <ResumeTab 
                 activeBot={activeBot}
                 onTabChange={onTabChange}
               />
             </TabsContent>
             
-            {/* RESTORED CANDIDATE TABS CONTENT */}
             <TabsContent value="playground" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
               <ChatTab 
                 activeBot={activeBot}
@@ -213,7 +208,6 @@ export function MainContent({
                 activeBot={activeBot}
               />
             </TabsContent>
-            {/* END RESTORED CANDIDATE TABS CONTENT */}
 
             <TabsContent value="usage" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
               <UsageTab />
