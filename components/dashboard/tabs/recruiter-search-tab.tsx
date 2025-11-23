@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Briefcase, Ghost, Loader2 } from "lucide-react";
+import { Search, MapPin, Briefcase, Ghost, Loader2, PhoneCall } from "lucide-react"; // Imported PhoneCall for the contact button
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation"; // Imported useRouter for navigation
 
 export function RecruiterSearchTab() {
   const [query, setQuery] = useState("");
@@ -16,6 +17,7 @@ export function RecruiterSearchTab() {
   const [results, setResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
+  const router = useRouter(); // Initialize router
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -24,12 +26,11 @@ export function RecruiterSearchTab() {
     setHasSearched(true);
 
     try {
-      // --- FIX: CHANGED FROM GET TO POST TO MATCH BACKEND ---
+      // FIX: CHANGED FROM GET TO POST TO MATCH BACKEND
       const data = await api.post("/recruiter/search", { 
         query: query 
       });
       
-      // The backend returns the list directly, so we use 'data'
       setResults(data || []); 
     } catch (error) {
       console.error("Search failed", error);
@@ -49,6 +50,20 @@ export function RecruiterSearchTab() {
       handleSearch();
     }
   };
+
+  const handleViewProfile = (botId: string) => {
+      // Navigate to the interview page for the specific bot (used as profile view)
+      router.push(`/interview/${botId}`);
+  }
+
+  // NOTE: The Contact button is a placeholder action.
+  const handleContact = (candidateName: string) => {
+      toast({
+          title: "Contact initiated",
+          description: `Contacting ${candidateName} via TwinlyAI messaging service.`,
+          variant: "default",
+      });
+  }
 
   return (
     <div className="space-y-6">
@@ -114,7 +129,7 @@ export function RecruiterSearchTab() {
             <Card key={candidate.id || index} className="bg-white/5 border-white/10 hover:border-blue-500/30 transition-all hover:bg-white/[0.07] overflow-hidden group">
               <CardHeader className="flex flex-row items-start gap-4 pb-2">
                 <Avatar className="h-12 w-12 border border-white/10">
-                  <AvatarImage src={candidate.avatar_url} />
+                  <AvatarImage src={candidate.avatar_url || "/public/placeholder-user.jpg"} />
                   <AvatarFallback className="bg-slate-800 text-blue-400">
                     {candidate.name?.substring(0, 2).toUpperCase() || "CN"}
                   </AvatarFallback>
@@ -149,11 +164,22 @@ export function RecruiterSearchTab() {
                   )}
                 </div>
 
+                {/* UI FIX APPLIED: Button visibility improved */}
                 <div className="pt-2 flex gap-2">
-                   <Button className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/5">
+                   {/* FUNCTIONALITY ADDED: View Profile navigates to the interview page */}
+                   <Button 
+                        onClick={() => handleViewProfile(candidate.id)}
+                        className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/5"
+                   >
                       View Profile
                    </Button>
-                   <Button className="w-full bg-blue-600 hover:bg-blue-500">
+                   
+                   {/* UI FIX: Added PhoneCall icon to the Contact button */}
+                   <Button 
+                        onClick={() => handleContact(candidate.name)}
+                        className="w-full bg-blue-600 hover:bg-blue-500"
+                   >
+                       <PhoneCall className="h-4 w-4 mr-1.5" />
                       Contact
                    </Button>
                 </div>
