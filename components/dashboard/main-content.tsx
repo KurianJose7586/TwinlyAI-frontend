@@ -30,7 +30,7 @@ import { UsageTab } from "./tabs/usage-tab";
 import { SettingsTab } from "./tabs/settings-tab";
 import { ApiKeysTab } from "./tabs/api-keys-tab";
 
-// --- ADDED INTERFACE TO MATCH DASHBOARD LAYOUT ---
+// --- REQUIRED INTERFACE FOR STATE PASSING (Fixes Candidate Dashboard) ---
 interface MainContentProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -54,7 +54,6 @@ export function MainContent({
 }: MainContentProps) {
   
   const { user } = useAuth();
-  // REMOVED local 'activeTab' state to use the one from props
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState("");
   const [newBotContext, setNewBotContext] = useState("");
@@ -158,11 +157,9 @@ export function MainContent({
         </div>
 
         {/* Main Content Tabs */}
-        {/* Use onTabChange from props instead of local state */}
         <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
           <TabsList className="bg-white/5 border border-white/10 p-1 rounded-lg w-full md:w-auto overflow-x-auto flex justify-start md:inline-flex">
             <PremiumTabTrigger value="my-bots" icon={Bot} label="My Twins" />
-            {/* MATCH VALUE WITH SIDEBAR (search-talent) */}
             <PremiumTabTrigger value="search-talent" icon={Search} label="Search" />
             <PremiumTabTrigger value="resume" icon={FileText} label="Resumes" />
             <PremiumTabTrigger value="usage" icon={BarChart3} label="Usage" />
@@ -172,7 +169,6 @@ export function MainContent({
 
           <div className="min-h-[400px] mt-6">
             <TabsContent value="my-bots" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
-              {/* PASS REQUIRED PROPS TO MYBOTSTAB */}
               <MyBotsTab 
                 currentTier={currentTier}
                 bots={bots}
