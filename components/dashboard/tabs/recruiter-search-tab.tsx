@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Briefcase, User, GraduationCap, Loader2, Ghost } from "lucide-react";
+import { Search, MapPin, Briefcase, Ghost, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,13 +21,16 @@ export function RecruiterSearchTab() {
     if (!query.trim()) return;
 
     setIsLoading(true);
-    setHasSearched(true); // Mark that a search has occurred
+    setHasSearched(true);
 
     try {
-      // Replace with your actual search endpoint
-      const response = await api.get(`/recruiter/search?q=${encodeURIComponent(query)}`);
-      // Ensure we always set an array, even if backend returns null
-      setResults(response.data?.candidates || []); 
+      // --- FIX: CHANGED FROM GET TO POST TO MATCH BACKEND ---
+      const data = await api.post("/recruiter/search", { 
+        query: query 
+      });
+      
+      // The backend returns the list directly, so we use 'data'
+      setResults(data || []); 
     } catch (error) {
       console.error("Search failed", error);
       toast({
@@ -79,7 +82,7 @@ export function RecruiterSearchTab() {
 
       {/* --- CONTENT AREA --- */}
       
-      {/* 1. INITIAL STATE (No search yet) - This replaces the blank space */}
+      {/* 1. INITIAL STATE (No search yet) */}
       {!hasSearched && (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 bg-white/5 rounded-xl border border-white/10 border-dashed animate-in fade-in zoom-in-95 duration-500">
           <div className="h-20 w-20 bg-blue-500/10 text-blue-400 rounded-full flex items-center justify-center ring-1 ring-blue-500/20">
@@ -94,7 +97,7 @@ export function RecruiterSearchTab() {
         </div>
       )}
 
-      {/* 2. NO RESULTS STATE (Searched but found nothing) */}
+      {/* 2. NO RESULTS STATE */}
       {hasSearched && !isLoading && results.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
           <div className="h-16 w-16 bg-slate-800 text-slate-500 rounded-full flex items-center justify-center">
