@@ -1,30 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { 
   Plus, 
   Search, 
   Settings, 
   Users, 
   BarChart3, 
-  Cpu, 
   Key, 
   FileText, 
   Zap,
-  MoreVertical,
   Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/app/context/AuthContext";
 import { api } from "@/lib/api";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 
 // Import your existing tab components
 import { MyBotsTab } from "./tabs/my-bots-tab";
@@ -34,9 +30,31 @@ import { UsageTab } from "./tabs/usage-tab";
 import { SettingsTab } from "./tabs/settings-tab";
 import { ApiKeysTab } from "./tabs/api-keys-tab";
 
-export function MainContent() {
+// --- ADDED INTERFACE TO MATCH DASHBOARD LAYOUT ---
+interface MainContentProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  currentTier: string;
+  setCurrentTier: (tier: string) => void;
+  bots: any[];
+  setBots: (bots: any[]) => void;
+  activeBot: any;
+  setActiveBot: (bot: any) => void;
+  isLoadingBots: boolean;
+}
+
+export function MainContent({
+  activeTab,
+  onTabChange,
+  currentTier,
+  bots,
+  setBots,
+  activeBot,
+  setActiveBot
+}: MainContentProps) {
+  
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("my-bots");
+  // REMOVED local 'activeTab' state to use the one from props
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState("");
   const [newBotContext, setNewBotContext] = useState("");
@@ -56,7 +74,6 @@ export function MainContent() {
       setIsCreateDialogOpen(false);
       setNewBotName("");
       setNewBotContext("");
-      // Force refresh logic here if needed, or use a context/swr
       window.location.reload(); 
     } catch (error) {
       console.error("Failed to create bot", error);
@@ -77,7 +94,7 @@ export function MainContent() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
-            <p className="text-slate-400 mt-1">Welcome back, <span className="text-blue-400 font-medium">{user?.full_name || "Recruiter"}</span></p>
+            <p className="text-slate-400 mt-1">Welcome back, <span className="text-blue-400 font-medium">{user?.full_name || "User"}</span></p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -141,10 +158,12 @@ export function MainContent() {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        {/* Use onTabChange from props instead of local state */}
+        <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
           <TabsList className="bg-white/5 border border-white/10 p-1 rounded-lg w-full md:w-auto overflow-x-auto flex justify-start md:inline-flex">
             <PremiumTabTrigger value="my-bots" icon={Bot} label="My Twins" />
-            <PremiumTabTrigger value="recruiter-search" icon={Search} label="Search" />
+            {/* MATCH VALUE WITH SIDEBAR (search-talent) */}
+            <PremiumTabTrigger value="search-talent" icon={Search} label="Search" />
             <PremiumTabTrigger value="resume" icon={FileText} label="Resumes" />
             <PremiumTabTrigger value="usage" icon={BarChart3} label="Usage" />
             <PremiumTabTrigger value="api-keys" icon={Key} label="API Keys" />
@@ -153,10 +172,18 @@ export function MainContent() {
 
           <div className="min-h-[400px] mt-6">
             <TabsContent value="my-bots" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
-              <MyBotsTab />
+              {/* PASS REQUIRED PROPS TO MYBOTSTAB */}
+              <MyBotsTab 
+                currentTier={currentTier}
+                bots={bots}
+                setBots={setBots}
+                activeBot={activeBot}
+                setActiveBot={setActiveBot}
+                onTabChange={onTabChange}
+              />
             </TabsContent>
             
-            <TabsContent value="recruiter-search" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+            <TabsContent value="search-talent" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
               <RecruiterSearchTab />
             </TabsContent>
 
