@@ -356,7 +356,7 @@ export default function LandingPage() {
       <Dialog open={isLogoModalOpen} onOpenChange={setIsLogoModalOpen}>
         <DialogContent className="sm:max-w-[500px] bg-[#0A0A0A] border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold mb-2">The Story of Two</DialogTitle>
+            <DialogTitle className="text-2xl font-bold mb-2">The Twinly Butterfly: The Story of Two</DialogTitle>
             <DialogDescription className="text-gray-400 text-base leading-relaxed">
               At first glance, it appears to be a butterfly taking flight. <strong>But look closer.</strong>
               <br/><br/>
