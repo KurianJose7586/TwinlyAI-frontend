@@ -367,7 +367,7 @@ export default function LandingPage() {
           </DialogHeader>
           <div className="flex justify-center py-6">
              <Image 
-                src="/Gemini_Generated_Image_47uqe847uqe847uq-removebg-preview.png" 
+                src="/butterfly1000.png" 
                 alt="TwinlyAI Butterfly Logo"
                 width={180}
                 height={180}
