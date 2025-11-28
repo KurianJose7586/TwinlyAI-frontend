@@ -352,25 +352,26 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* --- LOGO MODAL --- */}
+{/* --- UPDATED LOGO MODAL --- */}
       <Dialog open={isLogoModalOpen} onOpenChange={setIsLogoModalOpen}>
         <DialogContent className="sm:max-w-[500px] bg-[#0A0A0A] border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold mb-2">The TwinlyAI Butterfly</DialogTitle>
+            <DialogTitle className="text-2xl font-bold mb-2">The Story of Two</DialogTitle>
             <DialogDescription className="text-gray-400 text-base leading-relaxed">
-              Why a butterfly? <br/><br/>
-              Just as a caterpillar transforms into a butterfly, <strong>TwinlyAI transforms your static resume into a living, interactive digital twin.</strong>
+              At first glance, it appears to be a butterfly taking flight. <strong>But look closer.</strong>
               <br/><br/>
-              It symbolizes growth, evolution, and the freedom to let your career story take flight beyond the constraints of a traditional PDF.
+              The wings are formed by two stylized embryos facing each other, symbolizing the <strong>genesis of your Digital Twin</strong>.
+              <br/><br/>
+              This emblem represents the core mission of TwinlyAI: we don't just host your resume; we birth a living, breathing AI counterpart from your data. It represents the perfect symmetry between you and your AI, working together to advance your career.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-6">
              <Image 
-                src="/butterfly1000.png" 
+                src="/Gemini_Generated_Image_47uqe847uqe847uq-removebg-preview.png" 
                 alt="TwinlyAI Butterfly Logo"
-                width={150}
-                height={150}
-                className="opacity-90"
+                width={180}
+                height={180}
+                className="opacity-100 drop-shadow-[0_0_30px_rgba(59,130,246,0.3)]"
              />
           </div>
         </DialogContent>
