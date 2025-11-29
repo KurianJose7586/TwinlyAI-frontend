@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/app/context/AuthContext"
 
-// Define role-based Navigation Items
 const candidateItems = [
   { id: "my-bots", label: "My Bots", icon: Bot },
   { id: "resume", label: "Resume", icon: FileText },
@@ -23,13 +22,12 @@ const candidateItems = [
 
 const recruiterItems = [
   { id: "search-talent", label: "Search Talent", icon: Search },
-  // Future features can go here
   { id: "interviews", label: "Interviews", icon: Mic }, 
   { id: "settings", label: "Settings", icon: Settings },
 ]
 
 interface SidebarProps {
-  user: any; // Using any for simplicity, or import User type
+  user: any;
   activeTab: string
   onTabChange: (tab: string) => void
   hasActiveBot: boolean
@@ -39,48 +37,51 @@ export function Sidebar({ user, activeTab, onTabChange, hasActiveBot }: SidebarP
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { logout } = useAuth();
 
-  // Decide which items to show
   const items = user?.role === "recruiter" ? recruiterItems : candidateItems;
 
   return (
     <nav
       className={cn(
-        "flex flex-col bg-card border-r border-border transition-all duration-300 z-20 shadow-sm",
-        isCollapsed ? "w-16" : "w-64",
+        "flex flex-col h-full transition-all duration-300 z-20",
+        // UPDATED: Glassmorphic styles
+        "bg-black/20 backdrop-blur-xl border-r border-white/5", 
+        isCollapsed ? "w-20" : "w-72",
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border h-[65px]">
+      <div className="flex items-center justify-between p-6 border-b border-white/5 h-[80px]">
         {!isCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 bg-blue-600 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-xs">T</span>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <span className="text-white font-bold text-sm">T</span>
             </div>
-            <h1 className="text-lg font-bold text-foreground tracking-tight">TwinlyAI</h1>
-            {user?.role === "recruiter" && <Badge variant="outline" className="ml-1 text-[10px] h-5">Hiring</Badge>}
+            <h1 className="text-xl font-bold text-white tracking-tight">TwinlyAI</h1>
+            {user?.role === "recruiter" && <Badge variant="outline" className="ml-1 text-[10px] h-5 border-blue-500/30 text-blue-300">Hiring</Badge>}
           </div>
         )}
-        <Button variant="ghost" size="sm" onClick={() => setIsCollapsed(!isCollapsed)}>
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(!isCollapsed)} className="text-gray-400 hover:text-white hover:bg-white/5">
+          {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
         </Button>
       </div>
 
       {/* Nav Items */}
-      <div className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {items.map((item) => {
             const Icon = item.icon
             return (
                 <Button
                 key={item.id}
-                variant={activeTab === item.id ? "secondary" : "ghost"}
+                variant="ghost"
                 className={cn(
-                    "w-full justify-start gap-3 font-medium transition-all duration-200",
-                    activeTab === item.id ? "bg-blue-50 text-blue-700 shadow-sm" : "text-muted-foreground hover:text-foreground",
-                    isCollapsed && "justify-center px-2",
+                    "w-full justify-start gap-4 font-medium transition-all duration-200 h-12 rounded-xl",
+                    activeTab === item.id 
+                        ? "bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.05)] border border-white/5" 
+                        : "text-gray-400 hover:text-white hover:bg-white/5",
+                    isCollapsed && "justify-center px-0",
                 )}
                 onClick={() => onTabChange(item.id)}
                 >
-                <Icon className={cn("h-4 w-4", activeTab === item.id ? "text-blue-600" : "text-muted-foreground")} />
+                <Icon className={cn("h-5 w-5", activeTab === item.id ? "text-blue-400" : "text-gray-500 group-hover:text-white")} />
                 {!isCollapsed && <span>{item.label}</span>}
                 </Button>
             )
@@ -88,31 +89,31 @@ export function Sidebar({ user, activeTab, onTabChange, hasActiveBot }: SidebarP
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border bg-muted/10">
+      <div className="p-6 border-t border-white/5 bg-black/20">
         <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
-          <Avatar className="h-8 w-8 ring-2 ring-background">
-            <AvatarFallback className="bg-blue-600 text-white">
+          <Avatar className="h-10 w-10 border-2 border-white/10 shadow-md">
+            <AvatarFallback className="bg-gradient-to-br from-gray-700 to-gray-900 text-white font-semibold">
               {user?.email?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-sm font-medium text-white truncate">
                 {user?.email}
               </p>
-              <p className="text-xs text-muted-foreground capitalize">{user?.role || "Candidate"}</p>
+              <p className="text-xs text-gray-500 capitalize">{user?.role || "Candidate"}</p>
             </div>
           )}
         </div>
         <Button
           variant="ghost"
           className={cn(
-            "w-full mt-3 text-muted-foreground hover:text-red-500 hover:bg-red-50",
-            isCollapsed ? "justify-center px-2" : "justify-start gap-3",
+            "w-full mt-4 text-gray-400 hover:text-red-400 hover:bg-red-500/10",
+            isCollapsed ? "justify-center px-0" : "justify-start gap-3",
           )}
           onClick={() => { logout(); window.location.href = "/auth"; }}
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-5 w-5" />
           {!isCollapsed && <span>Log Out</span>}
         </Button>
       </div>

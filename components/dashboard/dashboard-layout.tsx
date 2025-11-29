@@ -7,9 +7,9 @@ import { MainContent } from "./main-content"
 import { api } from "@/lib/api"
 import { useAuth } from "@/app/context/AuthContext"
 import { CommandPalette } from "../command-palette"
+import LightRays from "@/components/light-rays"
 
 export function DashboardLayout() {
-  // Initialize empty, will set in useEffect based on role
   const [activeTab, setActiveTab] = useState("") 
   const [currentTier, setCurrentTier] = useState("Free")
   const [bots, setBots] = useState<any[]>([])
@@ -19,9 +19,7 @@ export function DashboardLayout() {
   const router = useRouter()
   const { user, isLoading: isAuthLoading } = useAuth()
 
-  // --- SMART DEFAULT TAB LOGIC ---
   useEffect(() => {
-    // Only set the default tab once when the user loads and activeTab is empty
     if (user && !activeTab) {
         if (user.role === "recruiter") {
             setActiveTab("search-talent");
@@ -31,10 +29,8 @@ export function DashboardLayout() {
     }
   }, [user, activeTab]);
 
-  // --- BOT FETCHING LOGIC ---
   useEffect(() => {
     const fetchBots = async () => {
-      // If user is a Recruiter, they don't need to load "My Bots" on startup
       if (user?.role === "recruiter") {
           setIsLoadingBots(false);
           return;
@@ -55,7 +51,6 @@ export function DashboardLayout() {
         }));
         setBots(formattedBots)
         
-        // Default to the first bot if available
         if (formattedBots.length > 0 && !activeBot) {
             setActiveBot(formattedBots[0]);
         }
@@ -77,7 +72,6 @@ export function DashboardLayout() {
     }
   }, [router, user, isAuthLoading, activeBot])
   
-  // Keyboard listener for the Command Palette
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -91,37 +85,76 @@ export function DashboardLayout() {
 
   if (isAuthLoading || !activeTab) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">
+      <div className="flex h-screen items-center justify-center bg-[#050505] text-muted-foreground">
         Loading Dashboard...
       </div>
     )
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-[#050505] overflow-hidden relative selection:bg-blue-500/30 text-white">
+      
+      {/* --- GLOBAL BACKGROUND EFFECTS --- */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {/* Grid Pattern */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `linear-gradient(to right, #333 1px, transparent 1px),
+                              linear-gradient(to bottom, #333 1px, transparent 1px)`,
+            backgroundSize: '4rem 4rem',
+            maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)' 
+          }}
+        />
+        
+        {/* Top Spotlight */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[500px] bg-blue-600/10 blur-[120px] rounded-full" />
+
+        {/* Light Rays */}
+        <div className="absolute inset-0 mix-blend-screen opacity-30">
+          <LightRays
+            raysOrigin="top-center"
+            raysColor="#ffffff"
+            raysSpeed={0.2}
+            lightSpread={10}
+            rayLength={0.8}
+            followMouse={true}
+            mouseInfluence={0.1}
+            noiseAmount={0.02}
+            distortion={0.02}
+            pulsating={false}
+            className="custom-rays"
+          />
+        </div>
+      </div>
+
       <CommandPalette 
         open={isCommandPaletteOpen} 
         setOpen={setCommandPaletteOpen} 
         onTabChange={setActiveTab}
         hasActiveBot={!!activeBot}
       />
-      <Sidebar 
-        user={user}
-        activeTab={activeTab} 
-        onTabChange={setActiveTab}
-        hasActiveBot={!!activeBot}
-      />
-      <MainContent
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        currentTier={currentTier}
-        setCurrentTier={setCurrentTier}
-        bots={bots}
-        setBots={setBots}
-        activeBot={activeBot}
-        setActiveBot={setActiveBot}
-        isLoadingBots={isLoadingBots}
-      />
+      
+      {/* Sidebar & Content Wrapper */}
+      <div className="relative z-10 flex w-full h-full">
+        <Sidebar 
+            user={user}
+            activeTab={activeTab} 
+            onTabChange={setActiveTab}
+            hasActiveBot={!!activeBot}
+        />
+        <MainContent
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            currentTier={currentTier}
+            setCurrentTier={setCurrentTier}
+            bots={bots}
+            setBots={setBots}
+            activeBot={activeBot}
+            setActiveBot={setActiveBot}
+            isLoadingBots={isLoadingBots}
+        />
+      </div>
     </div>
   )
 }
