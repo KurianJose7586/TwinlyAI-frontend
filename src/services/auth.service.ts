@@ -6,10 +6,10 @@ export const AuthService = {
         formData.append("username", email);
         formData.append("password", password);
 
-        const response = await api.post("/auth/login", formData, {
+        // Explicitly include the full versioned path
+        const response = await api.post("api/v1/auth/login", formData, { //
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
-        return response.data; // expects { access_token: string }
+        return response.data;
     },
-    // add logout if backend requires server-side invalidation later
 };

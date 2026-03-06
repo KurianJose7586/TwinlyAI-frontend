@@ -16,7 +16,8 @@ const triggerLoading = (show: boolean, message?: string) => {
 };
 
 const api = axios.create({
-    baseURL: `${API_BASE_URL}/api/v1`,
+    // Remove the extra /api/v1 here to prevent doubling up
+    baseURL: API_BASE_URL, //
     headers: {
         "Content-Type": "application/json",
     },
