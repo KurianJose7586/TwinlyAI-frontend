@@ -28,13 +28,16 @@ import ReactMarkdown from "react-markdown";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { ResumeUploadZone } from "@/components/ui/resume-upload-zone";
-import { useBots, useUpdateBot } from "@/hooks/useBots";
 import { useApiKeys, useCreateApiKey, useDeleteApiKey } from "@/hooks/useApiKeys";
+import { useBots, useUpdateBot } from "@/hooks/useBots";
+import { Project } from "@/types";
+import { PRESET_GOALS } from "@/constants";
 
 type APIKey = { id: string; prefix: string };
 
 export default function CandidateActiveDashboard() {
     const { user, logout } = useAuth();
+    const role = (user as any)?.role || 'candidate';
     const { setTheme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = React.useState(false);
     const [activeTab, setActiveTab] = React.useState('dashboard');
@@ -54,8 +57,8 @@ export default function CandidateActiveDashboard() {
     const [twitterUrl, setTwitterUrl] = React.useState("");
     const [websiteUrl, setWebsiteUrl] = React.useState("");
     const [linkedinUrl, setLinkedinUrl] = React.useState("");
-    const [projects, setProjects] = React.useState<any[]>([]);
-    const originalAgentState = React.useRef({ name: "", bio: "", githubUrl: "", twitterUrl: "", websiteUrl: "", linkedinUrl: "", projects: [] as any[] });
+    const [projects, setProjects] = React.useState<Project[]>([]);
+    const originalAgentState = React.useRef({ name: "", bio: "", githubUrl: "", twitterUrl: "", websiteUrl: "", linkedinUrl: "", projects: [] as Project[] });
     const [isSaving, setIsSaving] = React.useState(false);
     const [saveSuccess, setSaveSuccess] = React.useState(false);
 
@@ -253,7 +256,7 @@ export default function CandidateActiveDashboard() {
         const msg = chatInput.trim();
         if (!msg || isStreaming || !botId) return;
         setChatInput("");
-        setChatMessages(prev => [...prev, { role: 'user', text: msg }]);
+        setChatMessages((prev: ChatMsg[]) => [...prev, { role: 'user', text: msg }]);
         setIsStreaming(true);
 
         try {
@@ -277,7 +280,7 @@ export default function CandidateActiveDashboard() {
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
             let fullText = "";
-            setChatMessages(prev => [...prev, { role: 'assistant', text: "" }]);
+            setChatMessages((prev: ChatMsg[]) => [...prev, { role: 'assistant', text: "" }]);
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -287,7 +290,7 @@ export default function CandidateActiveDashboard() {
                 fullText += chunk;
                 const finalText = strip(fullText);
                 React.startTransition(() => {
-                    setChatMessages(prev => {
+                    setChatMessages((prev: ChatMsg[]) => {
                         const updated = [...prev];
                         updated[updated.length - 1] = { role: 'assistant', text: finalText };
                         return updated;
@@ -296,7 +299,7 @@ export default function CandidateActiveDashboard() {
             }
         } catch (err: any) {
             console.error("Chat Error:", err);
-            setChatMessages(prev => [...prev, { role: 'assistant', text: `Failed to connect to AI Twin: ${err.message}` }]);
+            setChatMessages((prev: ChatMsg[]) => [...prev, { role: 'assistant', text: `Failed to connect to AI Twin: ${err.message}` }]);
         }
         setIsStreaming(false);
     };
@@ -454,7 +457,7 @@ export default function CandidateActiveDashboard() {
                                                         id="agent-name"
                                                         type="text"
                                                         value={agentName}
-                                                        onChange={e => setAgentName(e.target.value)}
+                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAgentName(e.target.value)}
                                                         className="bg-white dark:bg-[#0B0E14] border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-2.5 text-sm transition-all duration-200 focus:ring-2 focus:ring-[#007AFF]/20 focus:border-[#007AFF] outline-none text-slate-900 dark:text-white"
                                                     />
                                                 </div>
@@ -474,7 +477,7 @@ export default function CandidateActiveDashboard() {
                                                     id="agent-bio"
                                                     rows={4}
                                                     value={agentBio}
-                                                    onChange={e => setAgentBio(e.target.value)}
+                                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAgentBio(e.target.value)}
                                                     className="resize-none bg-white dark:bg-[#0B0E14] border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-2.5 text-sm transition-all duration-200 focus:ring-2 focus:ring-[#007AFF]/20 focus:border-[#007AFF] outline-none text-slate-900 dark:text-white"
                                                 />
                                             </div>
@@ -527,10 +530,10 @@ export default function CandidateActiveDashboard() {
                                         <div className="space-y-6">
                                             {projects.length === 0 ? (
                                                 <p className="text-sm text-slate-400 text-center py-4 italic">No projects added yet.</p>
-                                            ) : projects.map((proj, idx) => (
+                                            ) : projects.map((proj: Project, idx: number) => (
                                                 <div key={idx} className="relative bg-slate-50 dark:bg-[#0B0E14]/50 p-5 rounded-2xl border border-slate-200 dark:border-white/5 group/proj">
                                                     <button
-                                                        onClick={() => setProjects(projects.filter((_, i) => i !== idx))}
+                                                        onClick={() => setProjects(projects.filter((_: Project, i: number) => i !== idx))}
                                                         className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/proj:opacity-100 transition-opacity shadow-lg"
                                                     >
                                                         <X size={12} />
@@ -683,7 +686,7 @@ export default function CandidateActiveDashboard() {
                                                     <p className="text-slate-400 dark:text-slate-500 text-sm">Start a conversation to preview your AI twin&apos;s responses.</p>
                                                 </div>
                                             )}
-                                            {chatMessages.map((msg, i) => (
+                                            {chatMessages.map((msg: { role: 'user' | 'agent'; text: string | null; }, i: number) => (
                                                 <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start gap-1'}`}>
                                                     {msg.role === 'user' ? (
                                                         <>
@@ -729,8 +732,8 @@ export default function CandidateActiveDashboard() {
                                                     placeholder={botId ? "Test your agent..." : "Save a bot first to chat..."}
                                                     type="text"
                                                     value={chatInput}
-                                                    onChange={e => setChatInput(e.target.value)}
-                                                    onKeyDown={e => { if (e.key === 'Enter') handleChatSend(); }}
+                                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setChatInput(e.target.value)}
+                                                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') handleChatSend(); }}
                                                     disabled={!botId || isStreaming}
                                                 />
                                                 <button

@@ -52,7 +52,7 @@ import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useUserProfile } from "@/hooks/useUser";
 import { useSearchCandidates, useCandidates } from "@/hooks/useCandidates";
-import { Candidate } from "@/types";
+import { Candidate, BotResponse } from "@/types";
 
 const AVATARS = [
     "https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0",
@@ -196,12 +196,12 @@ function RecruiterDashboardContent() {
         }, 0);
         return () => clearTimeout(timeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [initialSearchDone]);
 
     // Format backend data into Candidate UI interface
-    const formatCandidates = (rawData: any[]): Candidate[] => {
+    const formatCandidates = (rawData: BotResponse[]): Candidate[] => {
         if (!rawData) return [];
-        return rawData.map((r, i) => {
+        return rawData.map((r: BotResponse, i: number) => {
             const charCode = r.id ? String(r.id).charCodeAt(String(r.id).length - 1) : i;
             return {
                 id: r.id,
@@ -568,9 +568,9 @@ function RecruiterDashboardContent() {
                                         </p>
                                     </div>
                                     <div className="flex flex-wrap gap-1.5 mb-6">
-                                        {candidate.skills.map((skill: string, index: number) => (
+                                        {candidate.skills.map((_: string, index: number) => (
                                             <span key={index} className="px-2 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded uppercase tracking-wider">
-                                                {skill}
+                                                {candidate.skills[index]}
                                             </span>
                                         ))}
                                     </div>
@@ -619,7 +619,7 @@ function RecruiterDashboardContent() {
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No matches found</h3>
                         <p className="text-slate-500 dark:text-slate-400 max-w-md mb-6">
-                            We couldn't find any candidates matching "{searchQuery}". Try adjusting your filters or use different keywords.
+                            We couldn&apos;t find any candidates matching &quot;{searchQuery}&quot;. Try adjusting your filters or use different keywords.
                         </p>
                         <button onClick={clearSearch} className="px-6 py-2.5 bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm">
                             Clear Search
@@ -738,9 +738,9 @@ function RecruiterDashboardContent() {
                                         <FileText size={14} className="text-blue-600/50 dark:text-purple-500/50" /> Core Competencies
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
-                                        {selectedCandidate.skills.map((skill: string, index: number) => (
+                                        {selectedCandidate.skills.map((_: string, index: number) => (
                                             <span key={index} className="px-3 py-1.5 bg-blue-50/50 dark:bg-purple-500/5 text-blue-700/80 dark:text-purple-300/80 text-[11px] font-bold rounded-lg border border-blue-100/50 dark:border-purple-500/10 shadow-sm uppercase tracking-wide">
-                                                {skill}
+                                                {selectedCandidate.skills[index]}
                                             </span>
                                         ))}
                                     </div>
@@ -752,7 +752,7 @@ function RecruiterDashboardContent() {
                                     </h3>
                                     <div className="space-y-4">
                                         {selectedCandidate.projects && selectedCandidate.projects.length > 0 ? (
-                                            selectedCandidate.projects.map((project, idx) => (
+                                            selectedCandidate.projects.map((project: { name: string; description: string; link?: string }, idx: number) => (
                                                 <div key={idx} className="p-5 rounded-2xl bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:border-blue-200/50 dark:hover:border-purple-500/20 transition-all group/proj shadow-sm">
                                                     <div className="flex justify-between items-start mb-2">
                                                         <h4 className="font-bold text-slate-900 dark:text-white text-sm">{project.name}</h4>
@@ -815,7 +815,7 @@ function RecruiterDashboardContent() {
                                             };
                                             const existingRaw = localStorage.getItem("recruiter_chat_sessions");
                                             let existing = existingRaw ? JSON.parse(existingRaw) : [];
-                                            existing = existing.filter((c: any) => c.id !== newChat.id);
+                                            existing = existing.filter((c: { id: string }) => c.id !== newChat.id);
                                             existing.unshift(newChat);
                                             localStorage.setItem("recruiter_chat_sessions", JSON.stringify(existing));
                                         } catch (e) {

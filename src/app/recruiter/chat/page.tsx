@@ -49,7 +49,7 @@ export default function RecruiterChatPage() {
             if (rawSessions) {
                 const parsed = JSON.parse(rawSessions);
                 setChatSessions(parsed);
-                const active = parsed.find((p: any) => p.botId === storedBotId) || parsed[0];
+                const active = parsed.find((p: ChatSession) => p.botId === storedBotId) || parsed[0];
                 if (active) setActiveChatId(active.id);
             } else if (storedBotId) {
                 const storedBotName = localStorage.getItem("recruiter_chat_botName") || "Candidate";
@@ -87,7 +87,7 @@ export default function RecruiterChatPage() {
         }
     }, [messages, isStreaming]);
 
-    const activeChat = chatSessions.find(c => c.id === activeChatId) || chatSessions[0] || {
+    const activeChat = chatSessions.find((c: ChatSession) => c.id === activeChatId) || chatSessions[0] || {
         id: "", name: "Select a Candidate", role: "", avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=fallback", lastMessage: "", time: "", unread: 0, active: false, botId: null
     };
     const currentBotId = activeChat.botId || liveBotId;
@@ -96,12 +96,12 @@ export default function RecruiterChatPage() {
         const msg = input.trim();
         if (!msg || isStreaming) return;
         setInput("");
-        setMessages(prev => [...prev, { role: "user", text: msg }]);
+        setMessages((prev: ChatMsg[]) => [...prev, { role: "user", text: msg }]);
         setIsStreaming(true);
 
         try {
             const token = getToken();
-            const chatHistory = messages.map(m => ({
+            const chatHistory = messages.map((m: ChatMsg) => ({
                 role: m.role,
                 content: m.text,
             }));
@@ -125,7 +125,7 @@ export default function RecruiterChatPage() {
                     localStorage.removeItem("recruiter_chat_botId");
                     localStorage.removeItem("recruiter_chat_botName");
                     setLiveBotId(null);
-                    setChatSessions(prev => prev.map(s => s.botId === currentBotId ? { ...s, botId: null } : s));
+                    setChatSessions((prev: ChatSession[]) => prev.map((s: ChatSession) => s.botId === currentBotId ? { ...s, botId: null } : s));
                     setBotError("Bot not found. Please go back and click Chat on a candidate.");
                     throw new Error("Bot not found. Please go back and select a candidate.");
                 }
@@ -138,7 +138,7 @@ export default function RecruiterChatPage() {
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
             let fullText = "";
-            setMessages(prev => [...prev, { role: "assistant", text: "" }]);
+            setMessages((prev: ChatMsg[]) => [...prev, { role: "assistant", text: "" }]);
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -147,7 +147,7 @@ export default function RecruiterChatPage() {
                 fullText += chunk;
                 const finalText = stripThink(fullText);
                 startTransition(() => {
-                    setMessages(prev => {
+                    setMessages((prev: ChatMsg[]) => {
                         const newMsgs = [...prev];
                         newMsgs[newMsgs.length - 1] = { role: "assistant", text: finalText };
                         return newMsgs;
@@ -155,7 +155,7 @@ export default function RecruiterChatPage() {
                 });
             }
         } catch (err: unknown) {
-            setMessages(prev => [...prev, {
+            setMessages((prev: ChatMsg[]) => [...prev, {
                 role: "assistant",
                 text: (err as Error).message || "Something went wrong. Please try again.",
             }]);
@@ -267,7 +267,7 @@ export default function RecruiterChatPage() {
                     <div className="flex items-center gap-2">
                         <button
                             className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300 transition-colors"
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => {
                                 e.preventDefault();
                                 if (currentBotId) {
                                     localStorage.setItem("recruiter_chat_botId", currentBotId);
@@ -306,7 +306,7 @@ export default function RecruiterChatPage() {
                         </div>
                     )}
 
-                    {messages.map((msg, i) => (
+                    {messages.map((msg: ChatMsg, i: number) => (
                         msg.role === "user" ? (
                             <div key={i} className="flex flex-col items-end">
                                 <div className="bg-blue-600 dark:bg-purple-600 text-white rounded-[20px] rounded-br-sm px-5 py-3 text-[15px] leading-relaxed max-w-[80%] shadow-sm">
@@ -350,8 +350,8 @@ export default function RecruiterChatPage() {
                     <div className="max-w-4xl mx-auto flex items-end gap-3 bg-slate-100 dark:bg-[#0B0E14] border border-slate-200 dark:border-white/5 rounded-[24px] p-2 shadow-inner">
                         <textarea
                             value={input}
-                            onChange={e => setInput(e.target.value)}
-                            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
+                            onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                             placeholder={currentBotId ? `Message ${activeChat.name}'s AI Twin...` : "Select a candidate with an active bot to chat..."}
                             className="flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[44px] py-3 text-[15px] outline-none text-slate-900 dark:text-white placeholder:text-slate-400 scrollbar-none"
                             rows={1}

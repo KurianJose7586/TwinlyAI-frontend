@@ -28,3 +28,13 @@ export interface Candidate {
     resume_url?: string;
     thumbnail_url?: string;
 }
+export interface BotResponse {
+    id: string;
+    name: string;
+    summary?: string;
+    match_score: number;
+    avatar_url?: string;
+    skills: string[];
+    resume_url?: string;
+    thumbnail_url?: string;
+}

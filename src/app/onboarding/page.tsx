@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ChevronLeft, Check, Sparkles, Plus, X, Upload, AlertCircle, Target, Briefcase } from "lucide-react";
+import { PRESET_GOALS } from "@/constants";
 import api from "@/lib/api";
 import { setToken, setStoredUser } from "@/lib/auth";
 
@@ -18,21 +19,6 @@ const INITIAL_AVATAR_OPTIONS = [
     "https://api.dicebear.com/7.x/notionists/svg?seed=Leo&backgroundColor=fde047",
     "https://api.dicebear.com/7.x/notionists/svg?seed=Zoe&backgroundColor=c4b5fd"
 ];
-
-const PRESET_GOALS = {
-    candidate: [
-        "Finding a Senior AI Engineering role",
-        "Transitioning to Product Management",
-        "Discovering remote opportunities",
-        "Showcasing my open-source contributions",
-    ],
-    recruiter: [
-        "Hiring Senior Machine Learning Engineers",
-        "Building a founding engineering team",
-        "Sourcing top-tier frontend talent",
-        "Automating my recruitment pipeline",
-    ]
-};
 
 const HOBBY_SUGGESTIONS = [
     "Coding", "Reading", "Gaming", "Hiking", "Photography", "Music", "Cooking", "Travel"
@@ -135,8 +121,12 @@ function OnboardingWizardForm() {
         if (savedData) {
             try {
                 const parsed = JSON.parse(savedData);
-                if (parsed.formData) setFormData(parsed.formData);
-                if (parsed.step && parsed.step <= totalSteps) setStep(parsed.step);
+                if (parsed.formData && JSON.stringify(parsed.formData) !== JSON.stringify(formData)) {
+                    setFormData(parsed.formData);
+                }
+                if (parsed.step && parsed.step <= totalSteps && parsed.step !== step) {
+                    setStep(parsed.step);
+                }
             } catch (e) {
                 console.error("Failed to parse saved onboarding data", e);
             }
@@ -274,9 +264,9 @@ function OnboardingWizardForm() {
                 if (typeof detail === "string") {
                     errorMsg = detail;
                 } else if (Array.isArray(detail)) {
-                    const detailArr = detail as any[];
+                    const detailArr = detail as Record<string, unknown>[];
                     if (detailArr.length > 0 && detailArr[0].msg) {
-                        errorMsg = detailArr.map((d: any) => d.msg).join(", ");
+                        errorMsg = detailArr.map((d) => String(d.msg)).join(", ");
                     }
                 }
                 setSubmitError(errorMsg);
@@ -527,7 +517,7 @@ function OnboardingWizardForm() {
                                     {/* ----------------- STEP 1: NAME ----------------- */}
                                     {step === 1 && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">Let's start with the basics.</h1>
+                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">Let&apos;s start with the basics.</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">What should we call you?</p>
                                             <div className="space-y-5">
                                                 <input type="text" placeholder="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -542,7 +532,7 @@ function OnboardingWizardForm() {
                                     {step === 2 && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
                                             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">Choose your avatar.</h1>
-                                            <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-8">How you'll appear to {role === 'candidate' ? 'recruiters' : 'candidates'} through your AI Twin.</p>
+                                            <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-8">How you&apos;ll appear to {role === 'candidate' ? 'recruiters' : 'candidates'} through your AI Twin.</p>
                                             <div className="grid grid-cols-4 gap-4 mb-6">
                                                 {avatarOptions.map((url, idx) => (
                                                     <button key={idx} onClick={() => setFormData({ ...formData, avatarUrl: url })}
@@ -671,7 +661,7 @@ function OnboardingWizardForm() {
                                             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-2 text-center mt-4">Got any cool projects?</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-sm text-center mb-8 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 rounded-xl">
                                                 <Sparkles className="inline-block w-4 h-4 mr-2 text-yellow-500" />
-                                                We'll try to extract them from your resume, but let us know if you have anything particular to highlight!
+                                                We&apos;ll try to extract them from your resume, but let us know if you have anything particular to highlight!
                                             </p>
 
                                             <div className="space-y-6">
@@ -765,8 +755,8 @@ function OnboardingWizardForm() {
 
                                             <div className="space-y-8">
                                                 <div>
-                                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 text-center">What's your favorite quote or motto?</label>
-                                                    <input type="text" placeholder='"Move fast and break things"' value={formData.favoriteQuote} onChange={(e) => setFormData({ ...formData, favoriteQuote: e.target.value })}
+                                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 text-center">What&apos;s your favorite quote or motto?</label>
+                                                    <input type="text" placeholder="&quot;Move fast and break things&quot;" value={formData.favoriteQuote} onChange={(e) => setFormData({ ...formData, favoriteQuote: e.target.value })}
                                                         className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] text-center px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 transition-all font-medium italic" />
                                                 </div>
 
@@ -867,9 +857,9 @@ function OnboardingWizardForm() {
                                     {step === 6 && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
                                             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">What are your goals?</h1>
-                                            <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">This helps us tailor your AI Twin's interactions.</p>
+                                            <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">This helps us tailor your AI Twin&apos;s interactions.</p>
 
-                                            <textarea placeholder={role === 'candidate' ? "I want to transition into a senior AI engineering role focusing on generative models..." : "I'm looking to hire a founding engineering team for my AI startup..."}
+                                            <textarea placeholder={role === 'candidate' ? "I want to transition into a senior AI engineering role focusing on generative models..." : "I&apos;m looking to hire a founding engineering team for my AI startup..."}
                                                 value={formData.aspirations} onChange={(e) => setFormData({ ...formData, aspirations: e.target.value })}
                                                 className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all placeholder:text-slate-400 dark:placeholder:text-[#57606A] text-lg font-medium min-h-[160px] resize-none mb-6" autoFocus />
 

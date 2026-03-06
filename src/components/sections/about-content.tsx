@@ -149,7 +149,7 @@ export function AboutContent() {
                             className="text-center mb-20"
                         >
                             <h2 className="text-4xl md:text-5xl font-bold text-[var(--text-main)] tracking-tight">Democratizing the Interview</h2>
-                            <p className="text-[var(--text-muted)] mt-6 text-lg max-w-xl mx-auto">We're leveling the playing field for both sides of the hiring equation.</p>
+                            <p className="text-[var(--text-muted)] mt-6 text-lg max-w-xl mx-auto">We&apos;re leveling the playing field for both sides of the hiring equation.</p>
                         </motion.div>
 
                         <div className="grid md:grid-cols-2 gap-10">
@@ -163,7 +163,7 @@ export function AboutContent() {
                                     <EyeOff size={32} />
                                 </div>
                                 <h3 className="text-3xl font-bold text-[var(--text-main)] mb-6">The Overlooked</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed text-lg">For brilliant candidates whose resumes don't pass the keyword filters. We give them a voice to explain their non-traditional backgrounds and specialized expertise.</p>
+                                <p className="text-[var(--text-muted)] leading-relaxed text-lg">For brilliant candidates whose resumes don&apos;t pass the keyword filters. We give them a voice to explain their non-traditional backgrounds and specialized expertise.</p>
                             </motion.div>
 
                             <motion.div
@@ -177,7 +177,7 @@ export function AboutContent() {
                                     <UserX size={32} />
                                 </div>
                                 <h3 className="text-3xl font-bold text-[var(--text-main)] mb-6">The Overwhelmed</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed text-lg">For recruiters drowning in 500+ applications per role. We provide an intelligent interface to "talk" to every candidate, ensuring no diamond is left in the rough.</p>
+                                <p className="text-[var(--text-muted)] leading-relaxed text-lg">For recruiters drowning in 500+ applications per role. We provide an intelligent interface to &quot;talk&quot; to every candidate, ensuring no diamond is left in the rough.</p>
                             </motion.div>
                         </div>
                     </div>
@@ -195,7 +195,7 @@ export function AboutContent() {
                             >
                                 <h2 className="text-sm font-black uppercase tracking-[0.3em] text-[var(--brand-purple)] mb-6">Our Engine</h2>
                                 <h3 className="text-4xl md:text-5xl font-bold text-[var(--text-main)] tracking-tight mb-8">Built on Neural Architecture</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed mb-12 text-lg">Under the hood, TwinlyAI isn't just another chatbot. We've built a proprietary engine designed for professional integrity and human nuance.</p>
+                                <p className="text-[var(--text-muted)] leading-relaxed mb-12 text-lg">Under the hood, TwinlyAI isn&apos;t just another chatbot. We&apos;ve built a proprietary engine designed for professional integrity and human nuance.</p>
 
                                 <div className="space-y-10">
                                     <div className="flex gap-6 group">
@@ -273,7 +273,7 @@ export function AboutContent() {
                                     <div className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-bold uppercase tracking-[0.2em] mb-8">Founder & Lead Engineer</div>
                                     <h2 className="text-4xl font-bold text-white mb-6">Kurian Jose</h2>
                                     <p className="text-slate-400 leading-relaxed text-xl font-light italic">
-                                        "I spent years as an engineer seeing incredible talent filtered out by rigid systems. I built Twinly to ensure that your full story—the context, the passion, and the unique problem-solving—is never lost in translation again."
+                                        &quot;I spent years as an engineer seeing incredible talent filtered out by rigid systems. I built Twinly to ensure that your full story—the context, the passion, and the unique problem-solving—is never lost in translation again.&quot;
                                     </p>
                                 </div>
                             </div>

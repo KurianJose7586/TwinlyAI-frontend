@@ -40,7 +40,9 @@ export default function CandidateEmptyDashboard() {
     useEffect(() => {
         const stored = typeof window !== "undefined" ? localStorage.getItem("twinly_botId") : null;
         const storedName = typeof window !== "undefined" ? localStorage.getItem("twinly_userName") : null;
-        if (storedName) setUserName(storedName);
+        if (storedName && storedName !== userName) {
+            setUserName(storedName);
+        }
 
         // Always re-fetch from server to get the canonical bot ID
         api.get("/bots/")
@@ -152,7 +154,7 @@ export default function CandidateEmptyDashboard() {
                                 Add your experience
                             </h1>
                             <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                                Upload your resume. We'll parse the document and build your interactive digital profile.
+                                Upload your resume. We&apos;ll parse the document and build your interactive digital profile.
                             </p>
                         </div>
 
