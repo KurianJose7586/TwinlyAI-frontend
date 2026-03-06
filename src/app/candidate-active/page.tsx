@@ -686,7 +686,7 @@ export default function CandidateActiveDashboard() {
                                                     <p className="text-slate-400 dark:text-slate-500 text-sm">Start a conversation to preview your AI twin&apos;s responses.</p>
                                                 </div>
                                             )}
-                                            {chatMessages.map((msg: { role: 'user' | 'agent'; text: string | null; }, i: number) => (
+                                            {chatMessages.map((msg: { role: 'user' | 'assistant'; text: string | null; }, i: number) => (
                                                 <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start gap-1'}`}>
                                                     {msg.role === 'user' ? (
                                                         <>
