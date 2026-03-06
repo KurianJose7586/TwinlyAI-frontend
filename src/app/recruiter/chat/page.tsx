@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useRef, useEffect, startTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
     ChevronLeft, Search, MoreVertical, Phone, Video, Edit, Send, Smile, Loader2
@@ -26,8 +27,9 @@ type ChatMsg = { role: "user" | "assistant"; text: string };
 const stripThink = (t: string) => t.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 
 export default function RecruiterChatPage() {
-    const router = import("next/navigation").then(mod => mod.useRouter).then(useRouter => useRouter()); // wait actually need to import it properly.
+    const router = useRouter();
 
+    const [mounted, setMounted] = useState(false);
     const [activeChatId, setActiveChatId] = useState("");
     const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
     const [messages, setMessages] = useState<ChatMsg[]>([]);
