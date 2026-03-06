@@ -25,19 +25,16 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
-import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { ResumeUploadZone } from "@/components/ui/resume-upload-zone";
 import { useApiKeys, useCreateApiKey, useDeleteApiKey } from "@/hooks/useApiKeys";
 import { useBots, useUpdateBot } from "@/hooks/useBots";
 import { Project } from "@/types";
-import { PRESET_GOALS } from "@/constants";
 
 type APIKey = { id: string; prefix: string };
 
 export default function CandidateActiveDashboard() {
     const { user, logout } = useAuth();
-    const role = (user as { role?: string })?.role || 'candidate';
     const { setTheme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = React.useState(false);
     const [activeTab, setActiveTab] = React.useState('dashboard');

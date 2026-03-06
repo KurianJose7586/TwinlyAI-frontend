@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+// Removed motion and AnimatePresence imports as they are unused
+
 import {
     Upload,
     Lock,
@@ -30,7 +31,6 @@ export default function CandidateEmptyDashboard() {
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [activeStepIndex, setActiveStepIndex] = useState(-1);
-    const [uploadError, setUploadError] = useState<string | null>(null);
     const [uploadDone, setUploadDone] = useState(false);
 
     const [botId, setBotId] = useState<string | null>(() =>
@@ -74,7 +74,6 @@ export default function CandidateEmptyDashboard() {
 
     const doUpload = async (file: File) => {
         if (isUploading || !botId) return;
-        setUploadError(null);
         setIsUploading(true);
         setActiveStepIndex(0); // Step 1: Reading Document starts
 
@@ -110,7 +109,7 @@ export default function CandidateEmptyDashboard() {
             router.push("/candidate-active");
 
         } catch (err: unknown) {
-            setUploadError((err as Error).message || "Upload failed. Please try again.");
+            console.error("Upload error:", err);
             setActiveStepIndex(-1);
         }
         setIsUploading(false);

@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronLeft, Check, Sparkles, Plus, X, Upload, AlertCircle, Target, Briefcase } from "lucide-react";
+import { ArrowRight, ChevronLeft, Check, Sparkles, Plus, X, AlertCircle, Target } from "lucide-react";
 import { PRESET_GOALS } from "@/constants";
 import api from "@/lib/api";
 import { setToken, setStoredUser } from "@/lib/auth";

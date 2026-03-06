@@ -3,8 +3,9 @@
 import { Suspense, useState, useRef, useEffect, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
-    ChevronLeft, Search, MoreVertical, Phone, Video, Edit, Send, Smile, Loader2
+    ChevronLeft, Search, MoreVertical, Phone, Video, Send, Smile, Loader2
 } from "lucide-react";
 import { getToken } from "@/lib/auth";
 import ReactMarkdown from "react-markdown";
@@ -202,7 +203,7 @@ export default function RecruiterChatPage() {
                         >
                             <div className="relative shrink-0">
                                 <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0B0E14]">
-                                    <img src={chat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={chat.name} className="w-full h-full object-cover" />
+                                    <Image src={chat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={chat.name} width={48} height={48} className="w-full h-full object-cover" />
                                 </div>
                                 {chat.botId === liveBotId && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#1C2128] rounded-full"></div>}
                             </div>
@@ -250,7 +251,7 @@ export default function RecruiterChatPage() {
                             <ChevronLeft size={22} className="text-slate-500 dark:text-slate-400" />
                         </button>
                         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0B0E14] shrink-0">
-                            <img src={activeChat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={activeChat.name} className="w-full h-full object-cover" />
+                            <Image src={activeChat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={activeChat.name} width={40} height={40} className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
@@ -318,7 +319,7 @@ export default function RecruiterChatPage() {
                             <div key={i} className="flex flex-col items-start">
                                 <div className="flex gap-3 max-w-[80%]">
                                     <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shrink-0 mt-auto hidden sm:block">
-                                        <img src={activeChat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={activeChat.name} className="w-full h-full object-cover" />
+                                        <Image src={activeChat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={activeChat.name} width={32} height={32} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex flex-col">
                                         <div className="bg-white dark:bg-[#1C2128] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-[20px] rounded-bl-sm px-5 py-3 text-[15px] leading-relaxed shadow-sm">

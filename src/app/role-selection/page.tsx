@@ -17,10 +17,10 @@ export default function RoleSelectionPage() {
 
                 {/* Floating Avatars (Visible in Light & Dark Mode) */}
                 <div className="absolute top-[20%] left-[8%] w-32 h-48 animate-[float_8s_ease-in-out_infinite] hidden md:block opacity-60 dark:opacity-30">
-                    <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Mia&face=smile&backgroundColor=transparent" alt="Decoration" className="w-full h-full object-contain drop-shadow-xl dark:invert" />
+                    <Image src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Mia&face=smile&backgroundColor=transparent" alt="Decoration" width={128} height={192} className="w-full h-full object-contain drop-shadow-xl dark:invert" />
                 </div>
                 <div className="absolute bottom-[20%] right-[8%] w-40 h-56 animate-[float_10s_ease-in-out_infinite_1s] hidden md:block opacity-50 dark:opacity-20 blur-[2px]">
-                    <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Oliver&face=smile&backgroundColor=transparent" alt="Decoration" className="w-full h-full object-contain drop-shadow-2xl dark:invert" />
+                    <Image src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Oliver&face=smile&backgroundColor=transparent" alt="Decoration" width={160} height={224} className="w-full h-full object-contain drop-shadow-2xl dark:invert" />
                 </div>
             </div>
 
