@@ -3,7 +3,8 @@
 
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const isProd = process.env.NODE_ENV === "production";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://twinlyai-backend-v2-0.onrender.com" : "http://localhost:8000");
 
 // Helper to trigger global loading events
 const triggerLoading = (show: boolean, message?: string) => {

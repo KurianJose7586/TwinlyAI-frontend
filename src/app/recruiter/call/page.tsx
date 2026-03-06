@@ -92,9 +92,10 @@ export default function VoiceInterviewPage() {
 
     const connectWebSocket = (id: string) => {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const isProd = process.env.NODE_ENV === "production";
         const wsHost = process.env.NEXT_PUBLIC_API_URL
             ? process.env.NEXT_PUBLIC_API_URL.replace(/^https?:\/\//, '')
-            : "localhost:8000";
+            : (isProd ? "twinlyai-backend-v2-0.onrender.com" : "localhost:8000");
 
         const wsUrl = `${protocol}//${wsHost}/api/v1/bots/ws/${id}/voice`;
 

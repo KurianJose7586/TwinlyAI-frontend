@@ -9,7 +9,8 @@ import { Navbar } from "@/components/layout/navbar";
 import { useAuth } from "@/context/AuthContext";
 import { BotService } from "@/services/bot.service";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const isProd = process.env.NODE_ENV === "production";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://twinlyai-backend-v2-0.onrender.com" : "http://localhost:8000");
 
 function LoginForm() {
     const router = useRouter();

@@ -258,8 +258,10 @@ export default function CandidateActiveDashboard() {
 
         try {
             const token = localStorage.getItem("twinly_token");
+            const isProd = process.env.NODE_ENV === "production";
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://twinlyai-backend-v2-0.onrender.com" : "http://localhost:8000");
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/bots/${botId}/chat/stream`,
+                `${apiBase}/api/v1/bots/${botId}/chat/stream`,
                 {
                     method: "POST",
                     headers: {
