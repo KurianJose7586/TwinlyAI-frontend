@@ -49,7 +49,7 @@ export default function RoleSelectionPage() {
                             Choose your path
                         </h1>
                         <p className="text-slate-500 dark:text-[#9CA3AF] text-lg max-w-lg leading-relaxed">
-                            Select how you'll use TwinlyAI to tailor your experience.
+                            Select how you&apos;ll use TwinlyAI to tailor your experience.
                         </p>
                     </div>
 

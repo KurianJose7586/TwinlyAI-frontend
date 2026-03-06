@@ -103,8 +103,24 @@ function OnboardingWizardForm() {
     };
 
     const [isMounted, setIsMounted] = useState(false);
-    const [step, setStep] = useState(1);
-    const [formData, setFormData] = useState<FormData>(defaultFormData);
+    const [step, setStep] = useState(() => {
+        if (typeof window === "undefined") return 1;
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (!savedData) return 1;
+        try {
+            const parsed = JSON.parse(savedData);
+            return (parsed.step && parsed.step <= totalSteps) ? parsed.step : 1;
+        } catch { return 1; }
+    });
+    const [formData, setFormData] = useState<FormData>(() => {
+        if (typeof window === "undefined") return defaultFormData;
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (!savedData) return defaultFormData;
+        try {
+            const parsed = JSON.parse(savedData);
+            return parsed.formData || defaultFormData;
+        } catch { return defaultFormData; }
+    });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [password, setPassword] = useState("");
@@ -115,24 +131,11 @@ function OnboardingWizardForm() {
     const [customHobby, setCustomHobby] = useState("");
     const [customTechStack, setCustomTechStack] = useState("");
 
-    // Load from local storage on mount
+    // setIsMounted on mount for hydration safety
     useEffect(() => {
-        const savedData = localStorage.getItem(STORAGE_KEY);
-        if (savedData) {
-            try {
-                const parsed = JSON.parse(savedData);
-                if (parsed.formData && JSON.stringify(parsed.formData) !== JSON.stringify(formData)) {
-                    setFormData(parsed.formData);
-                }
-                if (parsed.step && parsed.step <= totalSteps && parsed.step !== step) {
-                    setStep(parsed.step);
-                }
-            } catch (e) {
-                console.error("Failed to parse saved onboarding data", e);
-            }
-        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         setIsMounted(true);
-    }, [STORAGE_KEY, totalSteps]);
+    }, []);
 
     // Auto-save whenever step or data changes
     useEffect(() => {
@@ -383,7 +386,7 @@ function OnboardingWizardForm() {
                             >
                                 <div className="hidden sm:flex items-center gap-2 bg-slate-200/50 dark:bg-[#1C2128]/50 px-3 py-1.5 rounded-full">
                                     <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-300 dark:border-white/20">
-                                        <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                        <Image src={formData.avatarUrl} alt="Avatar" width={64} height={64} className="w-full h-full object-cover" />
                                     </div>
                                     <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[80px]">
                                         {formData.firstName}
@@ -404,7 +407,7 @@ function OnboardingWizardForm() {
                                 className="sm:hidden"
                             >
                                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-slate-200 dark:border-white/10 shadow-sm">
-                                    <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                    <Image src={formData.avatarUrl} alt="Avatar" width={112} height={112} className="w-full h-full object-cover" />
                                 </div>
                             </motion.div>
                         )}
@@ -538,7 +541,7 @@ function OnboardingWizardForm() {
                                                     <button key={idx} onClick={() => setFormData({ ...formData, avatarUrl: url })}
                                                         className={`relative rounded-2xl aspect-square overflow-hidden border-4 transition-all duration-300 hover:scale-[1.03] ${formData.avatarUrl === url ? 'border-blue-600 dark:border-purple-500 shadow-md shadow-blue-500/20' : 'border-transparent hover:border-slate-300 dark:hover:border-white/20'}`}
                                                     >
-                                                        <img src={url} alt={`Avatar option ${idx + 1}`} className="w-full h-full object-cover" />
+                                                        <Image src={url} alt={`Avatar option ${idx + 1}`} width={80} height={80} className="w-full h-full object-cover" />
                                                         {formData.avatarUrl === url && (
                                                             <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-blue-600 dark:bg-purple-500 rounded-full flex items-center justify-center text-white">
                                                                 <Check size={12} strokeWidth={3} />

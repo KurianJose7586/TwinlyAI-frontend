@@ -45,14 +45,15 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for events from api.ts (non-component context)
     useEffect(() => {
-        const handleLoadingEvent = (e: any) => {
-            const { show, message } = e.detail;
+        const handleLoadingEvent = (e: Event) => {
+            const customEvent = e as CustomEvent<{ show: boolean; message?: string }>;
+            const { show, message } = customEvent.detail;
             if (show) startLoading(message);
             else stopLoading();
         };
 
-        window.addEventListener("twinly-loading", handleLoadingEvent);
-        return () => window.removeEventListener("twinly-loading", handleLoadingEvent);
+        window.addEventListener("twinly-loading", handleLoadingEvent as EventListener);
+        return () => window.removeEventListener("twinly-loading", handleLoadingEvent as EventListener);
     }, [startLoading, stopLoading]);
 
     // Cycle through messages while loading

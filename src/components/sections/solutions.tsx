@@ -15,7 +15,7 @@ export function SolutionsHero() {
                     The Future of Identity
                 </div>
                 <h1 className="text-[48px] md:text-[64px] font-extrabold tracking-tighter text-[var(--text-main)] leading-[1.1] mb-6">
-                    Solve the <span className="text-[var(--brand-purple)]">"Resume Black Hole"</span><br /> with Interactive AI Agents
+                    Solve the <span className="text-[var(--brand-purple)]">&quot;Resume Black Hole&quot;</span><br /> with Interactive AI Agents
                 </h1>
                 <p className="text-lg md:text-xl text-[var(--text-muted)] max-w-2xl mx-auto leading-relaxed font-light mb-10">
                     TwinlyAI transforms static PDFs into living, breathing AI agents. Enable instant screening, deeper discovery, and authentic representation.

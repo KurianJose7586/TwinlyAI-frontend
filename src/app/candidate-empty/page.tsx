@@ -33,16 +33,16 @@ export default function CandidateEmptyDashboard() {
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [uploadDone, setUploadDone] = useState(false);
 
-    const [botId, setBotId] = useState<string | null>(null);
-    const [userName, setUserName] = useState<string>("there");
+    const [botId, setBotId] = useState<string | null>(() =>
+        typeof window !== "undefined" ? localStorage.getItem("twinly_botId") : null
+    );
+    const [userName, setUserName] = useState<string>(() =>
+        (typeof window !== "undefined" ? localStorage.getItem("twinly_userName") : null) || "there"
+    );
 
-    // On mount: try localStorage first, then fetch fresh from server
+    // On mount: fetch fresh from server to stay in sync
     useEffect(() => {
         const stored = typeof window !== "undefined" ? localStorage.getItem("twinly_botId") : null;
-        const storedName = typeof window !== "undefined" ? localStorage.getItem("twinly_userName") : null;
-        if (storedName && storedName !== userName) {
-            setUserName(storedName);
-        }
 
         // Always re-fetch from server to get the canonical bot ID
         api.get("/bots/")

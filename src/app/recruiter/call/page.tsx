@@ -146,7 +146,7 @@ export default function VoiceInterviewPage() {
 
     const initAudioContext = async () => {
         if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+            audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
         }
         if (audioContextRef.current.state === "suspended") {
             await audioContextRef.current.resume();
@@ -331,8 +331,8 @@ export default function VoiceInterviewPage() {
                             disabled={!isConnected}
                             title={isRecording ? "Click to stop & send" : "Click to speak"}
                             className={`w-14 h-14 flex items-center justify-center rounded-2xl transition-all cursor-pointer select-none ${isRecording
-                                    ? 'bg-white text-black ring-2 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
-                                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                                ? 'bg-white text-black ring-2 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                                : 'text-white/70 hover:text-white hover:bg-white/10'
                                 } disabled:opacity-30 disabled:cursor-not-allowed`}
                         >
                             <Mic size={24} />

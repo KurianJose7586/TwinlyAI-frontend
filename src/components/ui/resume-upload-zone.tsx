@@ -53,9 +53,15 @@ export function ResumeUploadZone({ botId, onSuccess }: ResumeUploadZoneProps) {
             setProgress(100);
             setUploadedFile(file.name);
             onSuccess?.(data?.candidate_name || null);
-        } catch (err: any) {
+        } catch (err) {
             clearInterval(interval);
-            const msg = err.response?.data?.detail || err.message || "Upload failed. Please try again.";
+            let msg = "Upload failed. Please try again.";
+            if (err && typeof err === 'object' && 'response' in err) {
+                const axiosErr = err as { response?: { data?: { detail?: string } } };
+                msg = axiosErr.response?.data?.detail || msg;
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
             setError(msg);
         }
 

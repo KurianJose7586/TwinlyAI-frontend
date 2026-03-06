@@ -1,12 +1,19 @@
 import api from "@/lib/api";
 
+export type BotUpdateData = {
+    name?: string;
+    description?: string;
+    is_public?: boolean;
+    // Add other fields as needed based on backend
+} & Record<string, unknown>;
+
 export const BotService = {
     getBots: async () => {
         const response = await api.get("/bots/");
         return response.data;
     },
 
-    updateBot: async (botId: string, data: any) => {
+    updateBot: async (botId: string, data: BotUpdateData) => {
         const response = await api.patch(`/bots/${botId}`, data);
         return response.data;
     },

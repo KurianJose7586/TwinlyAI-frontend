@@ -436,14 +436,14 @@ function RecruiterDashboardContent() {
                             onClick={() => { setIsProfileMenuOpen(!isProfileMenuOpen); setIsNotificationsOpen(false); setIsSettingsOpen(false); }}
                             className={`h-8 w-8 rounded-full overflow-hidden border transition-all ${isProfileMenuOpen ? 'border-blue-500 dark:border-purple-500 ring-2 ring-blue-500/20 dark:ring-purple-500/20' : 'border-slate-300 dark:border-white/20 hover:border-slate-400 dark:hover:border-white/40'} bg-slate-200 dark:bg-[#1C2128] cursor-pointer`}
                         >
-                            <img src={AVATARS[0]} alt="Recruiter Avatar" className="w-full h-full object-cover" />
+                            <Image src={AVATARS[0]} alt="Recruiter Avatar" width={32} height={32} className="w-full h-full object-cover" />
                         </button>
 
                         {isProfileMenuOpen && (
                             <div className="absolute top-full right-0 mt-4 w-60 bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                                 <div className="p-4 border-b border-slate-200 dark:border-white/10 flex items-center gap-3 bg-slate-50 dark:bg-white/5">
                                     <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 dark:border-white/20">
-                                        <img src={AVATARS[0]} alt="Avatar" className="w-full h-full object-cover" />
+                                        <Image src={AVATARS[0]} alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-slate-900 dark:text-white">{userProfile?.email?.split('@')[0] || "Recruiter"}</p>
@@ -542,13 +542,15 @@ function RecruiterDashboardContent() {
                             <div key={candidate.id} onClick={() => openCandidateModal(candidate)} className="bg-white dark:bg-[#1C2128] rounded-2xl border border-slate-200 dark:border-white/10 p-6 shadow-sm hover:shadow-md dark:shadow-none hover:border-blue-500/30 dark:hover:border-purple-500/50 transition-all group flex flex-col relative overflow-hidden cursor-pointer">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-100 dark:border-white/10 bg-slate-100 dark:bg-[#0B0E14] relative z-10">
-                                        <img src={candidate.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={candidate.name} className="w-full h-full object-cover" />
+                                        <Image src={candidate.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={candidate.name} width={56} height={56} className="w-full h-full object-cover" />
                                     </div>
                                     {candidate.thumbnail_url && (
                                         <div className="absolute right-0 top-0 w-24 h-32 opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none rotate-12 translate-x-4 -translate-y-4">
-                                            <img
-                                                src={candidate.thumbnail_url || undefined}
+                                            <Image
+                                                src={candidate.thumbnail_url || ""}
                                                 alt="Resume Preview"
+                                                width={96}
+                                                height={128}
                                                 className="w-full h-full object-cover rounded-lg shadow-2xl border border-white/20"
                                             />
                                         </div>
@@ -695,7 +697,7 @@ function RecruiterDashboardContent() {
                         <div className="overflow-y-auto custom-scrollbar flex-1 px-6 sm:px-8 pb-6 relative pt-0">
                             <div className="flex justify-between items-end -mt-12 mb-6 pointer-events-none">
                                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white dark:border-[#1C2128] bg-slate-100 dark:bg-[#0B0E14] relative z-10 pointer-events-auto">
-                                    <img src={selectedCandidate.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={selectedCandidate.name} className="w-full h-full object-cover" />
+                                    <Image src={selectedCandidate.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={selectedCandidate.name} width={96} height={96} className="w-full h-full object-cover" />
                                 </div>
                                 <div className={`px-4 py-1.5 text-xs font-bold rounded-full border pointer-events-auto shadow-sm ${selectedCandidate.matchStyle}`}>
                                     {selectedCandidate.match}% MATCH SCORE

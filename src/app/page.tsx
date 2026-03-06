@@ -65,7 +65,7 @@ export default function LandingPage() {
             animate={{ y: [0, 20, 0], rotate: [1, -3, 1] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           >
-            <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Felix&face=smile&facialHairProbability=0&backgroundColor=transparent" alt="Background Character" className="w-full h-full object-contain opacity-60 blur-[3px] drop-shadow-2xl dark:invert" />
+            <Image src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Felix&face=smile&facialHairProbability=0&backgroundColor=transparent" alt="Background Character" width={224} height={288} className="w-full h-full object-contain opacity-60 blur-[3px] drop-shadow-2xl dark:invert" />
           </motion.div>
 
           {/* Top Left Focus */}
@@ -74,7 +74,7 @@ export default function LandingPage() {
             animate={{ y: [0, -15, 0], rotate: [-2, 2, -2] }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           >
-            <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Aneka&face=smile&facialHairProbability=0&backgroundColor=transparent" alt="Background Character" className="w-full h-full object-contain opacity-90 drop-shadow-xl dark:invert" />
+            <Image src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Aneka&face=smile&facialHairProbability=0&backgroundColor=transparent" alt="Background Character" width={160} height={224} className="w-full h-full object-contain opacity-90 drop-shadow-xl dark:invert" />
           </motion.div>
 
           {/* Top Right Focus */}
@@ -83,7 +83,7 @@ export default function LandingPage() {
             animate={{ y: [0, -25, 0], rotate: [3, -1, 3] }}
             transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 2 }}
           >
-            <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Jude&face=smile&facialHairProbability=0&backgroundColor=transparent" alt="Background Character" className="w-full h-full object-contain opacity-80 drop-shadow-xl dark:invert" />
+            <Image src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Jude&face=smile&facialHairProbability=0&backgroundColor=transparent" alt="Background Character" width={192} height={256} className="w-full h-full object-contain opacity-80 drop-shadow-xl dark:invert" />
           </motion.div>
 
           {/* Center Right Out of Focus */}
@@ -92,7 +92,7 @@ export default function LandingPage() {
             animate={{ y: [0, 15, 0], rotate: [-2, 2, -2] }}
             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
           >
-            <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Cookie&face=smile&facialHairProbability=0&backgroundColor=transparent" alt="Background Character" className="w-full h-full object-contain opacity-50 blur-[4px] drop-shadow-2xl dark:invert" />
+            <Image src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Cookie&face=smile&facialHairProbability=0&backgroundColor=transparent" alt="Background Character" width={256} height={320} className="w-full h-full object-contain opacity-50 blur-[4px] drop-shadow-2xl dark:invert" />
           </motion.div>
         </div>
 
@@ -201,10 +201,12 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden shrink-0 border-2 border-[#1e2330] ring-4 ring-white/5 bg-[#1e2330]">
-                    <img
+                    <Image
                       alt="Recruiter Profile"
                       className="w-full h-full object-cover scale-[1.3] pt-2"
                       src="https://api.dicebear.com/7.x/notionists/svg?seed=Michael&backgroundColor=e2e8f0"
+                      width={64}
+                      height={64}
                     />
                   </div>
                 </motion.div>
@@ -218,10 +220,12 @@ export default function LandingPage() {
                   }}
                 >
                   <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden shrink-0 border-2 border-[#1e2330] ring-4 ring-white/5 bg-[#1e2330]">
-                    <img
+                    <Image
                       alt="Professional Profile"
                       className="w-full h-full object-cover"
                       src="https://api.dicebear.com/7.x/notionists/svg?seed=Sarah&backgroundColor=e2e8f0"
+                      width={64}
+                      height={64}
                     />
                   </div>
                   <div className="space-y-4 text-left">
@@ -389,7 +393,7 @@ export default function LandingPage() {
             animate={{ y: [0, -15, 0], rotate: [-5, 5, -5] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           >
-            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0" alt="Avatar" className="w-full h-full object-cover" />
+            <Image src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0" alt="Avatar" width={80} height={80} className="w-full h-full object-cover" />
           </motion.div>
           {/* Top Right */}
           <motion.div
@@ -397,7 +401,7 @@ export default function LandingPage() {
             animate={{ y: [0, -20, 0], rotate: [5, -5, 5] }}
             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           >
-            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Aneka&backgroundColor=fef08a" alt="Avatar" className="w-full h-full object-cover" />
+            <Image src="https://api.dicebear.com/7.x/notionists/svg?seed=Aneka&backgroundColor=fef08a" alt="Avatar" width={64} height={64} className="w-full h-full object-cover" />
           </motion.div>
           {/* Bottom Left */}
           <motion.div
@@ -405,7 +409,7 @@ export default function LandingPage() {
             animate={{ y: [0, 15, 0], rotate: [-2, 4, -2] }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
           >
-            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Mia&backgroundColor=fbcfe8" alt="Avatar" className="w-full h-full object-cover" />
+            <Image src="https://api.dicebear.com/7.x/notionists/svg?seed=Mia&backgroundColor=fbcfe8" alt="Avatar" width={96} height={96} className="w-full h-full object-cover" />
           </motion.div>
           {/* Bottom Right */}
           <motion.div
@@ -413,7 +417,7 @@ export default function LandingPage() {
             animate={{ y: [0, -10, 0], rotate: [2, -2, 2] }}
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
           >
-            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Oliver&backgroundColor=bbf7d0" alt="Avatar" className="w-full h-full object-cover" />
+            <Image src="https://api.dicebear.com/7.x/notionists/svg?seed=Oliver&backgroundColor=bbf7d0" alt="Avatar" width={112} height={112} className="w-full h-full object-cover" />
           </motion.div>
           {/* Center Right */}
           <motion.div
@@ -421,7 +425,7 @@ export default function LandingPage() {
             animate={{ y: [0, -25, 0], rotate: [10, -10, 10] }}
             transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 3 }}
           >
-            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Zoe&backgroundColor=c4b5fd" alt="Avatar" className="w-full h-full object-cover" />
+            <Image src="https://api.dicebear.com/7.x/notionists/svg?seed=Zoe&backgroundColor=c4b5fd" alt="Avatar" width={48} height={48} className="w-full h-full object-cover" />
           </motion.div>
         </div>
 

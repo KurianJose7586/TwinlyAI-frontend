@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { AboutContent } from "@/components/sections/about-content";
@@ -15,12 +16,24 @@ export default function AboutPage() {
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-40 dark:opacity-20 hidden md:block">
                 {/* Left Center Avatar */}
                 <div className="absolute top-[30%] left-[5%] w-32 h-48 animate-[float_8s_ease-in-out_infinite]">
-                    <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Aneka&face=smile&backgroundColor=transparent" alt="Decoration" className="w-full h-full object-contain opacity-70 drop-shadow-2xl dark:invert" />
+                    <Image
+                        src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Aneka&face=smile&backgroundColor=transparent"
+                        alt="Decoration"
+                        width={128}
+                        height={192}
+                        className="w-full h-full object-contain opacity-70 drop-shadow-2xl dark:invert"
+                    />
                 </div>
 
                 {/* Bottom Right Avatar */}
                 <div className="absolute bottom-[20%] right-[8%] w-40 h-56 animate-[float_10s_ease-in-out_infinite_2s]">
-                    <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Felix&face=smile&backgroundColor=transparent" alt="Decoration" className="w-full h-full object-contain opacity-60 drop-shadow-xl dark:invert blur-[2px]" />
+                    <Image
+                        src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Felix&face=smile&backgroundColor=transparent"
+                        alt="Decoration"
+                        width={160}
+                        height={224}
+                        className="w-full h-full object-contain opacity-60 drop-shadow-xl dark:invert blur-[2px]"
+                    />
                 </div>
             </div>
 

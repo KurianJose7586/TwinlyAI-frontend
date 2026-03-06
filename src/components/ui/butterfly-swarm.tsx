@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, type MotionValue } from "framer-motion";
 import { Butterfly } from "@/components/ui/butterfly";
 import { useRef } from "react";
 
@@ -68,7 +68,7 @@ export function ButterflySwarm() {
 // Actually, let's just create a specialized internal component here to keep it clean.
 import { butterflyPaths, type ButterflyPath } from "@/lib/butterfly-data";
 
-function ButterflyWithMotion({ progress }: { progress: any }) {
+function ButterflyWithMotion({ progress }: { progress: MotionValue<number> }) {
     // We need to map the MotionValue `progress` to x/y for each path.
     // UseTransform is hook-based, so we can't call it inside .map() callback easily if the map is dynamic (it is constant though).
 

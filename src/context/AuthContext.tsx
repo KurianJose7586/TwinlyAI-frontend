@@ -31,9 +31,13 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
-    const [user, setUser] = useState<StoredUser | null>(null);
-    const [token, setTokenState] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState<StoredUser | null>(() => getStoredUser());
+    const [token, setTokenState] = useState<string | null>(() => getToken());
+    const [isLoading, setIsLoading] = useState(() => {
+        // If we have a token but no user, or vice versa, we might need a tick to settle, 
+        // but generally we can determine initial loading base on existence of local session data.
+        return false;
+    });
     const queryClient = useQueryClient();
 
     // Parse a raw JWT and persist user + token
@@ -51,17 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    // Restore session on mount
+    // Session consistency on mount
     useEffect(() => {
         const t = getToken();
-        const u = getStoredUser();
-        if (t && u) {
-            setTokenState(t);
-            setUser(u);
+        if (t) {
             // Crucial: Re-write the cookie just in case it expired or was cleared, but localStorage wasn't
             setToken(t);
         }
-        setIsLoading(false);
     }, []);
 
     const login = async (email: string, password: string) => {

@@ -28,7 +28,7 @@ export function PricingContent() {
                         transition={{ duration: 0.6, delay: 0.1 }}
                         className="text-[20px] text-[var(--text-muted)] max-w-2xl mx-auto font-light leading-relaxed"
                     >
-                        Whether you're an individual professional or a global enterprise, we have a plan to help your AI Twin excel.
+                        Whether you&apos;re an individual professional or a global enterprise, we have a plan to help your AI Twin excel.
                     </motion.p>
 
                     <motion.div

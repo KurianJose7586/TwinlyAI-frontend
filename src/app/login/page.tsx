@@ -103,10 +103,22 @@ function LoginForm() {
 
                 {/* Floating Avatars (Visible in Light & Dark Mode) */}
                 <div className="absolute top-[15%] left-[5%] w-48 h-64 animate-[float_11s_ease-in-out_infinite] hidden lg:block opacity-50 dark:opacity-20">
-                    <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Bailey&face=smile&backgroundColor=transparent" alt="Decoration" className="w-full h-full object-contain drop-shadow-xl dark:invert blur-[1px]" />
+                    <Image
+                        src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Bailey&face=smile&backgroundColor=transparent"
+                        alt="Decoration"
+                        width={192}
+                        height={256}
+                        className="w-full h-full object-contain drop-shadow-xl dark:invert blur-[1px]"
+                    />
                 </div>
                 <div className="absolute bottom-[25%] right-[5%] w-36 h-48 animate-[float_9s_ease-in-out_infinite_1.5s] hidden lg:block opacity-60 dark:opacity-30">
-                    <img src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Simon&face=smile&backgroundColor=transparent" alt="Decoration" className="w-full h-full object-contain drop-shadow-2xl dark:invert" />
+                    <Image
+                        src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Simon&face=smile&backgroundColor=transparent"
+                        alt="Decoration"
+                        width={144}
+                        height={192}
+                        className="w-full h-full object-contain drop-shadow-2xl dark:invert"
+                    />
                 </div>
             </div>
 

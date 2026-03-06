@@ -37,7 +37,7 @@ type APIKey = { id: string; prefix: string };
 
 export default function CandidateActiveDashboard() {
     const { user, logout } = useAuth();
-    const role = (user as any)?.role || 'candidate';
+    const role = (user as { role?: string })?.role || 'candidate';
     const { setTheme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = React.useState(false);
     const [activeTab, setActiveTab] = React.useState('dashboard');
@@ -297,9 +297,10 @@ export default function CandidateActiveDashboard() {
                     });
                 });
             }
-        } catch (err: any) {
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
             console.error("Chat Error:", err);
-            setChatMessages((prev: ChatMsg[]) => [...prev, { role: 'assistant', text: `Failed to connect to AI Twin: ${err.message}` }]);
+            setChatMessages((prev: ChatMsg[]) => [...prev, { role: 'assistant', text: `Failed to connect to AI Twin: ${message}` }]);
         }
         setIsStreaming(false);
     };
