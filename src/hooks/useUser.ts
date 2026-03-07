@@ -6,7 +6,8 @@ export const useUserProfile = () => {
     return useQuery({
         queryKey: ["user", "profile"],
         queryFn: UserService.getProfile,
-        retry: 1, // fail fast if 401
+        retry: 1,         // fail fast if 401
+        staleTime: 5 * 60 * 1000, // 5 min — prevents constant refetch loop on error
     });
 };
 
