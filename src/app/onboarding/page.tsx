@@ -185,7 +185,7 @@ function OnboardingWizardForm() {
         setSubmitError(null);
 
         try {
-            await api.post("/auth/signup", {
+            await api.post("/api/v1/auth/signup", {
                 email: formData.email,
                 password: password || "TwinlyDefault123!",
                 role,
@@ -194,7 +194,7 @@ function OnboardingWizardForm() {
             const loginForm = new URLSearchParams();
             loginForm.append("username", formData.email);
             loginForm.append("password", password || "TwinlyDefault123!");
-            const loginRes = await api.post("/auth/login", loginForm, {
+            const loginRes = await api.post("/api/v1/auth/login", loginForm, {
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
             });
             const token: string = loginRes.data.access_token;
@@ -203,12 +203,12 @@ function OnboardingWizardForm() {
 
             if (role === "candidate") {
                 const botName = `${formData.firstName} ${formData.lastName}`;
-                const botRes = await api.post("/bots/create", { name: botName }, {
+                const botRes = await api.post("/api/v1/bots/create", { name: botName }, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const botId: string = botRes.data.id ?? botRes.data._id;
 
-                await api.patch(`/bots/${botId}`, {
+                await api.patch(`/api/v1/bots/${botId}`, {
                     linkedin_url: formData.linkedin_url || formData.linkedIn,
                     github_url: formData.github_url,
                     twitter_url: formData.twitter_url,
@@ -250,7 +250,7 @@ function OnboardingWizardForm() {
                     const loginForm = new URLSearchParams();
                     loginForm.append("username", formData.email);
                     loginForm.append("password", password || "TwinlyDefault123!");
-                    const loginRes = await api.post("/auth/login", loginForm, {
+                    const loginRes = await api.post("/api/v1/auth/login", loginForm, {
                         headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     });
                     const token: string = loginRes.data.access_token;

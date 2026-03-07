@@ -83,7 +83,7 @@ function LoginForm() {
         setIsLoading(true);
         setError(null);
         try {
-            await login(email, password);
+            await login(email, password, rememberMe);
         } catch (err: unknown) {
             const msg =
                 (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||

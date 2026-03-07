@@ -8,6 +8,20 @@ import type { NextRequest } from "next/server";
 const PROTECTED_ROUTES = ["/candidate-active", "/recruiter", "/candidate-empty"];
 const AUTH_ROUTES = ["/login", "/role-selection", "/onboarding"];
 
+/** Decode role from a JWT without external libraries (Edge-runtime safe). */
+function getTokenRole(token: string): string {
+    try {
+        const base64Url = token.split(".")[1];
+        if (!base64Url) return "candidate";
+        // Edge runtime supports atob
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const payload = JSON.parse(atob(base64));
+        return (payload?.role as string) ?? "candidate";
+    } catch {
+        return "candidate";
+    }
+}
+
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
@@ -26,9 +40,11 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
     }
 
-    // If accessing auth routes while already logged in, redirect to dashboard
+    // If accessing auth routes while already logged in, redirect to role-appropriate dashboard
     if (isAuthRoute && token && pathname === "/login") {
-        return NextResponse.redirect(new URL("/candidate-active", request.url));
+        const role = getTokenRole(token);
+        const destination = role === "recruiter" ? "/recruiter" : "/candidate-active";
+        return NextResponse.redirect(new URL(destination, request.url));
     }
 
     return NextResponse.next();

@@ -15,11 +15,14 @@ export function getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
 }
 
-export function setToken(token: string): void {
+export function setToken(token: string, rememberMe = false): void {
     if (typeof window === "undefined") return;
     localStorage.setItem(TOKEN_KEY, token);
-    // Also write a cookie so Next.js edge middleware (which can't read localStorage) can see it
-    document.cookie = `${TOKEN_KEY}=${token}; path=/; SameSite=Lax; max-age=86400`;
+    // Also write a cookie so Next.js edge middleware (which can't read localStorage) can see it.
+    // rememberMe=true  → 30-day persistent cookie
+    // rememberMe=false → session cookie (no max-age, cleared when browser closes)
+    const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7; // 30 days or 7 days default
+    document.cookie = `${TOKEN_KEY}=${token}; path=/; SameSite=Lax; max-age=${maxAge}`;
 }
 
 export function clearToken(): void {

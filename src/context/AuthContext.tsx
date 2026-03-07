@@ -22,7 +22,7 @@ type AuthContextType = {
     user: StoredUser | null;
     token: string | null;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
     logout: () => void;
     setAuthFromToken: (token: string) => void;
 };
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, rememberMe = false) => {
         // Clear old profile cache to prevent cross-account ghosting
         queryClient.clear();
 
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { access_token } = data;
 
         // Store token and parse user immediately (synchronous)
-        setToken(access_token);
+        setToken(access_token, rememberMe);
         setTokenState(access_token);
         const payload = decodeTokenPayload(access_token);
         const role = (payload?.role as "candidate" | "recruiter") ?? "candidate";

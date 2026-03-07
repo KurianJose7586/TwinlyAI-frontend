@@ -5,6 +5,7 @@ export const useBots = () => {
     return useQuery({
         queryKey: ["bots"],
         queryFn: BotService.getBots,
+        staleTime: 5 * 60 * 1000, // 5 min — prevents refetch loop on 4xx errors
     });
 };
 

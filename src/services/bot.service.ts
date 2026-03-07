@@ -9,12 +9,12 @@ export type BotUpdateData = {
 
 export const BotService = {
     getBots: async () => {
-        const response = await api.get("/bots/");
+        const response = await api.get("/api/v1/bots/");
         return response.data;
     },
 
     updateBot: async (botId: string, data: BotUpdateData) => {
-        const response = await api.patch(`/bots/${botId}`, data);
+        const response = await api.patch(`/api/v1/bots/${botId}`, data);
         return response.data;
     },
 
