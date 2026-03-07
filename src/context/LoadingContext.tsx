@@ -13,16 +13,16 @@ type LoadingContextType = {
 const LoadingContext = createContext<LoadingContextType | null>(null);
 
 const WITTY_MESSAGES = [
-    "Waking up the server from its afternoon nap...",
-    "Assembling neural pathways...",
-    "Herding electronic sheep...",
-    "Brewing digital coffee for the backend...",
-    "Polishing the vector database...",
-    "Synchronizing with the hive mind...",
-    "Charging the flux capacitor...",
-    "Dusting off the server racks...",
-    "Optimizing spacetime coordinates...",
-    "Loading personality subroutines..."
+    "Creating your digital twin...",
+    "Teaching your twin to think like you...",
+    "Parsing the story of your career...",
+    "Extracting what makes you, you...",
+    "Building your professional knowledge base...",
+    "Waking up the AI backend...",
+    "Synthesizing your professional identity...",
+    "Almost ready to introduce you to your twin...",
+    "Mapping your expertise to the cosmos...",
+    "Your twin is warming up..."
 ];
 
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
