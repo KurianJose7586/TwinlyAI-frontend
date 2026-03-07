@@ -114,7 +114,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             keysToRemove.forEach(k => localStorage.removeItem(k));
         }
 
-        router.push("/login");
+        // Use a hard navigation instead of router.push so the browser commits
+        // the cookie deletion (max-age=0) before the next request hits the
+        // middleware. router.push is a SPA transition that can race against the
+        // cookie expiry, causing the middleware to see the old token on /login
+        // and immediately redirect back to /candidate-active.
+        window.location.href = "/login";
     };
 
     return (
