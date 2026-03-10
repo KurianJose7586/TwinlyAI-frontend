@@ -43,7 +43,7 @@ export function ResumeUploadZone({ botId, onSuccess }: ResumeUploadZoneProps) {
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await api.post(`/bots/${botId}/upload`, formData, {
+            const res = await api.post(`/api/v1/bots/${botId}/upload`, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 

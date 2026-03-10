@@ -33,19 +33,15 @@ export default function CandidateEmptyDashboard() {
     const [activeStepIndex, setActiveStepIndex] = useState(-1);
     const [uploadDone, setUploadDone] = useState(false);
 
-    const [botId, setBotId] = useState<string | null>(() =>
-        typeof window !== "undefined" ? localStorage.getItem("twinly_botId") : null
-    );
-    const [userName, setUserName] = useState<string>(() =>
-        (typeof window !== "undefined" ? localStorage.getItem("twinly_userName") : null) || "there"
-    );
+    const [botId, setBotId] = useState<string | null>(null);
+    const [userName, setUserName] = useState<string>("there");
 
     // On mount: fetch fresh from server to stay in sync
     useEffect(() => {
         const stored = typeof window !== "undefined" ? localStorage.getItem("twinly_botId") : null;
 
         // Always re-fetch from server to get the canonical bot ID
-        api.get("/bots/")
+        api.get("/api/v1/bots/")
             .then(res => {
                 const bots = res.data;
                 if (Array.isArray(bots) && bots.length > 0) {
@@ -84,7 +80,7 @@ export default function CandidateEmptyDashboard() {
             // Move to step 2 after a short delay (UI feel)
             const step2Timer = setTimeout(() => setActiveStepIndex(1), 2000);
 
-            const res = await api.post(`/bots/${botId}/upload`, formData, {
+            const res = await api.post(`/api/v1/bots/${botId}/upload`, formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
 

@@ -80,6 +80,7 @@ api.interceptors.response.use(
             // Must clear the cookie as well to prevent middleware redirect loops
             document.cookie = `twinly_token=; path=/; SameSite=Lax; max-age=0`;
             localStorage.removeItem("twinly_token");
+            localStorage.removeItem("twinly_user");
             window.location.href = "/login";
         }
         return Promise.reject(error);
