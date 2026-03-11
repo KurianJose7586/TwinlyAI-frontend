@@ -89,9 +89,9 @@ export default function CandidateEmptyDashboard() {
             const data = res.data;
 
             // Persist candidate name returned by the backend
-            if (data?.candidate_name) {
-                localStorage.setItem("twinly_userName", data.candidate_name);
-                localStorage.setItem("userName", data.candidate_name);
+            if (data?.extracted_data?.name) {
+                localStorage.setItem("twinly_userName", data.extracted_data.name);
+                localStorage.setItem("userName", data.extracted_data.name);
             }
 
             // Animate remaining pipeline steps quickly now that we have data

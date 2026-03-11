@@ -76,7 +76,8 @@ api.interceptors.response.use(
             triggerLoading(false);
         }
 
-        if (error.response?.status === 401 && typeof window !== "undefined") {
+        const isAuthRoute = error.config?.url?.includes('/login') || error.config?.url?.includes('/signup');
+        if (error.response?.status === 401 && typeof window !== "undefined" && !isAuthRoute) {
             // Must clear the cookie as well to prevent middleware redirect loops
             document.cookie = `twinly_token=; path=/; SameSite=Lax; max-age=0`;
             localStorage.removeItem("twinly_token");
