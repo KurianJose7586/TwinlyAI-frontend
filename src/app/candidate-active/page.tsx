@@ -21,12 +21,14 @@ import {
     Sun,
     Moon,
     X,
-    Sparkles
+    Sparkles,
+    Plug
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/context/AuthContext";
 import { ResumeUploadZone } from "@/components/ui/resume-upload-zone";
+import { IntegrationHub } from "@/components/ui/integration-hub";
 import { useApiKeys, useCreateApiKey, useDeleteApiKey } from "@/hooks/useApiKeys";
 import { useBots, useUpdateBot } from "@/hooks/useBots";
 import { Project } from "@/types";
@@ -361,6 +363,16 @@ export default function CandidateActiveDashboard() {
                     >
                         <Settings size={22} />
                         <span className="hidden lg:block">Settings</span>
+                    </button>
+                    <button
+                        onClick={() => safeTabChange('connectors')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'connectors'
+                            ? 'bg-slate-900/5 dark:bg-white/10 text-slate-900 dark:text-white'
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-900/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                    >
+                        <Plug size={22} />
+                        <span className="hidden lg:block">Connectors</span>
                     </button>
                 </nav>
 
@@ -776,6 +788,14 @@ export default function CandidateActiveDashboard() {
                                     <h4 className="text-lg font-semibold text-slate-900 dark:text-white">Detailed analytics arriving soon</h4>
                                     <p className="text-slate-500 dark:text-slate-400 max-w-sm mt-2">We are compiling deeper insights regarding your agent&apos;s interactions with prospective recruiters.</p>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Tab: Connectors */}
+                        {activeTab === 'connectors' && (
+                            <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+
+                                <IntegrationHub />
                             </div>
                         )}
 
