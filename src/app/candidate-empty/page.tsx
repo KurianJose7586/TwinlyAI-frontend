@@ -89,9 +89,10 @@ export default function CandidateEmptyDashboard() {
             const data = res.data;
 
             // Persist candidate name returned by the backend
-            if (data?.extracted_data?.name) {
-                localStorage.setItem("twinly_userName", data.extracted_data.name);
-                localStorage.setItem("userName", data.extracted_data.name);
+            const candidateName = data?.extracted_data?.name || data?.candidate_name;
+            if (candidateName) {
+                localStorage.setItem("twinly_userName", candidateName);
+                localStorage.setItem("userName", candidateName);
             }
 
             // Animate remaining pipeline steps quickly now that we have data
@@ -102,7 +103,14 @@ export default function CandidateEmptyDashboard() {
 
             setUploadDone(true);
             await delay(1000);
-            router.push("/candidate-active");
+
+            // Invalidate the globally cached bots so candidate-active fetches the updated profile
+            import('@tanstack/react-query').then(({ useQueryClient }) => {
+                // Not the cleanest outside a component hook, but we reload the router anyway.
+            }).catch(() => { });
+
+            // Simpler solution: Just reload the window entirely. This is safest for global React states.
+            window.location.href = "/candidate-active";
 
         } catch (err: unknown) {
             console.error("Upload error:", err);

@@ -113,7 +113,8 @@ export default function CandidateActiveDashboard() {
         setUserAvatar(avatar);
         setBotId(id);
         setAgentName(`${name} AI`);
-        const initialBio = `I'm ${name.split(' ')[0]}'s AI twin. I represent their skills and career achievements. I should be articulate, helpful, and maintain professional ethics.`;
+        const displayNameFallback = name && name.trim().length > 0 ? name : "Your";
+        const initialBio = `I'm ${displayNameFallback.split(' ')[0]}'s AI twin. I represent their skills and career achievements. I should be articulate, helpful, and maintain professional ethics.`;
         setAgentBio(initialBio);
         originalAgentState.current = {
             name: `${name} AI`,
@@ -135,13 +136,14 @@ export default function CandidateActiveDashboard() {
 
                 if (botId !== realId) {
                     localStorage.setItem("twinly_botId", realId);
-                    localStorage.setItem("twinly_userName", bot.name);
+                    localStorage.setItem("twinly_userName", bot.name || "Your");
                     setBotId(realId);
                 }
 
-                setUserName(bot.name);
-                setAgentName(`${bot.name} AI`);
-                setAgentBio(bot.summary || `I'm ${bot.name.split(' ')[0]}'s AI twin.`);
+                const displayName = bot.name && bot.name.trim().length > 0 ? bot.name : "Your";
+                setUserName(displayName);
+                setAgentName(`${displayName} AI`);
+                setAgentBio(bot.summary || `I'm ${displayName.split(' ')[0]}'s AI twin.`);
                 setGithubUrl(bot.github_url || "");
                 setTwitterUrl(bot.twitter_url || "");
                 setWebsiteUrl(bot.website_url || "");
@@ -149,8 +151,8 @@ export default function CandidateActiveDashboard() {
                 setProjects(bot.projects || []);
 
                 originalAgentState.current = {
-                    name: `${bot.name} AI`,
-                    bio: bot.summary || `I'm ${bot.name.split(' ')[0]}'s AI twin.`,
+                    name: `${displayName} AI`,
+                    bio: bot.summary || `I'm ${displayName.split(' ')[0]}'s AI twin.`,
                     githubUrl: bot.github_url || "",
                     twitterUrl: bot.twitter_url || "",
                     websiteUrl: bot.website_url || "",
