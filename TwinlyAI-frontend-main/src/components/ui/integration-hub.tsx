@@ -24,7 +24,6 @@ export function IntegrationHub() {
     const [loading, setLoading] = useState(true);
     const [reposLoading, setReposLoading] = useState(false);
     const [syncingRepo, setSyncingRepo] = useState<string | null>(null);
-    const [syncNotice, setSyncNotice] = useState<{ type: 'success' | 'info' | 'error'; text: string } | null>(null);
 
     const isProd = process.env.NODE_ENV === "production";
     const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://twinlyai-backend-v2-0.onrender.com" : "http://localhost:8000");
@@ -72,38 +71,24 @@ export function IntegrationHub() {
     };
 
     const handleConnectGithub = () => {
-        const token = localStorage.getItem("twinly_token");
-        window.location.href = `${apiBase}/api/v1/connectors/github/authorize?token=${token}`;
+        window.location.href = `${apiBase}/api/v1/connectors/github/authorize`;
     };
 
     const handleSyncRepo = async (repoName: string) => {
         setSyncingRepo(repoName);
-        setSyncNotice(null);
         try {
             const token = localStorage.getItem("twinly_token");
-            const res = await fetch(`${apiBase}/api/v1/connectors/github/repositories/${repoName}/sync`, {
+            await fetch(`${apiBase}/api/v1/connectors/github/repositories/${repoName}/sync`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` }
             });
-
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                const errorText = data?.detail || `Failed to sync ${repoName}.`;
-                setSyncNotice({ type: 'error', text: errorText });
+            // Ideally we'd poll or use a websocket here, but for now we just show it's syncing
+            setTimeout(() => {
                 setSyncingRepo(null);
-                return;
-            }
-
-            if (data?.status === 'completed') {
-                setSyncNotice({ type: 'success', text: data?.message || `Sync completed for ${repoName}.` });
-            } else {
-                setSyncNotice({ type: 'info', text: data?.message || `Sync started for ${repoName}.` });
-            }
-
-            setSyncingRepo(null);
+                alert(`Started indexing ${repoName} in the background.`);
+            }, 1500);
         } catch (err) {
             console.error(err);
-            setSyncNotice({ type: 'error', text: `Failed to sync ${repoName}. Please try again.` });
             setSyncingRepo(null);
         }
     };
@@ -120,17 +105,6 @@ export function IntegrationHub() {
                 <div className="mb-8">
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Integration Hub</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Connect external accounts so your AI Twin can answer deeper technical questions and stay up to date without hallucinating.</p>
-                    {syncNotice && (
-                        <div className={`mt-3 text-sm px-3 py-2 rounded-xl border ${
-                            syncNotice.type === 'success'
-                                ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-400'
-                                : syncNotice.type === 'error'
-                                ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400'
-                                : 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400'
-                        }`}>
-                            {syncNotice.text}
-                        </div>
-                    )}
                 </div>
 
                 {/* Base Card */}
