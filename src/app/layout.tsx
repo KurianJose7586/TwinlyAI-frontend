@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { LoadingProvider } from "@/context/LoadingContext";
 import { ColdStartLoader } from "@/components/ui/cold-start-loader";
 import { QueryProvider } from "@/providers/query-provider";
+import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -41,9 +42,11 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <LoadingProvider>
-                <CustomCursor />
-                <ColdStartLoader />
-                {children}
+                <ToastProvider>
+                  <CustomCursor />
+                  <ColdStartLoader />
+                  {children}
+                </ToastProvider>
               </LoadingProvider>
             </AuthProvider>
           </QueryProvider>

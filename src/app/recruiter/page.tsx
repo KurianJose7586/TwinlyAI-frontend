@@ -50,6 +50,7 @@ import {
 import { useTheme } from "next-themes";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/toast";
 import { useUserProfile } from "@/hooks/useUser";
 import { useSearchCandidates, useCandidates } from "@/hooks/useCandidates";
 import { Candidate, BotResponse } from "@/types";
@@ -147,8 +148,10 @@ const CandidateSkeleton = ({ index = 0 }: { index?: number }) => (
 
 function RecruiterDashboardContent() {
     const { logout } = useAuth();
+    const { comingSoon } = useToast();
     const { setTheme, resolvedTheme } = useTheme();
     const { data: userProfile } = useUserProfile();
+    const { data: allCandidates } = useCandidates();
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -224,8 +227,27 @@ function RecruiterDashboardContent() {
 
     // Use search results if available, otherwise it's empty
     const displayCandidates = useMemo(() => {
-        return searchResults !== null ? searchResults : [];
-    }, [searchResults]);
+        if (searchResults !== null) return searchResults;
+        if (allCandidates) {
+            return (allCandidates as {id:string;name:string;role?:string;email?:string;linkedin?:string;quote?:string;match:number;matchStyle?:string;avatar?:string;skills:string[];resume_url?:string;thumbnail_url?:string;experience_years?:number;projects?:{name:string;description:string;link?:string}[]}[]).map((r, i) => ({
+                id: r.id,
+                name: r.name,
+                role: r.role || "AI Professional",
+                email: r.email || "",
+                linkedin: r.linkedin || "",
+                quote: r.quote || "No summary available.",
+                match: 0,
+                matchStyle: "bg-slate-50 dark:bg-white/5 text-slate-500 border-slate-200 dark:border-white/10",
+                avatar: r.avatar || AVATARS[i % AVATARS.length],
+                skills: Array.isArray(r.skills) ? r.skills : [],
+                resume_url: r.resume_url,
+                thumbnail_url: r.thumbnail_url,
+                experience_years: r.experience_years || 0,
+                projects: r.projects || []
+            }));
+        }
+        return [];
+    }, [searchResults, allCandidates]);
 
     const candidateIdParam = searchParams?.get('candidate');
 
@@ -298,15 +320,11 @@ function RecruiterDashboardContent() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-[#0B0E14] text-slate-900 dark:text-white font-sans antialiased relative transition-colors duration-300">
-            {/* Background Orbs */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-0 dark:opacity-100 transition-opacity duration-300">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/20 blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/20 blur-[120px]" />
-            </div>
+        <div className="min-h-screen flex flex-col bg-white dark:bg-[#111318] text-slate-900 dark:text-white font-sans antialiased">
+
 
             {/* Header */}
-            <header className="flex items-center justify-between border-b border-transparent dark:border-white/5 px-8 py-4 bg-slate-100/80 dark:bg-[#0B0E14]/80 backdrop-blur-md sticky top-0 z-50 transition-colors duration-300 relative z-50">
+            <header className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.06] px-8 py-4 bg-white dark:bg-[#111318] sticky top-0 z-50">
                 <div className="flex items-center gap-6 overflow-hidden">
                     <Link href="/" className="flex items-center gap-2 shrink-0">
                         <Image
@@ -323,7 +341,7 @@ function RecruiterDashboardContent() {
                     <nav className="flex items-center gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap scrollbar-hide pr-4 min-w-0 hidden md:flex">
                         <button
                             className={`text-[14px] font-medium transition-colors py-2 ${activeTab === 'overview' ? 'text-slate-900 dark:text-white relative after:content-[""] after:absolute after:-bottom-[19px] after:left-0 after:w-full after:h-[2px] after:bg-blue-600 dark:after:bg-purple-500' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
-                            onClick={() => { setActiveTab('overview'); alert("Overview dashboard is coming soon."); }}
+                            onClick={() => { setActiveTab('overview'); comingSoon("Overview dashboard"); }}
                         >
                             Overview
                         </button>
@@ -335,7 +353,7 @@ function RecruiterDashboardContent() {
                         </button>
                         <button
                             className={`text-[14px] font-medium transition-colors py-2 ${activeTab === 'campaigns' ? 'text-slate-900 dark:text-white relative after:content-[""] after:absolute after:-bottom-[19px] after:left-0 after:w-full after:h-[2px] after:bg-blue-600 dark:after:bg-purple-500' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
-                            onClick={() => { setActiveTab('campaigns'); alert("Campaign management is coming soon."); }}
+                            onClick={() => { setActiveTab('campaigns'); comingSoon("Campaign management"); }}
                         >
                             Campaigns
                         </button>
@@ -403,10 +421,10 @@ function RecruiterDashboardContent() {
                             {isSettingsOpen && (
                                 <div className="absolute top-full right-0 mt-4 w-64 bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 p-2">
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3 pt-2">Preferences</h3>
-                                    <button onClick={() => alert("Security settings coming soon.")} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
+                                    <button onClick={() => comingSoon("Security settings")} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
                                         <Shield size={16} className="text-slate-400" /> Account Security
                                     </button>
-                                    <button onClick={() => alert("Notification preferences coming soon.")} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
+                                    <button onClick={() => comingSoon("Notification preferences")} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
                                         <Bell size={16} className="text-slate-400" /> Alert Preferences
                                     </button>
                                     <button
@@ -451,10 +469,10 @@ function RecruiterDashboardContent() {
                                     </div>
                                 </div>
                                 <div className="p-2">
-                                    <button onClick={() => alert("Profile management coming soon.")} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
+                                    <button onClick={() => comingSoon("Profile management")} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
                                         <User size={16} className="text-slate-400" /> My Profile
                                     </button>
-                                    <button onClick={() => alert("Active roles dashboard coming soon.")} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
+                                    <button onClick={() => comingSoon("Active roles")} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
                                         <Briefcase size={16} className="text-slate-400" /> Active Roles
                                     </button>
                                     <div className="h-px bg-slate-200 dark:bg-white/10 my-1 mx-1"></div>
@@ -469,20 +487,20 @@ function RecruiterDashboardContent() {
             </header>
 
             <main className="flex-1 max-w-7xl mx-auto w-full px-6 sm:px-8 py-8 sm:py-12 relative z-10 pb-24 md:pb-12">
-                <div className="mb-8 sm:mb-10 text-center">
-                    <h1 className="text-slate-900 dark:text-white text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">Find your next hire</h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-base sm:text-lg font-normal px-4">Intelligent semantic search for top AI talent.</p>
+                <div className="mb-6">
+                    <h1 className="text-[22px] font-semibold text-slate-900 dark:text-white tracking-tight">Candidates</h1>
+                    <p className="text-[14px] text-slate-400 dark:text-slate-500 mt-1">Search the talent pool by skill, role, or keyword.</p>
                 </div>
 
                 <div className="max-w-3xl mx-auto mb-12">
                     <form onSubmit={handleSearch} className="relative group">
                         <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
                             {isSearching
-                                ? <Loader2 className="text-blue-600 dark:text-purple-500 w-6 h-6 animate-spin" />
-                                : <Search className="text-blue-600 dark:text-purple-500 w-6 h-6" />}
+                                ? <Loader2 className="text-slate-400 w-5 h-5 animate-spin" />
+                                : <Search className="text-slate-400 w-5 h-5" />}
                         </div>
                         <input
-                            className="w-full h-14 sm:h-16 pl-12 sm:pl-14 pr-28 sm:pr-32 bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-600/20 dark:focus:ring-purple-500/20 focus:border-blue-600 dark:focus:border-purple-500 focus:outline-none text-lg sm:text-xl font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all"
+                            className="w-full h-11 pl-10 pr-28 bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 rounded-lg focus:border-slate-400 dark:focus:border-white/30 focus:outline-none text-[15px] font-normal text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
                             placeholder="Frontend dev, ML engineer..."
                             type="text"
                             value={searchQuery}
@@ -494,7 +512,7 @@ function RecruiterDashboardContent() {
                                     <X size={18} />
                                 </button>
                             )}
-                            <button type="submit" disabled={isSearching} className="h-full px-6 bg-blue-600 dark:bg-purple-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 dark:hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60">
+                            <button type="submit" disabled={isSearching} className="h-full px-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-md font-medium text-[13px] hover:bg-slate-700 dark:hover:bg-slate-200 transition-colors disabled:opacity-50">
                                 {isSearching ? "Searching..." : "Search"}
                             </button>
                         </div>
@@ -519,8 +537,8 @@ function RecruiterDashboardContent() {
                                     setSearchQuery(chip);
                                     performSearch(chip);
                                 }}
-                                className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-sm transition-colors cursor-pointer border ${searchQuery.toLowerCase() === chip.toLowerCase()
-                                    ? "bg-blue-50 dark:bg-purple-500/10 border-blue-200 dark:border-purple-500/20 text-blue-700 dark:text-purple-400"
+                                className={`px-3 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer border ${searchQuery.toLowerCase() === chip.toLowerCase()
+                                    ? "bg-slate-900 dark:bg-white border-slate-900 dark:border-white text-white dark:text-slate-900"
                                     : "bg-white dark:bg-[#1C2128] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5"
                                     }`}
                             >
@@ -539,42 +557,30 @@ function RecruiterDashboardContent() {
                         <p className="col-span-full text-center text-red-500">{searchError}</p>
                     ) : (
                         currentCandidates.map((candidate) => (
-                            <div key={candidate.id} onClick={() => openCandidateModal(candidate)} className="bg-white dark:bg-[#1C2128] rounded-2xl border border-slate-200 dark:border-white/10 p-6 shadow-sm hover:shadow-md dark:shadow-none hover:border-blue-500/30 dark:hover:border-purple-500/50 transition-all group flex flex-col relative overflow-hidden cursor-pointer">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-100 dark:border-white/10 bg-slate-100 dark:bg-[#0B0E14] relative z-10">
-                                        <Image src={candidate.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={candidate.name} width={56} height={56} className="w-full h-full object-cover" />
+                            <div key={candidate.id} onClick={() => openCandidateModal(candidate)} className="bg-white dark:bg-[#161B22] rounded-xl border border-slate-100 dark:border-white/[0.07] p-5 hover:border-slate-300 dark:hover:border-white/20 transition-all cursor-pointer flex flex-col">
+                                <div className="flex items-start gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-100 dark:border-white/10 bg-slate-100 dark:bg-white/5 shrink-0">
+                                        <Image src={candidate.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={candidate.name} width={40} height={40} className="w-full h-full object-cover" />
                                     </div>
-                                    {candidate.thumbnail_url && (
-                                        <div className="absolute right-0 top-0 w-24 h-32 opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none rotate-12 translate-x-4 -translate-y-4">
-                                            <Image
-                                                src={candidate.thumbnail_url || ""}
-                                                alt="Resume Preview"
-                                                width={96}
-                                                height={128}
-                                                className="w-full h-full object-cover rounded-lg shadow-2xl border border-white/20"
-                                            />
-                                        </div>
-                                    )}
-                                    <div className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${candidate.matchStyle}`}>
-                                        {candidate.match}% MATCH
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white truncate">{candidate.name}</h3>
+                                        <p className="text-[13px] text-slate-400 dark:text-slate-500 truncate">{candidate.role}</p>
                                     </div>
+                                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 shrink-0">{candidate.experience_years}y</span>
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-[19px] font-bold text-slate-900 dark:text-white mb-0.5">{candidate.name}</h3>
-                                    <p className="text-blue-600 dark:text-purple-400 text-[13px] font-semibold mb-4">{candidate.role}</p>
-                                    <p className="text-blue-600 dark:text-purple-400 text-[13px] font-semibold mb-2">{candidate.email}</p>
-                                    <p className="text-blue-600 dark:text-purple-400 text-[13px] font-semibold mb-4">{candidate.linkedin}</p>
-                                    <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-3 mb-4 border border-slate-100 dark:border-white/5">
-                                        <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed italic">
-                                            &quot;{candidate.quote}&quot;
-                                        </p>
-                                    </div>
-                                    <div className="flex flex-wrap gap-1.5 mb-6">
-                                        {candidate.skills.map((_: string, index: number) => (
-                                            <span key={index} className="px-2 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded uppercase tracking-wider">
+                                    <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 mb-4">
+                                        {candidate.quote}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1 mb-4">
+                                        {candidate.skills.slice(0,4).map((_: string, index: number) => (
+                                            <span key={index} className="px-2 py-0.5 bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[11px] rounded border border-slate-100 dark:border-white/[0.07]">
                                                 {candidate.skills[index]}
                                             </span>
                                         ))}
+                                        {candidate.skills.length > 4 && (
+                                            <span className="px-2 py-0.5 text-slate-400 dark:text-slate-500 text-[11px]">+{candidate.skills.length-4}</span>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex gap-2 mt-auto">
@@ -590,12 +596,12 @@ function RecruiterDashboardContent() {
                                             }
                                         }}
                                     >
-                                        <button className="w-full py-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-white text-[13px] font-semibold hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+                                        <button className="w-full py-1.5 rounded-md bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-[12px] font-medium hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-100 dark:border-white/[0.07] transition-colors">
                                             Chat
                                         </button>
                                     </Link>
                                     <button
-                                        className="flex-1 w-full py-2 rounded-lg bg-blue-600 dark:bg-purple-600 text-white text-[13px] font-semibold hover:bg-blue-700 dark:hover:bg-purple-700 transition-colors"
+                                        className="flex-1 w-full py-1.5 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-medium hover:bg-slate-700 dark:hover:bg-slate-200 transition-colors"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             e.preventDefault();
@@ -647,7 +653,7 @@ function RecruiterDashboardContent() {
                         <button
                             onClick={() => paginate(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="p-2 rounded-lg flex items-center justify-center bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm"
+                            className="p-2 rounded-md flex items-center justify-center bg-transparent border border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-slate-400 dark:hover:border-white/30 transition-colors"
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -668,7 +674,7 @@ function RecruiterDashboardContent() {
                         <button
                             onClick={() => paginate(currentPage + 1)}
                             disabled={currentPage === totalPages}
-                            className="p-2 rounded-lg flex items-center justify-center bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm"
+                            className="p-2 rounded-md flex items-center justify-center bg-transparent border border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-slate-400 dark:hover:border-white/30 transition-colors"
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -681,13 +687,12 @@ function RecruiterDashboardContent() {
             {mounted && selectedCandidate && createPortal(
                 <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-hidden">
                     <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity" onClick={closeCandidateModal}></div>
-                    <div className="relative w-full max-w-2xl bg-white dark:bg-[#1C2128] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 flex flex-col h-[95vh] sm:h-auto sm:max-h-[90vh] animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+                    <div className="relative w-full max-w-2xl bg-white dark:bg-[#161B22] rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-100 dark:border-white/[0.07] flex flex-col h-[95vh] sm:h-auto sm:max-h-[90vh] animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
                         {/* Header Image / Pattern - Fixed at top */}
-                        <div className="h-32 shrink-0 bg-gradient-to-r from-blue-600 to-purple-600 relative sm:rounded-t-3xl overflow-hidden">
-                            {generateDoodles(selectedCandidate.id + selectedCandidate.name)}
+                        <div className="h-20 shrink-0 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-100 dark:border-white/[0.06] relative sm:rounded-t-2xl overflow-hidden">
                             <button
                                 onClick={closeCandidateModal}
-                                className="absolute top-4 right-4 p-3 sm:p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-colors z-50 flex items-center justify-center min-h-[44px] min-w-[44px]"
+                                className="absolute top-3 right-4 p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors z-50 flex items-center justify-center"
                             >
                                 <X size={20} />
                             </button>
@@ -827,7 +832,7 @@ function RecruiterDashboardContent() {
                                         router.push("/recruiter/chat", { scroll: false });
                                     }
                                 }}
-                                className="flex-1 py-4 px-6 rounded-2xl bg-white dark:bg-white/5 text-slate-700 dark:text-white text-[13px] font-bold hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all shadow-sm active:scale-95 text-center"
+                                className="flex-1 py-3 px-5 rounded-lg bg-white dark:bg-white/5 text-slate-700 dark:text-white text-[13px] font-medium hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all text-center"
                             >
                                 Message Digital Twin
                             </button>
@@ -839,7 +844,7 @@ function RecruiterDashboardContent() {
                                     }
                                     router.push("/recruiter/call");
                                 }}
-                                className="flex-1 py-4 px-6 rounded-2xl bg-blue-600 dark:bg-purple-600 text-white text-[13px] font-bold hover:bg-blue-700 dark:hover:bg-purple-700 transition-all shadow-lg shadow-blue-500/20 dark:shadow-purple-500/20 active:scale-95 text-center"
+                                className="flex-1 py-3 px-5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[13px] font-medium hover:bg-slate-700 dark:hover:bg-slate-200 transition-all text-center"
                             >
                                 Voice Interview
                             </button>
@@ -868,7 +873,7 @@ function RecruiterDashboardContent() {
                             }
                             setActiveTab(tab.id);
                             if (tab.id === 'overview' || tab.id === 'campaigns') {
-                                alert(`${tab.label} is coming soon!`);
+                                comingSoon(tab.label);
                             }
                             if (tab.id === 'profile') {
                                 setIsProfileMenuOpen(true);

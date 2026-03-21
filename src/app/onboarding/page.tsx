@@ -367,13 +367,10 @@ function OnboardingWizardForm() {
     if (!isMounted) return null; // Prevent hydration mismatch
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 pt-24 pb-24 bg-slate-100 dark:bg-[#0B0E14] transition-colors duration-300 relative overflow-hidden font-sans">
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-0 dark:opacity-100 transition-opacity duration-300">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/20 blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/20 blur-[120px]" />
-            </div>
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 pt-24 pb-24 bg-white dark:bg-[#111318] font-sans">
 
-            <div className="fixed top-0 left-0 right-0 p-4 md:p-8 flex justify-between items-center z-50 bg-slate-100/80 dark:bg-[#0B0E14]/80 backdrop-blur-md border-b border-transparent dark:border-white/5">
+
+            <div className="fixed top-0 left-0 right-0 px-6 md:px-8 py-4 flex justify-between items-center z-50 bg-white dark:bg-[#111318] border-b border-slate-100 dark:border-white/[0.06]">
                 <div className="flex items-center gap-3 md:gap-4 font-sans antialiased">
                     <Image src="/butterfly.svg" alt="TwinlyAI" width={32} height={32} className="w-8 h-8 md:w-10 md:h-10" />
 
@@ -487,19 +484,14 @@ function OnboardingWizardForm() {
                     </motion.div>
                 ) : (
                     <>
-                        <div className="mb-12 flex items-center justify-center gap-2">
-                            {Array.from({ length: totalSteps }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`h-1.5 rounded-full transition-all duration-500 ${i + 1 === step ? 'w-8 bg-blue-600 dark:bg-purple-500' :
-                                        i + 1 < step ? 'w-4 bg-blue-600/50 dark:bg-purple-500/50' :
-                                            'w-4 bg-slate-200 dark:bg-white/10'
-                                        }`}
-                                />
-                            ))}
+                        <div className="fixed top-0 left-0 right-0 h-0.5 z-[60] bg-slate-100 dark:bg-white/5">
+                            <div className="h-full bg-slate-900 dark:bg-white transition-all duration-500" style={{ width: `${(step / totalSteps) * 100}%` }} />
+                        </div>
+                        <div className="mb-10 text-center">
+                            <span className="text-[12px] font-medium text-slate-400 dark:text-slate-500">Step {step} of {totalSteps}</span>
                         </div>
 
-                        <div className="bg-white dark:bg-[#161B22] border border-transparent dark:border-white/10 rounded-[2.5rem] p-8 md:p-14 shadow-2xl transition-colors duration-300 min-h-[450px] relative overflow-hidden flex flex-col">
+                        <div className="bg-white dark:bg-[#161B22] border border-slate-100 dark:border-white/[0.07] rounded-2xl p-8 md:p-12 transition-colors min-h-[400px] relative flex flex-col">
                             {step > 1 && (
                                 <button onClick={handleBack} className="absolute top-6 left-6 md:top-8 md:left-8 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors z-20 min-h-[44px] min-w-[44px] flex items-center justify-center">
                                     <ChevronLeft size={24} />
@@ -520,13 +512,13 @@ function OnboardingWizardForm() {
                                     {/* ----------------- STEP 1: NAME ----------------- */}
                                     {step === 1 && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">Let&apos;s start with the basics.</h1>
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">Let&apos;s start with the basics.</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">What should we call you?</p>
                                             <div className="space-y-5">
                                                 <input type="text" placeholder="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                                    className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all placeholder:text-slate-400 dark:placeholder:text-[#57606A] text-lg font-medium" autoFocus />
+                                                    className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600 text-lg" autoFocus />
                                                 <input type="text" placeholder="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                                    className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all placeholder:text-slate-400 dark:placeholder:text-[#57606A] text-lg font-medium" />
+                                                    className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600 text-lg" />
                                             </div>
                                         </div>
                                     )}
@@ -534,7 +526,7 @@ function OnboardingWizardForm() {
                                     {/* ----------------- STEP 2: AVATAR ----------------- */}
                                     {step === 2 && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">Choose your avatar.</h1>
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">Choose your avatar.</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-8">How you&apos;ll appear to {role === 'candidate' ? 'recruiters' : 'candidates'} through your AI Twin.</p>
                                             <div className="grid grid-cols-4 gap-4 mb-6">
                                                 {avatarOptions.map((url, idx) => (
@@ -561,18 +553,18 @@ function OnboardingWizardForm() {
                                     {/* ----------------- STEP 3: CONTACT OR COMPANY DETAILS ----------------- */}
                                     {step === 3 && role === 'candidate' && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">Nice to meet you, {formData.firstName || 'there'}!</h1>
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">Nice to meet you, {formData.firstName || 'there'}!</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">How should recruiters reach you?</p>
                                             <div className="space-y-5">
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Email (Required)</label>
                                                     <input type="email" placeholder="hello@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                        className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all" autoFocus />
+                                                        className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" autoFocus />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Password (Required)</label>
                                                     <input type="password" placeholder="Min 8 characters" value={password} onChange={(e) => setPassword(e.target.value)}
-                                                        className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all" />
+                                                        className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" />
                                                     {password.length > 0 && password.length < 8 && (
                                                         <p className="text-red-500 text-xs mt-1 ml-2">Password must be at least 8 characters.</p>
                                                     )}
@@ -583,7 +575,7 @@ function OnboardingWizardForm() {
                                                         <div>
                                                             <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Phone (Optional)</label>
                                                             <input type="tel" placeholder="+1 (555) 000-0000" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                                                className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all" />
+                                                                className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" />
                                                         </div>
                                                         <div>
                                                             <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-3 ml-2">Preferred Contact Method</label>
@@ -628,13 +620,13 @@ function OnboardingWizardForm() {
 
                                     {step === 3 && role === 'recruiter' && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">Welcome aboard, {formData.firstName || 'there'}!</h1>
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">Welcome aboard, {formData.firstName || 'there'}!</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">Where are you hiring for?</p>
                                             <div className="space-y-6">
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Company Name (Required)</label>
                                                     <input type="text" placeholder="Acme AI Inc." value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                                                        className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all" autoFocus />
+                                                        className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" autoFocus />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Company Website (Optional)</label>
@@ -698,7 +690,7 @@ function OnboardingWizardForm() {
 
                                     {step === 4 && role === 'recruiter' && (
                                         <div className="flex-1 flex flex-col justify-start max-w-lg mx-auto w-full max-h-full overflow-y-auto scrollbar-none pb-4">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center mt-4">What talent do you need?</h1>
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center mt-4">What talent do you need?</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">This helps us surface the perfect candidates.</p>
 
                                             <div className="space-y-8">
@@ -753,7 +745,7 @@ function OnboardingWizardForm() {
                                     {/* ----------------- STEP 5: PERSONALITY OR OUTREACH ----------------- */}
                                     {step === 5 && role === 'candidate' && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">Add some personality!</h1>
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">Add some personality!</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">Make your AI Twin uniquely you.</p>
 
                                             <div className="space-y-8">
@@ -790,7 +782,7 @@ function OnboardingWizardForm() {
 
                                     {step === 5 && role === 'recruiter' && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">How should top tier candidates connect with you?</h1>
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">How should top tier candidates connect with you?</h1>
 
                                             <div className="space-y-5 mt-6">
                                                 <div>
@@ -802,7 +794,7 @@ function OnboardingWizardForm() {
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Password (Required)</label>
                                                     <input type="password" placeholder="Min 8 characters" value={password} onChange={(e) => setPassword(e.target.value)}
-                                                        className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all" />
+                                                        className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" />
                                                     {password.length > 0 && password.length < 8 && (
                                                         <p className="text-red-500 text-xs mt-1 ml-2">Password must be at least 8 characters.</p>
                                                     )}
@@ -859,7 +851,7 @@ function OnboardingWizardForm() {
                                     {/* ----------------- STEP 6: ASPIRATIONS ----------------- */}
                                     {step === 6 && (
                                         <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-[#F9FAFB] mb-4 text-center">What are your goals?</h1>
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">What are your goals?</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">This helps us tailor your AI Twin&apos;s interactions.</p>
 
                                             <textarea placeholder={role === 'candidate' ? "I want to transition into a senior AI engineering role focusing on generative models..." : "I&apos;m looking to hire a founding engineering team for my AI startup..."}
