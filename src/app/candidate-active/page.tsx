@@ -596,14 +596,197 @@ export default function CandidateActiveDashboard() {
                                         <div className="space-y-3">
                                             {/* New key reveal */}
                                             {newKeyValue && (
-                                                <div className="bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 rounded-2xl p-4">
-                                                    <p className="text-xs font-bold text-green-700 dark:text-green-400 mb-1">🔑 Save this key — it won&apos;t be shown again!</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <code className="text-xs font-mono text-green-800 dark:text-green-300 flex-1 truncate">{newKeyValue}</code>
-                                                        <button onClick={() => { navigator.clipboard.writeText(newKeyValue); }} className="text-green-700 dark:text-green-400 hover:text-green-900">
-                                                            <Copy size={14} />
-                                                        </button>
+                                                <div className="space-y-3">
+                                                    <div className="bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 rounded-2xl p-4">
+                                                        <p className="text-xs font-bold text-green-700 dark:text-green-400 mb-1">🔑 Save this key — it won&apos;t be shown again!</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <code className="text-xs font-mono text-green-800 dark:text-green-300 flex-1 truncate">{newKeyValue}</code>
+                                                            <button onClick={() => { navigator.clipboard.writeText(newKeyValue); }} className="text-green-700 dark:text-green-400 hover:text-green-900">
+                                                                <Copy size={14} />
+                                                            </button>
+                                                        </div>
                                                     </div>
+
+                                                    {/* Embed snippet for this key & bot */}
+                                                    {botId && (
+                                                        <div className="bg-slate-900 text-slate-50 rounded-2xl p-4 text-xs space-y-2 border border-slate-700">
+                                                            <p className="font-semibold text-[11px] uppercase tracking-widest text-slate-400">Embeddable widget snippet</p>
+                                                            <p className="text-[11px] text-slate-400">
+                                                                Paste this snippet into your website. It renders a floating chat widget and authenticates via this API key, so visitors do not need a Twinly account.
+                                                            </p>
+                                                            <pre className="bg-black/40 rounded-lg p-3 overflow-x-auto text-[11px] whitespace-pre-wrap break-all">
+{`<div id="twinlyai-widget"></div>
+<script>
+  (function() {
+    var botId = "${botId}";
+    var apiKey = "${newKeyValue}";
+    var backendBase = "${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://twinlyai-backend-v2-0.onrender.com' : 'http://localhost:8000')}";
+
+    if (!botId || !apiKey || !backendBase) return;
+
+    var container = document.getElementById('twinlyai-widget');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'twinlyai-widget';
+      document.body.appendChild(container);
+    }
+
+    container.style.position = 'fixed';
+    container.style.bottom = '20px';
+    container.style.right = '20px';
+    container.style.zIndex = '9999';
+
+    var button = document.createElement('button');
+    button.textContent = 'Chat with my Twin';
+    button.style.background = '#0f172a';
+    button.style.color = '#f9fafb';
+    button.style.borderRadius = '999px';
+    button.style.padding = '10px 16px';
+    button.style.fontSize = '13px';
+    button.style.border = 'none';
+    button.style.cursor = 'pointer';
+    button.style.boxShadow = '0 10px 30px rgba(15,23,42,0.5)';
+
+    var box = document.createElement('div');
+    box.style.position = 'fixed';
+    box.style.bottom = '70px';
+    box.style.right = '20px';
+    box.style.width = '320px';
+    box.style.maxHeight = '520px';
+    box.style.background = '#0b1120';
+    box.style.color = '#e5e7eb';
+    box.style.borderRadius = '18px';
+    box.style.boxShadow = '0 18px 45px rgba(15,23,42,0.85)';
+    box.style.display = 'none';
+    box.style.overflow = 'hidden';
+    box.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+    var header = document.createElement('div');
+    header.textContent = 'AI Twin';
+    header.style.padding = '10px 14px';
+    header.style.fontSize = '13px';
+    header.style.fontWeight = '600';
+    header.style.background = 'rgba(15,23,42,0.95)';
+    header.style.borderBottom = '1px solid rgba(148,163,184,0.3)';
+
+    var messages = document.createElement('div');
+    messages.style.padding = '10px 12px';
+    messages.style.height = '360px';
+    messages.style.overflowY = 'auto';
+    messages.style.fontSize = '13px';
+    messages.style.background = 'rgba(15,23,42,0.9)';
+
+    var inputRow = document.createElement('div');
+    inputRow.style.display = 'flex';
+    inputRow.style.alignItems = 'center';
+    inputRow.style.gap = '6px';
+    inputRow.style.padding = '8px 10px';
+    inputRow.style.background = 'rgba(15,23,42,0.95)';
+    inputRow.style.borderTop = '1px solid rgba(148,163,184,0.3)';
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Ask this twin a question...';
+    input.style.flex = '1';
+    input.style.fontSize = '12px';
+    input.style.padding = '8px 10px';
+    input.style.borderRadius = '999px';
+    input.style.border = '1px solid rgba(148,163,184,0.6)';
+    input.style.background = 'transparent';
+    input.style.color = 'inherit';
+
+    var sendBtn = document.createElement('button');
+    sendBtn.textContent = 'Send';
+    sendBtn.style.fontSize = '12px';
+    sendBtn.style.padding = '8px 10px';
+    sendBtn.style.borderRadius = '999px';
+    sendBtn.style.border = 'none';
+    sendBtn.style.background = '#38bdf8';
+    sendBtn.style.color = '#0f172a';
+    sendBtn.style.cursor = 'pointer';
+
+    inputRow.appendChild(input);
+    inputRow.appendChild(sendBtn);
+
+    box.appendChild(header);
+    box.appendChild(messages);
+    box.appendChild(inputRow);
+
+    container.appendChild(button);
+    container.appendChild(box);
+
+    function appendMessage(role, text) {
+      var bubble = document.createElement('div');
+      bubble.style.margin = '6px 0';
+      bubble.style.padding = '8px 10px';
+      bubble.style.borderRadius = '14px';
+      bubble.style.maxWidth = '85%';
+      bubble.style.whiteSpace = 'pre-wrap';
+
+      if (role === 'user') {
+        bubble.style.marginLeft = 'auto';
+        bubble.style.background = '#38bdf8';
+        bubble.style.color = '#0f172a';
+      } else {
+        bubble.style.background = 'rgba(15,23,42,0.9)';
+        bubble.style.border = '1px solid rgba(148,163,184,0.6)';
+      }
+
+      bubble.textContent = text;
+      messages.appendChild(bubble);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    var history = [];
+
+    async function sendMessage() {
+      var text = input.value.trim();
+      if (!text) return;
+      appendMessage('user', text);
+      input.value = '';
+
+      try {
+        var res = await fetch(backendBase + '/api/v1/bots/' + botId + '/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey
+          },
+          body: JSON.stringify({ message: text, chat_history: history })
+        });
+
+        var data = await res.json().catch(function() { return {}; });
+        if (!res.ok) {
+          var detail = data && (data.detail || data.message);
+          throw new Error(detail || ('HTTP ' + res.status));
+        }
+
+        var reply = data.reply || data.message || 'No response.';
+        appendMessage('assistant', reply);
+        history.push({ role: 'user', content: text });
+        history.push({ role: 'assistant', content: reply });
+      } catch (e) {
+        appendMessage('assistant', 'Error talking to this twin. Please try again later.');
+        if (window && window.console && console.error) console.error('Twinly widget error:', e);
+      }
+    }
+
+    button.addEventListener('click', function() {
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Enter') sendMessage();
+    });
+  })();
+</script>`}
+                                                            </pre>
+                                                            <p className="text-[11px] text-amber-300/90">
+                                                                Anyone with this snippet can talk to your twin. Rotate/delete the API key if it is ever exposed or misused.
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             {/* Existing keys */}
