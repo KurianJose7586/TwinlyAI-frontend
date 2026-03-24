@@ -95,7 +95,7 @@ export default function VoiceInterviewPage() {
         const isProd = process.env.NODE_ENV === "production";
         const wsHost = process.env.NEXT_PUBLIC_API_URL
             ? process.env.NEXT_PUBLIC_API_URL.replace(/^https?:\/\//, '')
-            : (isProd ? "twinlyai-backend-v2-0.onrender.com" : "localhost:8000");
+            : (isProd ? "joserman-twinlybackend2-0.hf.space" : "localhost:8000");
 
         const wsUrl = `${protocol}//${wsHost}/api/v1/bots/ws/${id}/voice`;
 

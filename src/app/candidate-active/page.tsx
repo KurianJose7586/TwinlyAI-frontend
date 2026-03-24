@@ -264,7 +264,7 @@ export default function CandidateActiveDashboard() {
         try {
             const token = localStorage.getItem("twinly_token");
             const isProd = process.env.NODE_ENV === "production";
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://twinlyai-backend-v2-0.onrender.com" : "http://localhost:8000");
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://joserman-twinlybackend2-0.hf.space" : "http://localhost:8000");
             const res = await fetch(
                 `${apiBase}/api/v1/bots/${botId}/chat/stream`,
                 {
@@ -620,7 +620,7 @@ export default function CandidateActiveDashboard() {
   (function() {
     var botId = "${botId}";
     var apiKey = "${newKeyValue}";
-    var backendBase = "${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://twinlyai-backend-v2-0.onrender.com' : 'http://localhost:8000')}";
+    var backendBase = "${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://joserman-twinlybackend2-0.hf.space' : 'http://localhost:8000')}";
 
     if (!botId || !apiKey || !backendBase) return;
 
