@@ -243,7 +243,7 @@ function RecruiterDashboardContent() {
                 resume_url: r.resume_url,
                 thumbnail_url: r.thumbnail_url,
                 experience_years: r.experience_years || 0,
-                projects: r.projects || []
+                projects: (r.projects || []).map(p => ({ name: p.name, description: p.description, link: p.link || "" }))
             }));
         }
         return [];
