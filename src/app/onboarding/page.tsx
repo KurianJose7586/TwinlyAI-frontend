@@ -8,17 +8,9 @@ import { ArrowRight, ChevronLeft, Check, Sparkles, Plus, X, AlertCircle, Target 
 import { PRESET_GOALS } from "@/constants";
 import api from "@/lib/api";
 import { setToken, setStoredUser } from "@/lib/auth";
+import { AvatarCustomizer, AvatarConfig, buildAvatarUrl, DEFAULT_AVATAR_CONFIG } from "@/components/ui/avatar-customizer";
 
-const INITIAL_AVATAR_OPTIONS = [
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Aneka&backgroundColor=fef08a",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Jasper&backgroundColor=bfdbfe",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Mia&backgroundColor=fbcfe8",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Oliver&backgroundColor=bbf7d0",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Sophia&backgroundColor=fca5a5",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Leo&backgroundColor=fde047",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Zoe&backgroundColor=c4b5fd"
-];
+// DiceBear open-peeps used instead of notionists; initial config set below
 
 const HOBBY_SUGGESTIONS = [
     "Coding", "Reading", "Gaming", "Hiking", "Photography", "Music", "Cooking", "Travel"
@@ -80,7 +72,7 @@ function OnboardingWizardForm() {
     const defaultFormData: FormData = {
         firstName: "",
         lastName: "",
-        avatarUrl: INITIAL_AVATAR_OPTIONS[0],
+        avatarUrl: buildAvatarUrl(DEFAULT_AVATAR_CONFIG),
         aspirations: "",
         email: "",
         phone: "",
@@ -124,7 +116,7 @@ function OnboardingWizardForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [password, setPassword] = useState("");
-    const [avatarOptions, setAvatarOptions] = useState(INITIAL_AVATAR_OPTIONS);
+    const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(DEFAULT_AVATAR_CONFIG);
     const [showMoreContact, setShowMoreContact] = useState(false);
 
     // For custom inputs
@@ -351,17 +343,9 @@ function OnboardingWizardForm() {
         return false;
     };
 
-    const handleShuffleAvatars = () => {
-        const bgColors = ['e2e8f0', 'fef08a', 'bfdbfe', 'fbcfe8', 'bbf7d0', 'fca5a5', 'fde047', 'c4b5fd'];
-        const newAvatars = Array.from({ length: 8 }).map(() => {
-            const seed = Math.random().toString(36).substring(7);
-            const color = bgColors[Math.floor(Math.random() * bgColors.length)];
-            return `https://api.dicebear.com/7.x/notionists/svg?seed=${seed}&backgroundColor=${color}`;
-        });
-        setAvatarOptions(newAvatars);
-        if (!newAvatars.includes(formData.avatarUrl)) {
-            setFormData({ ...formData, avatarUrl: "" });
-        }
+    const handleAvatarConfigChange = (config: AvatarConfig) => {
+        setAvatarConfig(config);
+        setFormData({ ...formData, avatarUrl: buildAvatarUrl(config) });
     };
 
     if (!isMounted) return null; // Prevent hydration mismatch
@@ -525,27 +509,15 @@ function OnboardingWizardForm() {
 
                                     {/* ----------------- STEP 2: AVATAR ----------------- */}
                                     {step === 2 && (
-                                        <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
-                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">Choose your avatar.</h1>
-                                            <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-8">How you&apos;ll appear to {role === 'candidate' ? 'recruiters' : 'candidates'} through your AI Twin.</p>
-                                            <div className="grid grid-cols-4 gap-4 mb-6">
-                                                {avatarOptions.map((url, idx) => (
-                                                    <button key={idx} onClick={() => setFormData({ ...formData, avatarUrl: url })}
-                                                        className={`relative rounded-2xl aspect-square overflow-hidden border-4 transition-all duration-300 hover:scale-[1.03] ${formData.avatarUrl === url ? 'border-blue-600 dark:border-purple-500 shadow-md shadow-blue-500/20' : 'border-transparent hover:border-slate-300 dark:hover:border-white/20'}`}
-                                                    >
-                                                        <Image src={url} alt={`Avatar option ${idx + 1}`} width={80} height={80} className="w-full h-full object-cover" />
-                                                        {formData.avatarUrl === url && (
-                                                            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-blue-600 dark:bg-purple-500 rounded-full flex items-center justify-center text-white">
-                                                                <Check size={12} strokeWidth={3} />
-                                                            </div>
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <div className="flex justify-center">
-                                                <button onClick={handleShuffleAvatars} className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors">
-                                                    <Sparkles size={16} /> Shuffle Avatars
-                                                </button>
+                                        <div className="flex-1 flex flex-col justify-center max-w-xl mx-auto w-full">
+                                            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-2 text-center">Design your avatar.</h1>
+                                            <p className="text-slate-500 dark:text-[#9CA3AF] text-base text-center mb-6">Mix and match to create your perfect Open Peeps character.</p>
+                                            <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.07] rounded-2xl p-5">
+                                                <AvatarCustomizer
+                                                    value={avatarConfig}
+                                                    onChange={handleAvatarConfigChange}
+                                                    compact
+                                                />
                                             </div>
                                         </div>
                                     )}

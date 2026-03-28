@@ -33,6 +33,7 @@ import { useApiKeys, useCreateApiKey, useDeleteApiKey } from "@/hooks/useApiKeys
 import { useBots, useUpdateBot } from "@/hooks/useBots";
 import { useToast } from "@/components/ui/toast";
 import { Project } from "@/types";
+import { AvatarCustomizer, AvatarConfig, buildAvatarUrl, DEFAULT_AVATAR_CONFIG } from "@/components/ui/avatar-customizer";
 
 type APIKey = { id: string; prefix: string };
 
@@ -47,9 +48,11 @@ export default function CandidateActiveDashboard() {
     // --- Profile data ---
     const [userName, setUserName] = React.useState("Your AI Twin");
     const [userAvatar, setUserAvatar] = React.useState(
-        "https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0"
+        buildAvatarUrl(DEFAULT_AVATAR_CONFIG)
     );
     const [botId, setBotId] = React.useState<string | null>(null);
+    const [avatarConfig, setAvatarConfig] = React.useState<AvatarConfig>(DEFAULT_AVATAR_CONFIG);
+    const [showAvatarEditor, setShowAvatarEditor] = React.useState(false);
 
     // --- Dashboard form state ---
     const [agentName, setAgentName] = React.useState("");
@@ -109,7 +112,7 @@ export default function CandidateActiveDashboard() {
         const name = localStorage.getItem("twinly_userName") ||
             localStorage.getItem("userName") || "Your AI Twin";
         const avatar = localStorage.getItem("userAvatar") ||
-            "https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0";
+            buildAvatarUrl(DEFAULT_AVATAR_CONFIG);
         const id = localStorage.getItem("twinly_botId");
 
         setUserName(name);
@@ -309,10 +312,72 @@ export default function CandidateActiveDashboard() {
         setIsStreaming(false);
     };
 
+    // Handle avatar save from modal
+    const handleSaveAvatar = async () => {
+        const newUrl = buildAvatarUrl(avatarConfig);
+        setUserAvatar(newUrl);
+        localStorage.setItem("userAvatar", newUrl);
+        setShowAvatarEditor(false);
+        // Persist to backend if botId exists
+        if (botId) {
+            try {
+                await updateBotMutation({ botId, data: { avatar_url: newUrl } });
+            } catch (e) {
+                console.error("Failed to save avatar:", e);
+            }
+        }
+    };
+
     if (!mounted) return null;
 
     return (
         <div className="flex h-screen overflow-hidden bg-white dark:bg-[#111318] text-slate-900 dark:text-white font-sans antialiased">
+
+            {/* ── Avatar Editor Modal ── */}
+            {showAvatarEditor && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setShowAvatarEditor(false)}
+                    />
+                    {/* Panel */}
+                    <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-[#161B22] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-2xl overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/[0.07]">
+                            <div>
+                                <h2 className="text-base font-semibold text-slate-900 dark:text-white">Customize your avatar</h2>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Open Peeps · hand-drawn illustration style</p>
+                            </div>
+                            <button
+                                onClick={() => setShowAvatarEditor(false)}
+                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                        {/* Body */}
+                        <div className="p-6">
+                            <AvatarCustomizer value={avatarConfig} onChange={setAvatarConfig} />
+                        </div>
+                        {/* Footer */}
+                        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-white/[0.07] bg-slate-50 dark:bg-black/10">
+                            <button
+                                onClick={() => setShowAvatarEditor(false)}
+                                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveAvatar}
+                                className="px-5 py-2 rounded-lg text-sm font-semibold bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-200 transition-colors shadow-sm"
+                            >
+                                Save avatar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Sidebar — hidden on mobile, visible from md upward */}
             <aside className="hidden md:flex w-20 lg:w-64 border-r border-slate-100 dark:border-white/[0.06] flex-col bg-white dark:bg-[#111318] z-10">
@@ -427,6 +492,31 @@ export default function CandidateActiveDashboard() {
                                             <User className="text-slate-400 dark:text-slate-500" size={16} />
                                             <h3 className="text-[12px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Identity</h3>
                                         </div>
+
+                                        {/* Avatar Editor */}
+                                        <div className="mb-6 pb-6 border-b border-slate-100 dark:border-white/[0.06]">
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative group cursor-pointer" onClick={() => setShowAvatarEditor(true)}>
+                                                    <div
+                                                        className="w-16 h-16 rounded-full bg-cover bg-center border-2 border-slate-200 dark:border-white/10 shadow-md overflow-hidden"
+                                                        style={{ backgroundImage: `url("${userAvatar}")` }}
+                                                    />
+                                                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <span className="text-white text-[10px] font-bold">EDIT</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
+                                                    <button
+                                                        onClick={() => setShowAvatarEditor(true)}
+                                                        className="text-xs text-blue-600 dark:text-purple-400 hover:underline font-medium mt-0.5"
+                                                    >
+                                                        Customize avatar →
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <div className="space-y-6">
                                             <div className="grid grid-cols-2 gap-6">
                                                 <div className="flex flex-col">
