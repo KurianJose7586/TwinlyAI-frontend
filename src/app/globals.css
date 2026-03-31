@@ -108,6 +108,12 @@
   }
 }
 
+/* Shimmer animation for avatar tile skeletons */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Custom Cursor Styles */
 .custom-cursor {
   width: 20px;

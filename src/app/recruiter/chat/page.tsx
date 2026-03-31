@@ -110,7 +110,7 @@ export default function RecruiterChatPage() {
             if (!currentBotId) throw new Error("No bot selected. Click Chat on a candidate first.");
 
             const isProd = process.env.NODE_ENV === "production";
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://twinlyai-backend-v2-0.onrender.com" : "http://localhost:8000");
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://k632cnxhg3.ap-south-1.awsapprunner.com" : "http://localhost:8000");
             const res = await fetch(
                 `${apiBase}/api/v1/bots/${currentBotId}/chat/stream`,
                 {

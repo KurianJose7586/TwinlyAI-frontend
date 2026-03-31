@@ -27,6 +27,8 @@ export interface Candidate {
     skills: string[];
     resume_url?: string;
     thumbnail_url?: string;
+    experience_years?: number;
+    summary?: string;
 }
 export interface BotResponse {
     id: string;
