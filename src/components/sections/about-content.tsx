@@ -2,7 +2,6 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import {
     EyeOff,
     UserX,
@@ -60,9 +59,9 @@ export function AboutContent() {
                             transition={{ ...transition, delay: 0.1 }}
                             className="text-[56px] md:text-[84px] font-extrabold tracking-tighter text-[var(--text-main)] leading-[0.95] mb-8"
                         >
-                            We believe you are <br />
+                            Hiring is broken. <br />
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--brand-deep)] to-[var(--brand-purple)]">
-                                more than a PDF.
+                                We&apos;re fixing it.
                             </span>
                         </motion.h1>
 
@@ -72,7 +71,7 @@ export function AboutContent() {
                             transition={{ ...transition, delay: 0.2 }}
                             className="text-xl md:text-2xl text-[var(--text-muted)] max-w-3xl mx-auto leading-relaxed font-light"
                         >
-                            TwinlyAI was born from a simple observation: humans are multidimensional, but the hiring process is flat. We bridge the gap between static summaries and authentic potential.
+                            Resumes reduce people to keywords. TwinlyAI turns candidates into interactive profiles recruiters can actually understand.
                         </motion.p>
                     </div>
                 </section>
@@ -96,9 +95,9 @@ export function AboutContent() {
 
                             <div className="grid md:grid-cols-4 gap-12 relative z-10">
                                 {[
-                                    { year: "1482", title: "The First Resume", desc: "Handwritten letter by Leonardo da Vinci to the Duke of Milan." },
-                                    { year: "1980s", title: "Word Processing", desc: "The rise of the digital PDF. Static, rigid, and one-dimensional." },
-                                    { year: "2000s", title: "Social Networks", desc: "Professional profiles become public, but remain just lists of text." },
+                                    { year: "1482", title: "First Resume", desc: "Handwritten letter by Leonardo da Vinci." },
+                                    { year: "1980s", title: "Digital Resumes", desc: "Static PDFs." },
+                                    { year: "2000s", title: "Online Profiles", desc: "Searchable but shallow." },
                                 ].map((item, i) => (
                                     <motion.div
                                         key={i}
@@ -131,8 +130,8 @@ export function AboutContent() {
                                         </div>
                                     </div>
                                     <div className="text-[var(--brand-deep)] font-black text-lg">2025</div>
-                                    <h4 className="font-bold text-[var(--text-main)] mb-2">Twinly AI Twin</h4>
-                                    <p className="text-sm text-[var(--text-muted)] font-medium leading-relaxed">An interactive agent that carries your voice, context, and character.</p>
+                                    <h4 className="font-bold text-[var(--text-main)] mb-2">AI Candidate Twins</h4>
+                                    <p className="text-sm text-[var(--text-muted)] font-medium leading-relaxed">Interactive, contextual profiles.</p>
                                 </motion.div>
                             </div>
                         </div>
@@ -162,8 +161,8 @@ export function AboutContent() {
                                 <div className="w-16 h-16 bg-[var(--brand-deep)] text-white rounded-3xl flex items-center justify-center mb-10 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform duration-300">
                                     <EyeOff size={32} />
                                 </div>
-                                <h3 className="text-3xl font-bold text-[var(--text-main)] mb-6">The Overlooked</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed text-lg">For brilliant candidates whose resumes don&apos;t pass the keyword filters. We give them a voice to explain their non-traditional backgrounds and specialized expertise.</p>
+                                <h3 className="text-3xl font-bold text-[var(--text-main)] mb-6">For Candidates</h3>
+                                <p className="text-[var(--text-muted)] leading-relaxed text-lg">Not just what you&apos;ve done, but how you think.</p>
                             </motion.div>
 
                             <motion.div
@@ -176,8 +175,8 @@ export function AboutContent() {
                                 <div className="w-16 h-16 bg-[var(--brand-deep)] text-white rounded-3xl flex items-center justify-center mb-10 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform duration-300">
                                     <UserX size={32} />
                                 </div>
-                                <h3 className="text-3xl font-bold text-[var(--text-main)] mb-6">The Overwhelmed</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed text-lg">For recruiters drowning in 500+ applications per role. We provide an intelligent interface to &quot;talk&quot; to every candidate, ensuring no diamond is left in the rough.</p>
+                                <h3 className="text-3xl font-bold text-[var(--text-main)] mb-6">For Recruiters</h3>
+                                <p className="text-[var(--text-muted)] leading-relaxed text-lg">Stop scanning resumes. Start understanding candidates.</p>
                             </motion.div>
                         </div>
                     </div>
@@ -194,8 +193,8 @@ export function AboutContent() {
                                 className="md:w-1/2"
                             >
                                 <h2 className="text-sm font-black uppercase tracking-[0.3em] text-[var(--brand-purple)] mb-6">Our Engine</h2>
-                                <h3 className="text-4xl md:text-5xl font-bold text-[var(--text-main)] tracking-tight mb-8">Built on Neural Architecture</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed mb-12 text-lg">Under the hood, TwinlyAI isn&apos;t just another chatbot. We&apos;ve built a proprietary engine designed for professional integrity and human nuance.</p>
+                                <h3 className="text-4xl md:text-5xl font-bold text-[var(--text-main)] tracking-tight mb-8">Intelligent Analysis</h3>
+                                <p className="text-[var(--text-muted)] leading-relaxed mb-12 text-lg">Instead of keyword matching, we understand context. TwinlyAI ensures candidates are evaluated on their true potential.</p>
 
                                 <div className="space-y-10">
                                     <div className="flex gap-6 group">
@@ -203,8 +202,8 @@ export function AboutContent() {
                                             <Brain size={24} />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-[var(--text-main)] text-lg mb-1">Contextual Memory Engine</h4>
-                                            <p className="text-[var(--text-muted)]">Remembers the nuances of your career journey like a real person would, maintaining consistency across every interaction.</p>
+                                            <h4 className="font-bold text-[var(--text-main)] text-lg mb-1">Context-aware memory</h4>
+                                            <p className="text-[var(--text-muted)]">Understands full career journey.</p>
                                         </div>
                                     </div>
 
@@ -213,8 +212,18 @@ export function AboutContent() {
                                             <Languages size={24} />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-[var(--text-main)] text-lg mb-1">Semantic Understanding</h4>
-                                            <p className="text-[var(--text-muted)]">Goes beyond simple keywords to understand the actual impact, soft skills, and cultural context of your work.</p>
+                                            <h4 className="font-bold text-[var(--text-main)] text-lg mb-1">Semantic search</h4>
+                                            <p className="text-[var(--text-muted)]">Finds candidates by intent, not keywords.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-6 group">
+                                        <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center text-[var(--brand-deep)] shadow-sm group-hover:bg-[var(--brand-deep)] group-hover:text-white transition-all duration-300">
+                                            <SparklesIcon size={24} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-[var(--text-main)] text-lg mb-1">AI interaction</h4>
+                                            <p className="text-[var(--text-muted)]">Talk to candidates before reaching out.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -240,7 +249,7 @@ export function AboutContent() {
                     </div>
                 </section>
 
-                {/* FOUNDER SECTION */}
+                {/* WHY WE RE BUILDING THIS */}
                 <section className="py-32">
                     <div className="max-w-[1000px] mx-auto px-6 relative">
                         <motion.div
@@ -259,23 +268,11 @@ export function AboutContent() {
                             />
                             <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 blur-[100px]" />
 
-                            <div className="flex flex-col md:flex-row items-center gap-16 relative z-10">
-                                <div className="w-56 h-56 rounded-[48px] overflow-hidden flex-shrink-0 border-4 border-slate-800 shadow-2xl">
-                                    <Image
-                                        alt="Kurian Jose"
-                                        className="w-full h-full object-cover"
-                                        src="/Kurian-photo.jpg"
-                                        width={224}
-                                        height={224}
-                                    />
-                                </div>
-                                <div className="flex-1 text-center md:text-left">
-                                    <div className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-bold uppercase tracking-[0.2em] mb-8">Founder & Lead Engineer</div>
-                                    <h2 className="text-4xl font-bold text-white mb-6">Kurian Jose</h2>
-                                    <p className="text-slate-400 leading-relaxed text-xl font-light italic">
-                                        &quot;I spent years as an engineer seeing incredible talent filtered out by rigid systems. I built Twinly to ensure that your full story—the context, the passion, and the unique problem-solving—is never lost in translation again.&quot;
-                                    </p>
-                                </div>
+                            <div className="relative z-10 text-center max-w-3xl mx-auto">
+                                <h2 className="text-4xl font-bold text-white mb-6">Why we&apos;re building this</h2>
+                                <p className="text-slate-400 leading-relaxed text-xl font-light">
+                                    The current hiring system is broken. We saw incredible talent repeatedly missed because of rigid keyword filters, and overwhelming applicant volumes drowning out real potential. We needed a better way—a system that captures the context, nuance, and true capabilities of every candidate.
+                                </p>
                             </div>
                         </motion.div>
                     </div>
@@ -305,7 +302,7 @@ export function AboutContent() {
                                     <LockIcon />
                                 </div>
                                 <h3 className="text-2xl font-bold text-[var(--text-main)] mb-4">Privacy First</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed">Your data belongs to you. We never train public models on your private professional data. Encryption is our default.</p>
+                                <p className="text-[var(--text-muted)] leading-relaxed">Your data is never used to train public models.</p>
                             </motion.div>
 
                             <motion.div
@@ -318,8 +315,8 @@ export function AboutContent() {
                                 <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-amber-600 shadow-sm">
                                     <ShieldCheck />
                                 </div>
-                                <h3 className="text-2xl font-bold text-[var(--text-main)] mb-4">Zero Hallucinations</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed">Our agents are strictly grounded in your verified experience. No fabrications, no exaggerations. Just you.</p>
+                                <h3 className="text-2xl font-bold text-[var(--text-main)] mb-4">No Hallucinations</h3>
+                                <p className="text-[var(--text-muted)] leading-relaxed">Only verified experience, nothing generated.</p>
                             </motion.div>
 
                             <motion.div
@@ -332,8 +329,8 @@ export function AboutContent() {
                                 <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-[var(--brand-deep)] shadow-sm">
                                     <Zap />
                                 </div>
-                                <h3 className="text-2xl font-bold text-[var(--text-main)] mb-4">Real-time Velocity</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed">Instant answers for recruiters. No more waiting days for an email reply to a simple qualifying question.</p>
+                                <h3 className="text-2xl font-bold text-[var(--text-main)] mb-4">Speed</h3>
+                                <p className="text-[var(--text-muted)] leading-relaxed">Instant answers, not days of waiting.</p>
                             </motion.div>
                         </div>
                     </div>
