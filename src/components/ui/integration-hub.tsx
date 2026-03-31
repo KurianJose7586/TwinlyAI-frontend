@@ -29,7 +29,7 @@ type Repository = {
 };
 
 const isProd = process.env.NODE_ENV === "production";
-const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://joserman-twinlybackend2-0.hf.space" : "http://localhost:8000");
+const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://k632cnxhg3.ap-south-1.awsapprunner.com" : "http://localhost:8000");
 
 export function IntegrationHub() {
     const { user } = useAuth();
