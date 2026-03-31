@@ -3,8 +3,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import {
-    EyeOff,
-    UserX,
+    User,
+    Search,
     Brain,
     Languages,
     Cpu,
@@ -95,7 +95,7 @@ export function AboutContent() {
 
                             <div className="grid md:grid-cols-4 gap-12 relative z-10">
                                 {[
-                                    { year: "1482", title: "First Resume", desc: "Handwritten letter by Leonardo da Vinci." },
+                                    { year: "1482", title: "First Resume", desc: "Handwritten letter by Leonardo da Vinci to the Duke of Milan." },
                                     { year: "1980s", title: "Digital Resumes", desc: "Static PDFs." },
                                     { year: "2000s", title: "Online Profiles", desc: "Searchable but shallow." },
                                 ].map((item, i) => (
@@ -159,7 +159,7 @@ export function AboutContent() {
                                 className="p-12 rounded-[40px] bg-white/60 backdrop-blur-xl border border-white/50 hover:bg-white/80 transition-all group shadow-sm hover:shadow-xl"
                             >
                                 <div className="w-16 h-16 bg-[var(--brand-deep)] text-white rounded-3xl flex items-center justify-center mb-10 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform duration-300">
-                                    <EyeOff size={32} />
+                                    <User size={32} />
                                 </div>
                                 <h3 className="text-3xl font-bold text-[var(--text-main)] mb-6">For Candidates</h3>
                                 <p className="text-[var(--text-muted)] leading-relaxed text-lg">Not just what you&apos;ve done, but how you think.</p>
@@ -173,7 +173,7 @@ export function AboutContent() {
                                 className="p-12 rounded-[40px] bg-white/60 backdrop-blur-xl border border-white/50 hover:bg-white/80 transition-all group shadow-sm hover:shadow-xl"
                             >
                                 <div className="w-16 h-16 bg-[var(--brand-deep)] text-white rounded-3xl flex items-center justify-center mb-10 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform duration-300">
-                                    <UserX size={32} />
+                                    <Search size={32} />
                                 </div>
                                 <h3 className="text-3xl font-bold text-[var(--text-main)] mb-6">For Recruiters</h3>
                                 <p className="text-[var(--text-muted)] leading-relaxed text-lg">Stop scanning resumes. Start understanding candidates.</p>
@@ -203,7 +203,7 @@ export function AboutContent() {
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-[var(--text-main)] text-lg mb-1">Context-aware memory</h4>
-                                            <p className="text-[var(--text-muted)]">Understands full career journey.</p>
+                                            <p className="text-[var(--text-muted)]">Understands your full career journey, maintaining consistency across every interaction.</p>
                                         </div>
                                     </div>
 
@@ -249,7 +249,7 @@ export function AboutContent() {
                     </div>
                 </section>
 
-                {/* WHY WE RE BUILDING THIS */}
+                {/* WHY WE'RE BUILDING THIS */}
                 <section className="py-32">
                     <div className="max-w-[1000px] mx-auto px-6 relative">
                         <motion.div
@@ -302,7 +302,7 @@ export function AboutContent() {
                                     <LockIcon />
                                 </div>
                                 <h3 className="text-2xl font-bold text-[var(--text-main)] mb-4">Privacy First</h3>
-                                <p className="text-[var(--text-muted)] leading-relaxed">Your data is never used to train public models.</p>
+                                <p className="text-[var(--text-muted)] leading-relaxed">Your data is never used to train public models. Encryption is our default.</p>
                             </motion.div>
 
                             <motion.div
