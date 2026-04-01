@@ -23,13 +23,13 @@ function RoleSelectionContent() {
     useEffect(() => {
         const token = searchParams.get("token");
         if (token) {
-            // Store the token so API calls work, but mark user as "needs role selection"
             setAuthFromToken(token);
-            setOauthToken(token);
-            // Clean the URL without losing state
             router.replace("/role-selection", { scroll: false });
+            // Schedule state update outside the synchronous effect body
+            setTimeout(() => setOauthToken(token), 0);
         }
-    }, [searchParams, setAuthFromToken, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     /**
      * Handle role card click.

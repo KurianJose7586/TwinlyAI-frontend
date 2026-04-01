@@ -2,11 +2,11 @@
 
 import React from "react";
 import { AnimatePresence } from "framer-motion";
-import { History, FileText, Edit3, Search, MessageSquare, Clock } from "lucide-react";
+import { History, FileText, Edit3, Search, MessageSquare } from "lucide-react";
 import Image from "next/image";
-import { useActivityFeed, useConversationDetail, useResumeVersions } from "@/hooks/useHistory";
+import { useActivityFeed } from "@/hooks/useHistory";
 import { ConversationDetailPanel } from "./ConversationDetailPanel";
-import type { ActivityEvent, ConversationStatus } from "@/types/history";
+import type { ActivityEvent } from "@/types/history";
 
 interface HistoryTabProps {
     botId: string | null;
@@ -15,20 +15,6 @@ interface HistoryTabProps {
 type FilterType = "all" | "chat" | "resume" | "profile";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-const STATUS_STYLES: Record<ConversationStatus, string> = {
-    qualified: "bg-green-100 text-green-700 dark:bg-green-500/12 dark:text-green-400",
-    cold: "bg-slate-100 text-slate-500 dark:bg-white/[0.05] dark:text-slate-500",
-    followup: "bg-blue-100 text-blue-700 dark:bg-blue-500/12 dark:text-blue-400",
-    ghosted: "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400",
-};
-
-const STATUS_LABELS: Record<ConversationStatus, string> = {
-    qualified: "✦ Qualified Lead",
-    cold: "Cold Outreach",
-    followup: "↗ Follow-up",
-    ghosted: "✕ Ghosted",
-};
 
 function formatRelative(iso: string): string {
     const now = new Date();

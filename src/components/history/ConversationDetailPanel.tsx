@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, MessageSquare, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { motion } from "framer-motion";
+import { X, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import Image from "next/image";
-import type { Conversation, ResumeVersion, ConversationStatus } from "@/types/history";
+import type { ResumeVersion, ConversationStatus } from "@/types/history";
 import { useConversationDetail, useResumeVersions } from "@/hooks/useHistory";
 
 interface ConversationDetailPanelProps {
@@ -20,27 +20,10 @@ const STATUS_STYLES: Record<ConversationStatus, string> = {
     ghosted: "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400",
 };
 
-const STATUS_LABELS: Record<ConversationStatus, string> = {
-    qualified: "✦ Qualified Lead",
-    cold: "Cold Outreach",
-    followup: "↗ Follow-up Sent",
-    ghosted: "✕ Ghosted",
-};
-
 function formatDuration(seconds: number): string {
     if (!seconds) return "—";
     if (seconds < 60) return `${seconds}s`;
     return `${Math.round(seconds / 60)}m`;
-}
-
-function getInitials(name?: string): string {
-    if (!name) return "?";
-    return name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
 }
 
 function formatTime(iso?: string): string {
