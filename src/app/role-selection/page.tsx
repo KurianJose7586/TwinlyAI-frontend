@@ -1,12 +1,81 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Brain, Search } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, Brain, Search, Loader2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
+import { setToken, setStoredUser, decodeTokenPayload } from "@/lib/auth";
 
-export default function RoleSelectionPage() {
+function RoleSelectionContent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { setAuthFromToken } = useAuth();
+
+    const [oauthToken, setOauthToken] = useState<string | null>(null);
+    const [selectingRole, setSelectingRole] = useState<"candidate" | "recruiter" | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    // If redirected here from OAuth with ?token=..., store the token
+    useEffect(() => {
+        const token = searchParams.get("token");
+        if (token) {
+            // Store the token so API calls work, but mark user as "needs role selection"
+            setAuthFromToken(token);
+            setOauthToken(token);
+            // Clean the URL without losing state
+            router.replace("/role-selection", { scroll: false });
+        }
+    }, [searchParams, setAuthFromToken, router]);
+
+    /**
+     * Handle role card click.
+     *
+     * Two cases:
+     * 1. Regular signup (no oauth token) → just navigate to onboarding with role param
+     * 2. OAuth new user (has oauth token) → update role via API, get a fresh token
+     *    with the correct role encoded, then navigate to onboarding
+     */
+    const handleRoleSelect = async (role: "candidate" | "recruiter") => {
+        setSelectingRole(role);
+        setError(null);
+
+        if (!oauthToken) {
+            // Regular signup path — no API calls needed yet, role gets set during onboarding signup
+            router.push(`/onboarding?role=${role}`);
+            return;
+        }
+
+        try {
+            // 1. Update the user's role in the database
+            await api.put("api/v1/users/me", { role });
+
+            // 2. Get a fresh token that has the correct role encoded in the JWT
+            const { data } = await api.post<{ access_token: string }>("api/v1/auth/refresh-token");
+            const freshToken = data.access_token;
+
+            // 3. Store the fresh token and update stored user
+            setToken(freshToken);
+            const payload = decodeTokenPayload(freshToken);
+            if (payload) {
+                setStoredUser({
+                    email: payload.sub as string,
+                    role: (payload.role as "candidate" | "recruiter") ?? role,
+                });
+            }
+
+            // 4. Navigate to onboarding for the selected role
+            router.push(`/onboarding?role=${role}`);
+        } catch (err) {
+            console.error("Role selection failed:", err);
+            setError("Something went wrong. Please try again.");
+            setSelectingRole(null);
+        }
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center p-6 pt-24 bg-slate-100 dark:bg-[#0B0E14] transition-colors duration-300 relative overflow-hidden font-sans">
             {/* Background Ambience */}
@@ -15,7 +84,7 @@ export default function RoleSelectionPage() {
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/20 blur-[120px] hidden dark:block" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/20 blur-[120px] hidden dark:block" />
 
-                {/* Floating Avatars (Visible in Light & Dark Mode) */}
+                {/* Floating Avatars */}
                 <div className="absolute top-[20%] left-[8%] w-32 h-48 animate-[float_8s_ease-in-out_infinite] hidden md:block opacity-60 dark:opacity-30">
                     <Image src="https://api.dicebear.com/7.x/open-peeps/svg?seed=Mia&face=smile&backgroundColor=transparent" alt="Decoration" width={128} height={192} className="w-full h-full object-contain drop-shadow-xl dark:invert" />
                 </div>
@@ -49,17 +118,34 @@ export default function RoleSelectionPage() {
                             Choose your path
                         </h1>
                         <p className="text-slate-500 dark:text-[#9CA3AF] text-lg max-w-lg leading-relaxed">
-                            Select how you&apos;ll use TwinlyAI to tailor your experience.
+                            {oauthToken
+                                ? "Welcome! Select how you'll use TwinlyAI to set up your profile."
+                                : "Select how you'll use TwinlyAI to tailor your experience."}
                         </p>
+
+                        {/* Error state */}
+                        {error && (
+                            <div className="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-2xl">
+                                {error}
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-8 relative z-10">
                         {/* Candidate Card */}
-                        <Link href="/onboarding?role=candidate" className="group relative flex flex-col items-start text-left p-10 rounded-3xl border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-purple-500/10 hover:-translate-y-2 overflow-hidden">
+                        <button
+                            onClick={() => handleRoleSelect("candidate")}
+                            disabled={selectingRole !== null}
+                            className="group relative flex flex-col items-start text-left p-10 rounded-3xl border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-purple-500/10 hover:-translate-y-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 w-full"
+                        >
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
                             <div className="w-16 h-16 rounded-[1.25rem] bg-white dark:bg-white/10 shadow-sm flex items-center justify-center text-blue-600 dark:text-purple-400 mb-8 dark:mb-10 border border-slate-100 dark:border-white/5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-                                <Brain size={32} />
+                                {selectingRole === "candidate" ? (
+                                    <Loader2 size={32} className="animate-spin" />
+                                ) : (
+                                    <Brain size={32} />
+                                )}
                             </div>
                             <h3 className="text-2xl font-bold text-slate-800 dark:text-[#F9FAFB] mb-3 dark:mb-4 tracking-tight">
                                 I am a Candidate
@@ -68,17 +154,25 @@ export default function RoleSelectionPage() {
                                 Build your AI Twin, manage your professional persona, and accelerate your career growth.
                             </p>
                             <div className="mt-auto flex items-center font-bold text-blue-600 dark:text-purple-400 text-[13px] tracking-[0.1em] uppercase">
-                                Building my Twin
+                                {selectingRole === "candidate" ? "Setting up..." : "Building my Twin"}
                                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" />
                             </div>
-                        </Link>
+                        </button>
 
                         {/* Recruiter Card */}
-                        <Link href="/onboarding?role=recruiter" className="group relative flex flex-col items-start text-left p-10 rounded-3xl border border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-blue-500/10 hover:-translate-y-2 overflow-hidden">
+                        <button
+                            onClick={() => handleRoleSelect("recruiter")}
+                            disabled={selectingRole !== null}
+                            className="group relative flex flex-col items-start text-left p-10 rounded-3xl border border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-blue-500/10 hover:-translate-y-2 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 w-full"
+                        >
                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
                             <div className="w-16 h-16 rounded-[1.25rem] bg-white dark:bg-white/10 shadow-sm flex items-center justify-center text-indigo-600 dark:text-blue-400 mb-8 dark:mb-10 border border-slate-100 dark:border-white/5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
-                                <Search size={32} />
+                                {selectingRole === "recruiter" ? (
+                                    <Loader2 size={32} className="animate-spin" />
+                                ) : (
+                                    <Search size={32} />
+                                )}
                             </div>
                             <h3 className="text-2xl font-bold text-slate-800 dark:text-[#F9FAFB] mb-3 dark:mb-4 tracking-tight">
                                 I am a Recruiter
@@ -87,15 +181,15 @@ export default function RoleSelectionPage() {
                                 Discover top-tier talent, engage with AI Twins, and streamline your entire hiring pipeline.
                             </p>
                             <div className="mt-auto flex items-center font-bold text-indigo-600 dark:text-blue-400 text-[13px] tracking-[0.1em] uppercase">
-                                Finding Talent
+                                {selectingRole === "recruiter" ? "Setting up..." : "Finding Talent"}
                                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" />
                             </div>
-                        </Link>
+                        </button>
                     </div>
 
                     <div className="mt-14 text-center relative z-10">
                         <p className="text-slate-500 dark:text-[#9CA3AF] text-sm font-medium">
-                            Already have an enterprise account?
+                            Already have an account?
                             <Link
                                 href="/login"
                                 className="text-slate-900 dark:text-[#F9FAFB] hover:text-slate-700 dark:hover:text-purple-400 transition-colors ml-1.5 font-bold hover:underline underline-offset-4 decoration-2"
@@ -119,5 +213,17 @@ export default function RoleSelectionPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function RoleSelectionPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-[#0B0E14]">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            </div>
+        }>
+            <RoleSelectionContent />
+        </Suspense>
     );
 }

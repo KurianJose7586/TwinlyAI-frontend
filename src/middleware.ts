@@ -40,7 +40,8 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
     }
 
-    // If accessing auth routes while already logged in, redirect to role-appropriate dashboard
+    // If accessing /login while already logged in, redirect to role-appropriate dashboard
+    // NOTE: /role-selection is intentionally excluded — OAuth new users are sent there with a token
     if (isAuthRoute && token && pathname === "/login") {
         const role = getTokenRole(token);
         const destination = role === "recruiter" ? "/recruiter" : "/candidate-active";

@@ -66,6 +66,9 @@ function OnboardingWizardForm() {
     const searchParams = useSearchParams();
     const role = searchParams.get("role") || "candidate";
 
+    // Detect if this user came via OAuth (already has a token — no signup/login needed)
+    const isOAuthUser = typeof window !== "undefined" && !!localStorage.getItem("twinly_token");
+
     const totalSteps = 6;
     const STORAGE_KEY = `twinlyai_onboarding_${role}`;
 
@@ -177,6 +180,50 @@ function OnboardingWizardForm() {
         setSubmitError(null);
 
         try {
+            let token: string;
+
+            if (isOAuthUser) {
+                // ── OAuth path ──────────────────────────────────────────────────
+                // User already has a valid token from the OAuth flow.
+                // No signup/login needed — just use the existing token.
+                token = localStorage.getItem("twinly_token") as string;
+
+                if (role === "candidate") {
+                    const botName = `${formData.firstName} ${formData.lastName}`;
+                    const botRes = await api.post("/api/v1/bots/create", { name: botName }, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    const botId: string = botRes.data.id ?? botRes.data._id;
+
+                    await api.patch(`/api/v1/bots/${botId}`, {
+                        linkedin_url: formData.linkedin_url || formData.linkedIn,
+                        github_url: formData.github_url,
+                        twitter_url: formData.twitter_url,
+                        website_url: formData.website_url,
+                        projects: formData.projects,
+                        summary: formData.aspirations,
+                        avatar_url: formData.avatarUrl,
+                    }, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+
+                    localStorage.setItem("twinly_botId", botId);
+                    localStorage.setItem("twinly_userName", botName);
+                    localStorage.setItem("userAvatar", formData.avatarUrl);
+                    localStorage.setItem("userName", botName);
+                } else {
+                    localStorage.setItem("userName", `${formData.firstName} ${formData.lastName}`);
+                    localStorage.setItem("userAvatar", formData.avatarUrl);
+                    const keywords = [...formData.hiringRoles, ...formData.techStackFocus].filter(Boolean).join(" ");
+                    if (keywords) localStorage.setItem("recruiter_keywords", keywords);
+                }
+
+                localStorage.removeItem(STORAGE_KEY);
+                router.push(role === "recruiter" ? "/recruiter" : "/candidate-empty");
+                return;
+            }
+
+            // ── Regular signup path ──────────────────────────────────────────
             await api.post("/api/v1/auth/signup", {
                 email: formData.email,
                 password: password || "TwinlyDefault123!",
@@ -189,7 +236,7 @@ function OnboardingWizardForm() {
             const loginRes = await api.post("/api/v1/auth/login", loginForm, {
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
             });
-            const token: string = loginRes.data.access_token;
+            token = loginRes.data.access_token;
             setToken(token);
             setStoredUser({ email: formData.email, role: role as "candidate" | "recruiter" });
 
@@ -217,24 +264,15 @@ function OnboardingWizardForm() {
                 localStorage.setItem("userAvatar", formData.avatarUrl);
                 localStorage.setItem("userName", botName);
             } else {
-                // For recruiters, just store basic info
                 localStorage.setItem("userName", `${formData.firstName} ${formData.lastName}`);
                 localStorage.setItem("userAvatar", formData.avatarUrl);
-
-                // Store keywords for default Dashboard view
                 const keywords = [...formData.hiringRoles, ...formData.techStackFocus].filter(Boolean).join(" ");
-                if (keywords) {
-                    localStorage.setItem("recruiter_keywords", keywords);
-                }
+                if (keywords) localStorage.setItem("recruiter_keywords", keywords);
             }
 
             localStorage.removeItem(STORAGE_KEY);
+            router.push(role === "recruiter" ? "/recruiter" : "/candidate-empty");
 
-            if (role === "recruiter") {
-                router.push("/recruiter");
-            } else {
-                router.push("/candidate-empty");
-            }
         } catch (err: unknown) {
             const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
             if (typeof detail === "string" && detail.includes("already exists")) {
@@ -328,10 +366,12 @@ function OnboardingWizardForm() {
         if (role === "recruiter") {
             if (step === 3) return formData.companyName.trim() !== "";
             if (step === 4) return formData.hiringRoles.length > 0;
-            if (step === 5) return formData.email.trim() !== "" && formData.email.includes("@") && password.length >= 8;
+            // OAuth users skip email/password — step 5 is always valid for them
+            if (step === 5) return isOAuthUser || (formData.email.trim() !== "" && formData.email.includes("@") && password.length >= 8);
         } else {
             // Candidate validation
-            if (step === 3) return formData.email.trim() !== "" && formData.email.includes("@") && password.length >= 8;
+            // OAuth users skip email/password — step 3 is always valid for them
+            if (step === 3) return isOAuthUser || (formData.email.trim() !== "" && formData.email.includes("@") && password.length >= 8);
             if (step === 4) {
                 if (formData.projects.length > 0) {
                     return formData.projects.every(p => p.name.trim() !== "");
@@ -528,19 +568,33 @@ function OnboardingWizardForm() {
                                             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">Nice to meet you, {formData.firstName || 'there'}!</h1>
                                             <p className="text-slate-500 dark:text-[#9CA3AF] text-lg text-center mb-10">How should recruiters reach you?</p>
                                             <div className="space-y-5">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Email (Required)</label>
-                                                    <input type="email" placeholder="hello@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                        className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" autoFocus />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Password (Required)</label>
-                                                    <input type="password" placeholder="Min 8 characters" value={password} onChange={(e) => setPassword(e.target.value)}
-                                                        className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" />
-                                                    {password.length > 0 && password.length < 8 && (
-                                                        <p className="text-red-500 text-xs mt-1 ml-2">Password must be at least 8 characters.</p>
-                                                    )}
-                                                </div>
+                                                {!isOAuthUser && (
+                                                    <>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Email (Required)</label>
+                                                            <input type="email" placeholder="hello@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                                className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" autoFocus />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Password (Required)</label>
+                                                            <input type="password" placeholder="Min 8 characters" value={password} onChange={(e) => setPassword(e.target.value)}
+                                                                className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" />
+                                                            {password.length > 0 && password.length < 8 && (
+                                                                <p className="text-red-500 text-xs mt-1 ml-2">Password must be at least 8 characters.</p>
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {isOAuthUser && (
+                                                    <div className="flex items-center gap-3 bg-blue-50 dark:bg-purple-500/10 border border-blue-100 dark:border-purple-500/20 rounded-2xl px-5 py-4">
+                                                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                                            <Check size={16} className="text-blue-600 dark:text-purple-400" />
+                                                        </div>
+                                                        <p className="text-sm text-slate-600 dark:text-slate-300">
+                                                            You signed in with Google/GitHub — your account is already set up. Just add your contact details below!
+                                                        </p>
+                                                    </div>
+                                                )}
 
                                                 {showMoreContact ? (
                                                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-5">
@@ -757,20 +811,33 @@ function OnboardingWizardForm() {
                                             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4 text-center">How should top tier candidates connect with you?</h1>
 
                                             <div className="space-y-5 mt-6">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Work Email (Required)</label>
-                                                    <input type="email" placeholder="hiring@company.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                        className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all text-lg font-medium" autoFocus />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Password (Required)</label>
-                                                    <input type="password" placeholder="Min 8 characters" value={password} onChange={(e) => setPassword(e.target.value)}
-                                                        className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" />
-                                                    {password.length > 0 && password.length < 8 && (
-                                                        <p className="text-red-500 text-xs mt-1 ml-2">Password must be at least 8 characters.</p>
-                                                    )}
-                                                </div>
+                                                {isOAuthUser && (
+                                                    <div className="flex items-center gap-3 bg-blue-50 dark:bg-purple-500/10 border border-blue-100 dark:border-purple-500/20 rounded-2xl px-5 py-4">
+                                                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                                            <Check size={16} className="text-blue-600 dark:text-purple-400" />
+                                                        </div>
+                                                        <p className="text-sm text-slate-600 dark:text-slate-300">
+                                                            You signed in with Google/GitHub — your account is already set up. Add optional links below to complete your profile!
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                {!isOAuthUser && (
+                                                    <>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Work Email (Required)</label>
+                                                            <input type="email" placeholder="hiring@company.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                                className="w-full bg-slate-50 dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-[#F9FAFB] px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-purple-500/20 focus:border-blue-500 dark:focus:border-purple-400 transition-all text-lg font-medium" autoFocus />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 ml-2">Password (Required)</label>
+                                                            <input type="password" placeholder="Min 8 characters" value={password} onChange={(e) => setPassword(e.target.value)}
+                                                                className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-0 py-3 focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors placeholder:text-slate-300 dark:placeholder:text-slate-600" />
+                                                            {password.length > 0 && password.length < 8 && (
+                                                                <p className="text-red-500 text-xs mt-1 ml-2">Password must be at least 8 characters.</p>
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                )}
 
                                                 {showMoreContact ? (
                                                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-5">
@@ -872,7 +939,7 @@ function OnboardingWizardForm() {
                                     {step === totalSteps ? "Complete Setup" : "Continue"}
                                     {step < totalSteps && <ArrowRight size={20} />}
                                 </button>
-                                {!isStepValid() && step === 5 && role === 'recruiter' && (
+                                {!isStepValid() && step === 5 && role === 'recruiter' && !isOAuthUser && (
                                     <p className="absolute -bottom-6 right-0 text-[10px] text-slate-400">
                                         {!formData.email.includes('@') ? 'Enter a valid email' : password.length < 8 ? 'Password must be 8+ chars' : ''}
                                     </p>
