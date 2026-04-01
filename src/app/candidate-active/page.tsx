@@ -34,6 +34,7 @@ import { useBots, useUpdateBot } from "@/hooks/useBots";
 import { useToast } from "@/components/ui/toast";
 import { Project } from "@/types";
 import { AvatarCustomizer, AvatarConfig, buildAvatarUrl, DEFAULT_AVATAR_CONFIG } from "@/components/ui/avatar-customizer";
+import { HistoryTab } from "@/components/history/HistoryTab";
 
 type APIKey = { id: string; prefix: string };
 
@@ -1040,32 +1041,7 @@ export default function CandidateActiveDashboard() {
 
                         {/* Tab: History */}
                         {activeTab === 'history' && (
-                            <div className="animate-in fade-in duration-300">
-                                <div className="pb-4 border-b border-slate-100 dark:border-white/[0.06] mb-2">
-                                    <h3 className="text-[12px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Recent Interactions</h3>
-                                </div>
-                                <div className="divide-y divide-slate-100 dark:divide-white/5">
-                                    {[
-                                        { company: 'Tech Innovators Inc.', time: '2 hours ago', action: 'Chatted with your twin regarding UI scale architecture.' },
-                                        { company: 'Global Solutions', time: 'Yesterday', action: 'Viewed your system directives and connection keys.' },
-                                        { company: 'Alpha Startups', time: '3 days ago', action: 'Downloaded resume extraction summary.' },
-                                        { company: 'Meta Design Team', time: '1 week ago', action: 'Chatted with your twin for 15 minutes.' }
-                                    ].map((item, i) => (
-                                        <div key={i} className="p-6 flex items-start gap-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                            <div className="w-10 h-10 rounded-full bg-[#007AFF]/10 flex items-center justify-center shrink-0">
-                                                <History size={18} className="text-[#007AFF]" />
-                                            </div>
-                                            <div>
-                                                <h4 className="font-semibold text-[15px] text-slate-900 dark:text-white">{item.company}</h4>
-                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{item.action}</p>
-                                            </div>
-                                            <div className="ml-auto text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                                {item.time}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <HistoryTab botId={botId} />
                         )}
 
                         {/* Tab: Settings */}
