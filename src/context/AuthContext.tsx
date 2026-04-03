@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const u: StoredUser = {
                 email: payload.sub as string,
                 role: (payload.role as "candidate" | "recruiter") ?? "candidate",
+                onboarding_complete: !!payload.onboarding_complete,
             };
             setStoredUser(u);
             setUser(u);
@@ -76,9 +77,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTokenState(access_token);
         const payload = decodeTokenPayload(access_token);
         const role = (payload?.role as "candidate" | "recruiter") ?? "candidate";
+        const onboarding_complete = !!payload?.onboarding_complete;
         const u: StoredUser = {
             email: payload?.sub as string ?? email,
             role,
+            onboarding_complete,
         };
         setStoredUser(u);
         setUser(u);
@@ -89,7 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Navigate based on role — read directly, don't wait for state
-        router.push(role === "recruiter" ? "/recruiter" : "/candidate-active");
+        // Navigate based on role and onboarding status
+        if (!onboarding_complete) {
+            router.push(`/onboarding?role=${role}`);
+        } else {
+            router.push(role === "recruiter" ? "/recruiter" : "/candidate-active");
+        }
     };
 
     const logout = () => {

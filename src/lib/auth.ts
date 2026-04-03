@@ -7,6 +7,7 @@ const USER_KEY = "twinly_user";
 export type StoredUser = {
     email: string;
     role: "candidate" | "recruiter";
+    onboarding_complete: boolean;
     id?: string;
 };
 

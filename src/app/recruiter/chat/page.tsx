@@ -27,6 +27,13 @@ type ChatMsg = { role: "user" | "assistant"; text: string };
 // Strip <think> tags from streaming LLM output
 const stripThink = (t: string) => t.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 
+// Dynamic Avatar Generator (DiceBear)
+const getAvatarUrl = (seed: string | null) => {
+    if (!seed) return "https://api.dicebear.com/7.x/notionists/svg?seed=fallback";
+    // Using fun-emoji or notionists for a professional yet friendly look
+    return `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(seed)}`;
+};
+
 export default function RecruiterChatPage() {
     const router = useRouter();
 
@@ -42,33 +49,44 @@ export default function RecruiterChatPage() {
 
     useEffect(() => {
         setMounted(true);
-        const storedBotId = localStorage.getItem("recruiter_chat_botId");
-        if (storedBotId) setLiveBotId(storedBotId);
-
+        // Priority 1: Current candidate selected from dashboard
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCandidateId = urlParams.get("candidate");
+        
         try {
             const rawSessions = localStorage.getItem("recruiter_chat_sessions");
+            let sessions: any[] = [];
             if (rawSessions) {
-                const parsed = JSON.parse(rawSessions);
-                setChatSessions(parsed);
-                const active = parsed.find((p: ChatSession) => p.botId === storedBotId) || parsed[0];
-                if (active) setActiveChatId(active.id);
-            } else if (storedBotId) {
-                const storedBotName = localStorage.getItem("recruiter_chat_botName") || "Candidate";
-                const fallbackSession = {
-                    id: storedBotId,
-                    name: storedBotName,
-                    role: "AI Professional",
-                    avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=fallback",
-                    lastMessage: "Start a conversation...",
-                    time: "Just now",
-                    unread: 0,
-                    active: true,
-                    botId: storedBotId
-                };
-                setChatSessions([fallbackSession]);
-                setActiveChatId(storedBotId);
+                sessions = JSON.parse(rawSessions);
             }
-        } catch (e) { console.error(e); }
+
+            // Ensure our sessions have the right fields for the UI
+            const formattedSessions: ChatSession[] = sessions.map(s => ({
+                id: s.id,
+                name: s.name || "Candidate",
+                role: s.role || "AI Professional",
+                avatar: getAvatarUrl(s.id),
+                lastMessage: s.lastMessage || "Start a conversation...",
+                time: s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
+                unread: 0,
+                active: false,
+                botId: s.id // In this app, candidate ID is the Bot ID
+            }));
+
+            setChatSessions(formattedSessions);
+
+            // Set active chat: URL param > Last stored botId > first session
+            const activeId = urlCandidateId || localStorage.getItem("recruiter_chat_botId") || (formattedSessions[0]?.id);
+            if (activeId) {
+                setActiveChatId(activeId);
+                const activeSession = formattedSessions.find(s => s.id === activeId);
+                if (activeSession) {
+                    setLiveBotId(activeSession.botId);
+                }
+            }
+        } catch (e) {
+            console.error("Error loading chat sessions:", e);
+        }
     }, []);
 
     const chatScrollContainerRef = useRef<HTMLDivElement>(null);

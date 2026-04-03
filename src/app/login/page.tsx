@@ -55,18 +55,26 @@ function LoginForm() {
     useEffect(() => {
         if (!authLoading && user) {
             if (user.role === "recruiter") {
-                router.push("/recruiter");
+                if (!user.onboarding_complete) {
+                    router.push("/onboarding?role=recruiter");
+                } else {
+                    router.push("/recruiter");
+                }
             } else {
-                BotService.getBots().then((bots) => {
-                    // If they have a bot and it has some data (like summary or skills from resume index)
-                    if (bots.length > 0 && (bots[0].summary || (bots[0].skills && bots[0].skills.length > 0))) {
-                        router.push("/candidate-active");
-                    } else {
+                if (!user.onboarding_complete) {
+                    router.push("/onboarding?role=candidate");
+                } else {
+                    BotService.getBots().then((bots) => {
+                        // If they have a bot and it has some data (like summary or skills from resume index)
+                        if (bots.length > 0 && (bots[0].summary || (bots[0].skills && bots[0].skills.length > 0))) {
+                            router.push("/candidate-active");
+                        } else {
+                            router.push("/candidate-empty");
+                        }
+                    }).catch(() => {
                         router.push("/candidate-empty");
-                    }
-                }).catch(() => {
-                    router.push("/candidate-empty");
-                });
+                    });
+                }
             }
         }
     }, [user, authLoading, router]);

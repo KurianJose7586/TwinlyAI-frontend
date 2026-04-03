@@ -64,6 +64,7 @@ function RoleSelectionContent() {
                 setStoredUser({
                     email: payload.sub as string,
                     role: (payload.role as "candidate" | "recruiter") ?? role,
+                    onboarding_complete: !!payload.onboarding_complete,
                 });
             }
 

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ChevronLeft, Check, Sparkles, Plus, X, AlertCircle, Target } from "lucide-react";
 import { PRESET_GOALS } from "@/constants";
 import api from "@/lib/api";
-import { setToken, setStoredUser } from "@/lib/auth";
+import { setToken, setStoredUser, decodeTokenPayload } from "@/lib/auth";
 import { AvatarCustomizer, AvatarConfig, buildAvatarUrl, DEFAULT_AVATAR_CONFIG } from "@/components/ui/avatar-customizer";
 
 // DiceBear open-peeps used instead of notionists; initial config set below
@@ -188,34 +188,26 @@ function OnboardingWizardForm() {
                 // No signup/login needed — just use the existing token.
                 token = localStorage.getItem("twinly_token") as string;
 
-                if (role === "candidate") {
-                    const botName = `${formData.firstName} ${formData.lastName}`;
-                    const botRes = await api.post("/api/v1/bots/create", { name: botName }, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    const botId: string = botRes.data.id ?? botRes.data._id;
+                // 5. Mark onboarding as complete on the backend
+                await api.put("/api/v1/users/me", { onboarding_complete: true }, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
 
-                    await api.patch(`/api/v1/bots/${botId}`, {
-                        linkedin_url: formData.linkedin_url || formData.linkedIn,
-                        github_url: formData.github_url,
-                        twitter_url: formData.twitter_url,
-                        website_url: formData.website_url,
-                        projects: formData.projects,
-                        summary: formData.aspirations,
-                        avatar_url: formData.avatarUrl,
-                    }, {
-                        headers: { Authorization: `Bearer ${token}` },
+                // 6. Refresh the token to get the new onboarding_complete status
+                const refreshRes = await api.post("/api/v1/auth/refresh-token", {}, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const newToken = refreshRes.data.access_token;
+                
+                // Update Context/Storage via helper (Note: setToken is imported)
+                setToken(newToken);
+                const payload = decodeTokenPayload(newToken);
+                if (payload) {
+                    setStoredUser({
+                        email: payload.sub as string,
+                        role: (payload.role as "candidate" | "recruiter") ?? (role as "candidate" | "recruiter"),
+                        onboarding_complete: true
                     });
-
-                    localStorage.setItem("twinly_botId", botId);
-                    localStorage.setItem("twinly_userName", botName);
-                    localStorage.setItem("userAvatar", formData.avatarUrl);
-                    localStorage.setItem("userName", botName);
-                } else {
-                    localStorage.setItem("userName", `${formData.firstName} ${formData.lastName}`);
-                    localStorage.setItem("userAvatar", formData.avatarUrl);
-                    const keywords = [...formData.hiringRoles, ...formData.techStackFocus].filter(Boolean).join(" ");
-                    if (keywords) localStorage.setItem("recruiter_keywords", keywords);
                 }
 
                 localStorage.removeItem(STORAGE_KEY);
@@ -238,37 +230,25 @@ function OnboardingWizardForm() {
             });
             token = loginRes.data.access_token;
             setToken(token);
-            setStoredUser({ email: formData.email, role: role as "candidate" | "recruiter" });
+            setStoredUser({ email: formData.email, role: role as "candidate" | "recruiter", onboarding_complete: false });
 
-            if (role === "candidate") {
-                const botName = `${formData.firstName} ${formData.lastName}`;
-                const botRes = await api.post("/api/v1/bots/create", { name: botName }, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const botId: string = botRes.data.id ?? botRes.data._id;
+            // 3. Mark onboarding as complete on the backend
+            await api.put("/api/v1/users/me", { onboarding_complete: true }, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-                await api.patch(`/api/v1/bots/${botId}`, {
-                    linkedin_url: formData.linkedin_url || formData.linkedIn,
-                    github_url: formData.github_url,
-                    twitter_url: formData.twitter_url,
-                    website_url: formData.website_url,
-                    projects: formData.projects,
-                    summary: formData.aspirations,
-                    avatar_url: formData.avatarUrl,
-                }, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-
-                localStorage.setItem("twinly_botId", botId);
-                localStorage.setItem("twinly_userName", botName);
-                localStorage.setItem("userAvatar", formData.avatarUrl);
-                localStorage.setItem("userName", botName);
-            } else {
-                localStorage.setItem("userName", `${formData.firstName} ${formData.lastName}`);
-                localStorage.setItem("userAvatar", formData.avatarUrl);
-                const keywords = [...formData.hiringRoles, ...formData.techStackFocus].filter(Boolean).join(" ");
-                if (keywords) localStorage.setItem("recruiter_keywords", keywords);
-            }
+            // 4. Refresh token to reflect new status
+            const refreshRes = await api.post("/api/v1/auth/refresh-token", {}, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            token = refreshRes.data.access_token;
+            setToken(token);
+            const payload = decodeTokenPayload(token);
+            setStoredUser({ 
+                email: formData.email, 
+                role: role as "candidate" | "recruiter",
+                onboarding_complete: true
+            });
 
             localStorage.removeItem(STORAGE_KEY);
             router.push(role === "recruiter" ? "/recruiter" : "/candidate-empty");
@@ -285,7 +265,7 @@ function OnboardingWizardForm() {
                     });
                     const token: string = loginRes.data.access_token;
                     setToken(token);
-                    setStoredUser({ email: formData.email, role: role as "candidate" | "recruiter" });
+                    setStoredUser({ email: formData.email, role: role as "candidate" | "recruiter", onboarding_complete: true });
                     localStorage.removeItem(STORAGE_KEY);
                     router.push(role === "recruiter" ? "/recruiter" : "/candidate-empty");
                     return;

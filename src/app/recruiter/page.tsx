@@ -265,6 +265,28 @@ function RecruiterDashboardContent() {
 
     const openCandidateModal = (candidate: Candidate) => {
         setSelectedCandidate(candidate);
+        // Persist session to local storage for the sidebar
+        if (typeof window !== "undefined") {
+            const sessionsRaw = localStorage.getItem("recruiter_chat_sessions");
+            let sessions = [];
+            try {
+                sessions = sessionsRaw ? JSON.parse(sessionsRaw) : [];
+            } catch (e) {
+                sessions = [];
+            }
+            
+            // Avoid duplicates
+            if (!sessions.some((s: any) => s.id === candidate.id)) {
+                sessions.push({
+                    id: candidate.id,
+                    name: candidate.name,
+                    role: candidate.role,
+                    lastMessage: "Started a new conversation",
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem("recruiter_chat_sessions", JSON.stringify(sessions));
+            }
+        }
         router.push(`/recruiter?candidate=${candidate.id}`, { scroll: false });
     };
 
