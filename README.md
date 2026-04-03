@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🦋 TwinlyAI Frontend
 
-## Getting Started
+The official Next.js-powered web application for **TwinlyAI**. Providing a seamless, modern interface for candidates to build their AI professional identity and for recruiters to source talent with precision.
 
-First, run the development server:
+## ✨ Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### For Candidates
+- **Digital Twin Customization**: Dynamic avatar builder and profile orchestration using DiceBear.
+- **Onboarding Wizard**: A step-by-step interactive journey to build your AI professional persona.
+- **Integration Hub**: Connect GitHub, LinkedIn, and other professional sources to train your Twin.
+
+### For Recruiters
+- **Intelligent Dashboard**: View candidate matches with semantic scores and detailed summaries.
+- **Dynamic AI Chat**: Real-time streaming chat with a candidate's AI Twin to evaluate soft and hard skills instantly.
+- **Persistent Sessions**: Automated chat history tracking in the browser sidebar for efficient candidate management.
+
+## 🛠️ Technology Stack
+
+- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **State Management**: React Context (Auth) + [TanStack Query](https://tanstack.com/query)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Real-time**: Event-driven streaming for AI responses.
+
+## ⚙️ Setup & Installation
+
+### 1. Prerequisites
+- Node.js 18+
+- npm / yarn / pnpm
+
+### 2. Environment Configuration
+Create a `.env.local` file in the root directory:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Installation
+```bash
+# Install dependencies
+npm install
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Run development server
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+## 📂 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/`: Next.js pages and routing (Auth, Recruiter, Candidate, Onboarding).
+- `src/components/`: Reusable UI components and layout sections.
+- `src/context/`: Global state providers (Authentication).
+- `src/services/`: API client services for backend interaction.
+- `src/lib/`: Shared utilities, validation, and constants.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
+This project is proprietary. © 2025 TwinlyAI.
