@@ -10,6 +10,8 @@ import {
 import { getToken } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { HistoryService } from "@/services/history.service";
+
 
 type ChatSession = {
     id: string;
@@ -41,7 +43,10 @@ export default function RecruiterChatPage() {
     const [isStreaming, setIsStreaming] = useState(false);
     const [liveBotId, setLiveBotId] = useState<string | null>(null);
     const [botError, setBotError] = useState<string | null>(null);
+    const [activeConvId, setActiveConvId] = useState<string | null>(null);
+    const [startedAt, setStartedAt] = useState<string | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
+
 
     useEffect(() => {
         setMounted(true);
@@ -110,13 +115,24 @@ export default function RecruiterChatPage() {
     const sendMessage = async () => {
         const msg = input.trim();
         if (!msg || isStreaming) return;
+
+        let currentStartedAt = startedAt;
+        if (!currentStartedAt) {
+            currentStartedAt = new Date().toISOString();
+            setStartedAt(currentStartedAt);
+        }
+
         setInput("");
-        setMessages((prev: ChatMsg[]) => [...prev, { role: "user", text: msg }]);
+        const currentMessages = messages; // Keep reference to current state
+        const newMessages: ChatMsg[] = [...currentMessages, { role: "user", text: msg }];
+        setMessages(newMessages);
         setIsStreaming(true);
+
+        let currentAssistantText = "";
 
         try {
             const token = getToken();
-            const chatHistory = messages.map((m: ChatMsg) => ({
+            const chatHistory = currentMessages.map((m: ChatMsg) => ({
                 role: m.role,
                 content: m.text,
             }));
@@ -162,15 +178,37 @@ export default function RecruiterChatPage() {
                 if (done) break;
                 const chunk = decoder.decode(value, { stream: true });
                 fullText += chunk;
-                const finalText = stripThink(fullText);
+                currentAssistantText = stripThink(fullText);
                 startTransition(() => {
                     setMessages((prev: ChatMsg[]) => {
                         const newMsgs = [...prev];
-                        newMsgs[newMsgs.length - 1] = { role: "assistant", text: finalText };
+                        newMsgs[newMsgs.length - 1] = { role: "assistant", text: currentAssistantText };
                         return newMsgs;
                     });
                 });
             }
+
+            // Sync with backend after stream is complete
+            try {
+                const finalHistory = [...newMessages, { role: "assistant", text: currentAssistantText }];
+                const saveRes = await HistoryService.saveConversation(currentBotId, {
+                    id: activeConvId || undefined,
+                    messages: finalHistory.map(m => ({
+                        role: m.role,
+                        content: m.text,
+                        timestamp: new Date().toISOString()
+                    })),
+                    started_at: currentStartedAt,
+                    duration_seconds: Math.floor((Date.now() - new Date(currentStartedAt).getTime()) / 1000)
+                });
+                
+                if (saveRes.id && !activeConvId) {
+                    setActiveConvId(saveRes.id);
+                }
+            } catch (saveErr) {
+                console.error("Failed to sync conversation:", saveErr);
+            }
+
         } catch (err: unknown) {
             setMessages((prev: ChatMsg[]) => [...prev, {
                 role: "assistant",
@@ -214,7 +252,14 @@ export default function RecruiterChatPage() {
                     ) : chatSessions.map((chat) => (
                         <div
                             key={chat.id}
-                            onClick={() => { setActiveChatId(chat.id); setMessages([]); setLiveBotId(chat.botId); localStorage.setItem("recruiter_chat_botId", chat.botId || ""); }}
+                            onClick={() => { 
+                                setActiveChatId(chat.id); 
+                                setMessages([]); 
+                                setLiveBotId(chat.botId); 
+                                localStorage.setItem("recruiter_chat_botId", chat.botId || ""); 
+                                setActiveConvId(null);
+                                setStartedAt(null);
+                            }}
                             className={`flex items-start gap-4 p-4 cursor-pointer transition-colors border-l-4 ${chat.id === activeChatId ? 'bg-blue-50/50 dark:bg-white/5 border-blue-600 dark:border-purple-500' : 'hover:bg-slate-50 dark:hover:bg-white/5 border-transparent'}`}
                         >
                             <div className="relative shrink-0">

@@ -34,6 +34,7 @@ export const HistoryService = {
     saveConversation: async (
         botId: string,
         payload: {
+            id?: string;
             messages: { role: string; content: string; timestamp?: string }[];
             duration_seconds?: number;
             recruiter_name?: string;
