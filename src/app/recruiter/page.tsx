@@ -211,7 +211,7 @@ function RecruiterDashboardContent() {
         // Persist session to local storage for the sidebar
         if (typeof window !== "undefined") {
             const sessionsRaw = localStorage.getItem("recruiter_chat_sessions");
-            let sessions: Array<{ id: string; name: string; role: string; lastMessage: string; timestamp: string }> = [];
+            let sessions: Array<{ id: string; name: string; role: string; avatar?: string; lastMessage: string; timestamp: string }> = [];
             try {
                 sessions = sessionsRaw ? JSON.parse(sessionsRaw) : [];
             } catch {
@@ -224,7 +224,8 @@ function RecruiterDashboardContent() {
                     id: candidate.id,
                     name: candidate.name,
                     role: candidate.role,
-                    lastMessage: "Started a new conversation",
+                    avatar: candidate.avatar,
+                    lastMessage: "Interested in your profile",
                     timestamp: new Date().toISOString()
                 });
                 if (sessions.length > 20) sessions.pop();
@@ -562,13 +563,14 @@ function RecruiterDashboardContent() {
                                                 
                                                 // Ensure session is tracking
                                                 const sessionsRaw = localStorage.getItem("recruiter_chat_sessions");
-                                                let sessions: Array<{id: string, name: string, role: string, lastMessage: string, timestamp: string}> = [];
+                                                let sessions: Array<{id: string, name: string, role: string, avatar?: string, lastMessage: string, timestamp: string}> = [];
                                                 try { sessions = sessionsRaw ? JSON.parse(sessionsRaw) : []; } catch { sessions = []; }
                                                 if (!sessions.some((s) => s.id === candidate.id)) {
                                                     sessions.unshift({
                                                         id: candidate.id,
                                                         name: candidate.name,
                                                         role: candidate.role,
+                                                        avatar: candidate.avatar,
                                                         lastMessage: "Started a new conversation",
                                                         timestamp: new Date().toISOString()
                                                     });

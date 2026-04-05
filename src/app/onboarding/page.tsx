@@ -188,18 +188,60 @@ function OnboardingWizardForm() {
                 // No signup/login needed — just use the existing token.
                 token = localStorage.getItem("twinly_token") as string;
 
-                // 5. Mark onboarding as complete on the backend
+                // 2. Mark onboarding as complete on the backend
                 await api.put("/api/v1/users/me", { onboarding_complete: true }, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                // 6. Refresh the token to get the new onboarding_complete status
+                // 3. Create or Update the Bot (AI Twin) with the onboarding profile data
+                try {
+                    const botsRes = await api.get("/api/v1/bots/", {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    
+                    let botId: string;
+                    const profileData = {
+                        name: `${formData.firstName} ${formData.lastName}`.trim() || "My AI Twin",
+                        avatar_url: formData.avatarUrl,
+                        summary: formData.aspirations,
+                        linkedin_url: formData.linkedin_url,
+                        github_url: formData.github_url,
+                        twitter_url: formData.twitter_url,
+                        website_url: formData.website_url,
+                        projects: formData.projects
+                    };
+
+                    if (botsRes.data && botsRes.data.length > 0) {
+                        botId = botsRes.data[0].id || botsRes.data[0]._id;
+                        await api.patch(`/api/v1/bots/${botId}`, profileData, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                    } else {
+                        const createRes = await api.post("/api/v1/bots/create", { 
+                            name: profileData.name 
+                        }, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        botId = createRes.data.id || createRes.data._id;
+                        await api.patch(`/api/v1/bots/${botId}`, profileData, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                    }
+                    
+                    localStorage.setItem("twinly_botId", botId);
+                    localStorage.setItem("twinly_userName", profileData.name);
+                    localStorage.setItem("userAvatar", formData.avatarUrl);
+                } catch (botErr) {
+                    console.error("Failed to initialize AI Twin profile (OAuth):", botErr);
+                }
+
+                // 4. Refresh the token to get the new onboarding_complete status
                 const refreshRes = await api.post("/api/v1/auth/refresh-token", {}, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const newToken = refreshRes.data.access_token;
                 
-                // Update Context/Storage via helper (Note: setToken is imported)
+                // Update Context/Storage via helper
                 setToken(newToken);
                 const payload = decodeTokenPayload(newToken);
                 if (payload) {
@@ -237,7 +279,56 @@ function OnboardingWizardForm() {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            // 4. Refresh token to reflect new status
+            // 4. Create or Update the Bot (AI Twin) with the onboarding profile data
+            try {
+                // First, check if a bot already exists (e.g. if they started but didn't finish)
+                const botsRes = await api.get("/api/v1/bots/", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                let botId: string;
+                const profileData = {
+                    name: `${formData.firstName} ${formData.lastName}`.trim() || "My AI Twin",
+                    avatar_url: formData.avatarUrl,
+                    summary: formData.aspirations,
+                    linkedin_url: formData.linkedin_url,
+                    github_url: formData.github_url,
+                    twitter_url: formData.twitter_url,
+                    website_url: formData.website_url,
+                    projects: formData.projects
+                };
+
+                if (botsRes.data && botsRes.data.length > 0) {
+                    botId = botsRes.data[0].id || botsRes.data[0]._id;
+                    await api.patch(`/api/v1/bots/${botId}`, profileData, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                } else {
+                    // Create a new bot
+                    const createRes = await api.post("/api/v1/bots/create", { 
+                        name: profileData.name 
+                    }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    botId = createRes.data.id || createRes.data._id;
+                    // Then update with full profile
+                    await api.patch(`/api/v1/bots/${botId}`, profileData, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                }
+                
+                // Save to localStorage for immediate use in dashboard
+                localStorage.setItem("twinly_botId", botId);
+                localStorage.setItem("twinly_userName", profileData.name);
+                localStorage.setItem("userAvatar", formData.avatarUrl);
+                
+            } catch (botErr) {
+                console.error("Failed to initialize AI Twin profile:", botErr);
+                // We don't block the whole onboarding if just the bot creation fails, 
+                // but we log it for debugging.
+            }
+
+            // 5. Refresh token to reflect new status
             const refreshRes = await api.post("/api/v1/auth/refresh-token", {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });

@@ -61,7 +61,7 @@ export default function RecruiterChatPage() {
                 id: s.id,
                 name: s.name || "Candidate",
                 role: s.role || "AI Professional",
-                avatar: getAvatarUrl(s.id),
+                avatar: s.avatar || getAvatarUrl(s.id),
                 lastMessage: s.lastMessage || "Start a conversation...",
                 time: s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
                 unread: 0,
@@ -103,7 +103,7 @@ export default function RecruiterChatPage() {
     }, [messages, isStreaming]);
 
     const activeChat = chatSessions.find((c: ChatSession) => c.id === activeChatId) || chatSessions[0] || {
-        id: "", name: "Select a Candidate", role: "", avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=fallback", lastMessage: "", time: "", unread: 0, active: false, botId: null
+        id: "", name: "Select a Candidate", role: "", avatar: getAvatarUrl(null), lastMessage: "", time: "", unread: 0, active: false, botId: null
     };
     const currentBotId = activeChat.botId || liveBotId;
 
