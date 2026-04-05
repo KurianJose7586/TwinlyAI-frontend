@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+// Removed unused useRouter import
 // Removed motion and AnimatePresence imports as they are unused
 
 import {
@@ -25,7 +25,6 @@ const PIPELINE_STEPS = [
 ];
 
 export default function CandidateEmptyDashboard() {
-    const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [isDragging, setIsDragging] = useState(false);
@@ -105,9 +104,7 @@ export default function CandidateEmptyDashboard() {
             await delay(1000);
 
             // Invalidate the globally cached bots so candidate-active fetches the updated profile
-            import('@tanstack/react-query').then(({ useQueryClient }) => {
-                // Not the cleanest outside a component hook, but we reload the router anyway.
-            }).catch(() => { });
+            // We reload the window anyway to ensure fresh state.
 
             // Simpler solution: Just reload the window entirely. This is safest for global React states.
             window.location.href = "/candidate-active";

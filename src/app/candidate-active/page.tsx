@@ -102,7 +102,6 @@ export default function CandidateActiveDashboard() {
 
     const [newKeyValue, setNewKeyValue] = React.useState<string | null>(null);
     const [copiedKeyId, setCopiedKeyId] = React.useState<string | null>(null);
-    const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null);
 
     const { data: fetchedBots } = useBots();
     const { mutateAsync: updateBotMutation } = useUpdateBot();

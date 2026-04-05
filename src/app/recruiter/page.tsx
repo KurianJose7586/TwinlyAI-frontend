@@ -49,69 +49,13 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import api from "@/lib/api";
+import { getAvatarUrl } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/toast";
 import { useUserProfile } from "@/hooks/useUser";
 import { useSearchCandidates, useCandidates } from "@/hooks/useCandidates";
 import { Candidate, BotResponse } from "@/types";
 
-const AVATARS = [
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Aneka&backgroundColor=fef08a",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Jasper&backgroundColor=bfdbfe",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Mia&backgroundColor=fbcfe8",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Oliver&backgroundColor=bbf7d0",
-    "https://api.dicebear.com/7.x/notionists/svg?seed=Sophia&backgroundColor=fca5a5"
-];
-
-
-// Helper to generate deterministic but varied doodles based on candidate property
-const DOODLE_ICONS = [Sparkles, Code2, Zap, Brain, Target, Rocket, Lightbulb, Coffee, Terminal, Cpu, Database, Network];
-
-const generateDoodles = (seedString: string) => {
-    let hash = 0;
-    for (let i = 0; i < seedString.length; i++) {
-        hash = seedString.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const seed = Math.abs(hash);
-    const pseudoRandom = (min: number, max: number, offset: number) => {
-        const val = ((seed + offset) * 9301 + 49297) % 233280;
-        return min + (val / 233280) * (max - min);
-    };
-
-    const numIcons = Math.floor(pseudoRandom(6, 12, 0));
-    const icons = [];
-
-    for (let i = 0; i < numIcons; i++) {
-        const Icon = DOODLE_ICONS[Math.floor(pseudoRandom(0, DOODLE_ICONS.length, i * 10 + 1))];
-        const size = pseudoRandom(18, 36, i * 10 + 2);
-        const top = pseudoRandom(-10, 80, i * 10 + 3);
-        const left = pseudoRandom(0, 95, i * 10 + 4);
-        const rotation = pseudoRandom(-30, 30, i * 10 + 5);
-        const opacity = pseudoRandom(0.1, 0.25, i * 10 + 6);
-
-        icons.push(
-            <Icon
-                key={i}
-                className="absolute text-white"
-                style={{
-                    top: `${top}%`,
-                    left: `${left}%`,
-                    width: size,
-                    height: size,
-                    transform: `rotate(${rotation}deg)`,
-                    opacity
-                }}
-            />
-        );
-    }
-
-    return (
-        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none rounded-t-3xl border-t border-white/10">
-            {icons}
-        </div>
-    );
-};
 
 const CandidateSkeleton = ({ index = 0 }: { index?: number }) => (
     <motion.div
@@ -205,7 +149,6 @@ function RecruiterDashboardContent() {
     const formatCandidates = (rawData: BotResponse[]): Candidate[] => {
         if (!rawData) return [];
         return rawData.map((r: BotResponse, i: number) => {
-            const charCode = r.id ? String(r.id).charCodeAt(String(r.id).length - 1) : i;
             return {
                 id: r.id,
                 name: r.name,
@@ -217,7 +160,7 @@ function RecruiterDashboardContent() {
                 matchStyle: i === 0
                     ? "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20"
                     : "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20",
-                avatar: r.avatar_url || AVATARS[charCode % AVATARS.length],
+                avatar: r.avatar_url || getAvatarUrl(r.id),
                 skills: r.skills,
                 resume_url: r.resume_url,
                 thumbnail_url: r.thumbnail_url
@@ -238,7 +181,7 @@ function RecruiterDashboardContent() {
                 quote: r.quote || "No summary available.",
                 match: 0,
                 matchStyle: "bg-slate-50 dark:bg-white/5 text-slate-500 border-slate-200 dark:border-white/10",
-                avatar: r.avatar || AVATARS[i % AVATARS.length],
+                avatar: r.avatar || getAvatarUrl(r.id),
                 skills: Array.isArray(r.skills) ? r.skills : [],
                 resume_url: r.resume_url,
                 thumbnail_url: r.thumbnail_url,
@@ -268,22 +211,23 @@ function RecruiterDashboardContent() {
         // Persist session to local storage for the sidebar
         if (typeof window !== "undefined") {
             const sessionsRaw = localStorage.getItem("recruiter_chat_sessions");
-            let sessions = [];
+            let sessions: Array<{ id: string; name: string; role: string; lastMessage: string; timestamp: string }> = [];
             try {
                 sessions = sessionsRaw ? JSON.parse(sessionsRaw) : [];
-            } catch (e) {
+            } catch {
                 sessions = [];
             }
             
-            // Avoid duplicates
-            if (!sessions.some((s: any) => s.id === candidate.id)) {
-                sessions.push({
+            // Avoid duplicates and maintain 10 most recent sessions
+            if (!sessions.some((s) => s.id === candidate.id)) {
+                sessions.unshift({
                     id: candidate.id,
                     name: candidate.name,
                     role: candidate.role,
                     lastMessage: "Started a new conversation",
                     timestamp: new Date().toISOString()
                 });
+                if (sessions.length > 20) sessions.pop();
                 localStorage.setItem("recruiter_chat_sessions", JSON.stringify(sessions));
             }
         }
@@ -476,14 +420,14 @@ function RecruiterDashboardContent() {
                             onClick={() => { setIsProfileMenuOpen(!isProfileMenuOpen); setIsNotificationsOpen(false); setIsSettingsOpen(false); }}
                             className={`h-8 w-8 rounded-full overflow-hidden border transition-all ${isProfileMenuOpen ? 'border-blue-500 dark:border-purple-500 ring-2 ring-blue-500/20 dark:ring-purple-500/20' : 'border-slate-300 dark:border-white/20 hover:border-slate-400 dark:hover:border-white/40'} bg-slate-200 dark:bg-[#1C2128] cursor-pointer`}
                         >
-                            <Image src={AVATARS[0]} alt="Recruiter Avatar" width={32} height={32} className="w-full h-full object-cover" />
+                            <Image src={getAvatarUrl("recruiter")} alt="Recruiter Avatar" width={32} height={32} className="w-full h-full object-cover" />
                         </button>
 
                         {isProfileMenuOpen && (
                             <div className="absolute top-full right-0 mt-4 w-60 bg-white dark:bg-[#1C2128] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                                 <div className="p-4 border-b border-slate-200 dark:border-white/10 flex items-center gap-3 bg-slate-50 dark:bg-white/5">
                                     <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 dark:border-white/20">
-                                        <Image src={AVATARS[0]} alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
+                                        <Image src={getAvatarUrl("recruiter")} alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-slate-900 dark:text-white">{userProfile?.email?.split('@')[0] || "Recruiter"}</p>
@@ -611,10 +555,26 @@ function RecruiterDashboardContent() {
                                         className="flex-1"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            // Pass bot ID to the chat page via localStorage
+                                            // Pass bot ID to the chat page via localStorage and ensure session is saved
                                             if (candidate.id) {
                                                 localStorage.setItem("recruiter_chat_botId", candidate.id);
                                                 localStorage.setItem("recruiter_chat_botName", candidate.name);
+                                                
+                                                // Ensure session is tracking
+                                                const sessionsRaw = localStorage.getItem("recruiter_chat_sessions");
+                                                let sessions: Array<{id: string, name: string, role: string, lastMessage: string, timestamp: string}> = [];
+                                                try { sessions = sessionsRaw ? JSON.parse(sessionsRaw) : []; } catch { sessions = []; }
+                                                if (!sessions.some((s) => s.id === candidate.id)) {
+                                                    sessions.unshift({
+                                                        id: candidate.id,
+                                                        name: candidate.name,
+                                                        role: candidate.role,
+                                                        lastMessage: "Started a new conversation",
+                                                        timestamp: new Date().toISOString()
+                                                    });
+                                                    if (sessions.length > 20) sessions.pop();
+                                                    localStorage.setItem("recruiter_chat_sessions", JSON.stringify(sessions));
+                                                }
                                             }
                                         }}
                                     >

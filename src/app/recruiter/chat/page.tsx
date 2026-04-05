@@ -8,6 +8,7 @@ import {
     ChevronLeft, Search, MoreVertical, Phone, Video, Send, Smile, Loader2
 } from "lucide-react";
 import { getToken } from "@/lib/auth";
+import { getAvatarUrl } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 
 type ChatSession = {
@@ -27,12 +28,7 @@ type ChatMsg = { role: "user" | "assistant"; text: string };
 // Strip <think> tags from streaming LLM output
 const stripThink = (t: string) => t.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 
-// Dynamic Avatar Generator (DiceBear)
-const getAvatarUrl = (seed: string | null) => {
-    if (!seed) return "https://api.dicebear.com/7.x/notionists/svg?seed=fallback";
-    // Using fun-emoji or notionists for a professional yet friendly look
-    return `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(seed)}`;
-};
+// Dynamic Avatar Generator moved to @/lib/utils
 
 export default function RecruiterChatPage() {
     const router = useRouter();
