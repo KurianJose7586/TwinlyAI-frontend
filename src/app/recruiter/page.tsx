@@ -55,6 +55,101 @@ import { useToast } from "@/components/ui/toast";
 import { useUserProfile } from "@/hooks/useUser";
 import { useSearchCandidates, useCandidates } from "@/hooks/useCandidates";
 import { Candidate, BotResponse } from "@/types";
+import { Skeleton } from 'boneyard-js/react';
+
+const MOCK_CANDIDATE: Candidate = {
+    id: "mock",
+    name: "Candidate Name",
+    role: "Professional Role",
+    email: "email@example.com",
+    linkedin: "",
+    quote: "This is a placeholder summary of the candidate's professional background and key achievements.",
+    match: 95,
+    matchStyle: "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20",
+    avatar: "",
+    skills: ["React", "TypeScript", "Node.js", "Python"],
+    resume_url: "",
+    thumbnail_url: "",
+    experience_years: 5,
+    projects: []
+};
+
+const CandidateCard = ({ candidate, onClick, router }: { candidate: Candidate, onClick: () => void, router: any }) => (
+    <div onClick={onClick} className="bg-white dark:bg-[#161B22] rounded-xl border border-slate-100 dark:border-white/[0.07] p-5 hover:border-slate-300 dark:hover:border-white/20 transition-all cursor-pointer flex flex-col h-full">
+        <div className="flex items-start gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-100 dark:border-white/10 bg-slate-100 dark:bg-white/5 shrink-0">
+                <Image src={candidate.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={candidate.name} width={40} height={40} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 min-w-0">
+                <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white truncate">{candidate.name}</h3>
+                <p className="text-[13px] text-slate-400 dark:text-slate-500 truncate">{candidate.role}</p>
+            </div>
+            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 shrink-0">{candidate.experience_years}y</span>
+        </div>
+        <div className="flex-1">
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 mb-4">
+                {candidate.quote}
+            </p>
+            <div className="flex flex-wrap gap-1 mb-4">
+                {candidate.skills.slice(0, 4).map((skill: string, index: number) => (
+                    <span key={index} className="px-2 py-0.5 bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[11px] rounded border border-slate-100 dark:border-white/[0.07]">
+                        {skill}
+                    </span>
+                ))}
+                {candidate.skills.length > 4 && (
+                    <span className="px-2 py-0.5 text-slate-400 dark:text-slate-500 text-[11px]">+{candidate.skills.length - 4}</span>
+                )}
+            </div>
+        </div>
+        <div className="flex gap-2 mt-auto">
+            <Link
+                href="/recruiter/chat"
+                className="flex-1"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (candidate.id && candidate.id !== "mock") {
+                        localStorage.setItem("recruiter_chat_botId", candidate.id);
+                        localStorage.setItem("recruiter_chat_botName", candidate.name);
+                        
+                        const sessionsRaw = localStorage.getItem("recruiter_chat_sessions");
+                        let sessions: Array<{id: string, name: string, role: string, avatar?: string, lastMessage: string, timestamp: string}> = [];
+                        try { sessions = sessionsRaw ? JSON.parse(sessionsRaw) : []; } catch { sessions = []; }
+                        if (!sessions.some((s) => s.id === candidate.id)) {
+                            sessions.unshift({
+                                id: candidate.id,
+                                name: candidate.name,
+                                role: candidate.role,
+                                avatar: candidate.avatar,
+                                lastMessage: "Started a new conversation",
+                                timestamp: new Date().toISOString()
+                            });
+                            if (sessions.length > 20) sessions.pop();
+                            localStorage.setItem("recruiter_chat_sessions", JSON.stringify(sessions));
+                        }
+                    }
+                }}
+            >
+                <button className="w-full py-1.5 rounded-md bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-[12px] font-medium hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-100 dark:border-white/[0.07] transition-colors">
+                    Chat
+                </button>
+            </Link>
+            <button
+                className="flex-1 w-full py-1.5 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-medium hover:bg-slate-700 dark:hover:bg-slate-200 transition-colors"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (candidate.id && candidate.id !== "mock") {
+                        localStorage.setItem("recruiter_chat_botId", candidate.id);
+                        localStorage.setItem("recruiter_chat_botName", candidate.name);
+                    }
+                    router.push("/recruiter/call");
+                }}
+            >
+                Call
+            </button>
+        </div>
+    </div>
+);
 
 
 const CandidateSkeleton = ({ index = 0 }: { index?: number }) => (
@@ -287,7 +382,20 @@ function RecruiterDashboardContent() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-white dark:bg-[#111318] text-slate-900 dark:text-white font-sans antialiased">
+        <Skeleton name="recruiter-dashboard" loading={!mounted} fixture={
+            <div className="flex h-screen bg-slate-50 dark:bg-[#0B0E14]">
+                <div className="flex-1 max-w-7xl mx-auto w-full px-8 py-12">
+                    <div className="h-8 w-48 bg-slate-200 dark:bg-white/10 rounded-md mb-2" />
+                    <div className="h-4 w-64 bg-slate-200 dark:bg-white/10 rounded-md mb-12" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="h-64 bg-white dark:bg-[#161B22] rounded-2xl border border-slate-200 dark:border-white/10" />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        }>
+            <div className="min-h-screen flex flex-col bg-white dark:bg-[#111318] text-slate-900 dark:text-white font-sans antialiased">
 
 
             {/* Header */}
@@ -518,88 +626,21 @@ function RecruiterDashboardContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {isSearching || !initialSearchDone ? (
                         Array.from({ length: 8 }).map((_, i) => (
-                            <CandidateSkeleton key={i} index={i} />
+                            <Skeleton key={i} name="candidate-card" loading={true}>
+                                <CandidateCard candidate={MOCK_CANDIDATE} onClick={() => {}} router={router} />
+                            </Skeleton>
                         ))
                     ) : searchError ? (
                         <p className="col-span-full text-center text-red-500">{searchError}</p>
                     ) : (
                         currentCandidates.map((candidate) => (
-                            <div key={candidate.id} onClick={() => openCandidateModal(candidate)} className="bg-white dark:bg-[#161B22] rounded-xl border border-slate-100 dark:border-white/[0.07] p-5 hover:border-slate-300 dark:hover:border-white/20 transition-all cursor-pointer flex flex-col">
-                                <div className="flex items-start gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-100 dark:border-white/10 bg-slate-100 dark:bg-white/5 shrink-0">
-                                        <Image src={candidate.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={candidate.name} width={40} height={40} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white truncate">{candidate.name}</h3>
-                                        <p className="text-[13px] text-slate-400 dark:text-slate-500 truncate">{candidate.role}</p>
-                                    </div>
-                                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 shrink-0">{candidate.experience_years}y</span>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 mb-4">
-                                        {candidate.quote}
-                                    </p>
-                                    <div className="flex flex-wrap gap-1 mb-4">
-                                        {candidate.skills.slice(0,4).map((_: string, index: number) => (
-                                            <span key={index} className="px-2 py-0.5 bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[11px] rounded border border-slate-100 dark:border-white/[0.07]">
-                                                {candidate.skills[index]}
-                                            </span>
-                                        ))}
-                                        {candidate.skills.length > 4 && (
-                                            <span className="px-2 py-0.5 text-slate-400 dark:text-slate-500 text-[11px]">+{candidate.skills.length-4}</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex gap-2 mt-auto">
-                                    <Link
-                                        href="/recruiter/chat"
-                                        className="flex-1"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            // Pass bot ID to the chat page via localStorage and ensure session is saved
-                                            if (candidate.id) {
-                                                localStorage.setItem("recruiter_chat_botId", candidate.id);
-                                                localStorage.setItem("recruiter_chat_botName", candidate.name);
-                                                
-                                                // Ensure session is tracking
-                                                const sessionsRaw = localStorage.getItem("recruiter_chat_sessions");
-                                                let sessions: Array<{id: string, name: string, role: string, avatar?: string, lastMessage: string, timestamp: string}> = [];
-                                                try { sessions = sessionsRaw ? JSON.parse(sessionsRaw) : []; } catch { sessions = []; }
-                                                if (!sessions.some((s) => s.id === candidate.id)) {
-                                                    sessions.unshift({
-                                                        id: candidate.id,
-                                                        name: candidate.name,
-                                                        role: candidate.role,
-                                                        avatar: candidate.avatar,
-                                                        lastMessage: "Started a new conversation",
-                                                        timestamp: new Date().toISOString()
-                                                    });
-                                                    if (sessions.length > 20) sessions.pop();
-                                                    localStorage.setItem("recruiter_chat_sessions", JSON.stringify(sessions));
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <button className="w-full py-1.5 rounded-md bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-[12px] font-medium hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-100 dark:border-white/[0.07] transition-colors">
-                                            Chat
-                                        </button>
-                                    </Link>
-                                    <button
-                                        className="flex-1 w-full py-1.5 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-medium hover:bg-slate-700 dark:hover:bg-slate-200 transition-colors"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            e.preventDefault();
-                                            if (candidate.id) {
-                                                localStorage.setItem("recruiter_chat_botId", candidate.id);
-                                                localStorage.setItem("recruiter_chat_botName", candidate.name);
-                                            }
-                                            router.push("/recruiter/call");
-                                        }}
-                                    >
-                                        Call
-                                    </button>
-                                </div>
-                            </div>
+                            <Skeleton key={candidate.id} name="candidate-card" loading={false}>
+                                <CandidateCard 
+                                    candidate={candidate} 
+                                    onClick={() => openCandidateModal(candidate)} 
+                                    router={router} 
+                                />
+                            </Skeleton>
                         ))
                     )}
                 </div>
@@ -879,7 +920,8 @@ function RecruiterDashboardContent() {
                     </button>
                 ))}
             </div>
-        </div>
+            </div>
+        </Skeleton>
     );
 }
 

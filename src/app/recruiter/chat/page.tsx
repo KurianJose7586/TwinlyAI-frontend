@@ -11,6 +11,7 @@ import { getToken } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { HistoryService } from "@/services/history.service";
+import { Skeleton } from 'boneyard-js/react';
 
 
 type ChatSession = {
@@ -219,10 +220,31 @@ export default function RecruiterChatPage() {
         setIsStreaming(false);
     };
 
-    if (!mounted) return null;
+    // We'll use the loading prop of Skeleton to handle the "not mounted" or "no sessions" state
+    const isLoadingSessions = !mounted || chatSessions.length === 0;
 
     return (
-        <div className="flex h-screen bg-slate-100 dark:bg-[#0B0E14] text-slate-900 dark:text-white font-sans overflow-hidden transition-colors duration-300">
+        <Skeleton name="recruiter-chat" loading={!mounted} fixture={
+            <div className="flex h-screen bg-slate-100 dark:bg-[#0B0E14]">
+                <div className="w-80 md:w-96 border-r border-slate-200 dark:border-white/10 bg-white dark:bg-[#1C2128]">
+                    <div className="p-4 border-b h-16 border-slate-200 dark:border-white/10" />
+                    <div className="p-4 space-y-4">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="h-16 bg-slate-100 dark:bg-white/5 rounded-xl" />
+                        ))}
+                    </div>
+                </div>
+                <div className="flex-1 bg-white dark:bg-[#0B0E14]">
+                    <div className="h-16 border-b border-slate-200 dark:border-white/10 p-4" />
+                    <div className="p-8 space-y-6">
+                        <div className="h-12 w-1/3 bg-slate-100 dark:bg-white/5 rounded-2xl" />
+                        <div className="h-20 w-1/2 bg-blue-50 dark:bg-purple-500/10 rounded-2xl ml-auto" />
+                        <div className="h-12 w-1/3 bg-slate-100 dark:bg-white/5 rounded-2xl" />
+                    </div>
+                </div>
+            </div>
+        }>
+            <div className="flex h-screen bg-slate-100 dark:bg-[#0B0E14] text-slate-900 dark:text-white font-sans overflow-hidden transition-colors duration-300">
             {/* Sidebar List — hidden on mobile when a chat is active */}
             <aside className={`${activeChatId ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96 border-r border-slate-200 dark:border-white/10 flex-col bg-white dark:bg-[#1C2128]`}>
                 <div className="p-4 border-b border-slate-200 dark:border-white/10 flex items-center gap-3">
@@ -244,48 +266,50 @@ export default function RecruiterChatPage() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-white/20">
-                    {chatSessions.length === 0 ? (
-                        <div className="p-8 justify-center text-center">
-                            <p className="text-sm text-slate-500">No active chats.</p>
-                            <Link href="/recruiter"><button className="mt-4 text-xs font-bold text-blue-600 bg-blue-50 py-2 px-4 rounded-full min-h-[44px]">Find Candidates</button></Link>
-                        </div>
-                    ) : chatSessions.map((chat) => (
-                        <div
-                            key={chat.id}
-                            onClick={() => { 
-                                setActiveChatId(chat.id); 
-                                setMessages([]); 
-                                setLiveBotId(chat.botId); 
-                                localStorage.setItem("recruiter_chat_botId", chat.botId || ""); 
-                                setActiveConvId(null);
-                                setStartedAt(null);
-                            }}
-                            className={`flex items-start gap-4 p-4 cursor-pointer transition-colors border-l-4 ${chat.id === activeChatId ? 'bg-blue-50/50 dark:bg-white/5 border-blue-600 dark:border-purple-500' : 'hover:bg-slate-50 dark:hover:bg-white/5 border-transparent'}`}
-                        >
-                            <div className="relative shrink-0">
-                                <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0B0E14]">
-                                    <Image src={chat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={chat.name} width={48} height={48} className="w-full h-full object-cover" />
-                                </div>
-                                {chat.botId === liveBotId && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#1C2128] rounded-full"></div>}
+                    <Skeleton name="chat-sidebar" loading={isLoadingSessions}>
+                        {chatSessions.length === 0 ? (
+                            <div className="p-8 justify-center text-center">
+                                <p className="text-sm text-slate-500">No active chats.</p>
+                                <Link href="/recruiter"><button className="mt-4 text-xs font-bold text-blue-600 bg-blue-50 py-2 px-4 rounded-full min-h-[44px]">Find Candidates</button></Link>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-baseline mb-1">
-                                    <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">{chat.name}</h3>
-                                    <span className={`text-[11px] font-medium shrink-0 ml-2 ${chat.unread > 0 ? 'text-blue-600 dark:text-purple-400' : 'text-slate-500 dark:text-slate-400'}`}>{chat.time}</span>
+                        ) : chatSessions.map((chat) => (
+                            <div
+                                key={chat.id}
+                                onClick={() => { 
+                                    setActiveChatId(chat.id); 
+                                    setMessages([]); 
+                                    setLiveBotId(chat.botId); 
+                                    localStorage.setItem("recruiter_chat_botId", chat.botId || ""); 
+                                    setActiveConvId(null);
+                                    setStartedAt(null);
+                                }}
+                                className={`flex items-start gap-4 p-4 cursor-pointer transition-colors border-l-4 ${chat.id === activeChatId ? 'bg-blue-50/50 dark:bg-white/5 border-blue-600 dark:border-purple-500' : 'hover:bg-slate-50 dark:hover:bg-white/5 border-transparent'}`}
+                            >
+                                <div className="relative shrink-0">
+                                    <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0B0E14]">
+                                        <Image src={chat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={chat.name} width={48} height={48} className="w-full h-full object-cover" />
+                                    </div>
+                                    {chat.botId === liveBotId && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#1C2128] rounded-full"></div>}
                                 </div>
-                                <div className="flex justify-between items-center gap-2">
-                                    <p className={`text-xs truncate ${chat.unread > 0 ? 'font-semibold text-slate-800 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}`}>
-                                        {chat.lastMessage}
-                                    </p>
-                                    {chat.unread > 0 && (
-                                        <span className="w-4 h-4 rounded-full bg-blue-600 dark:bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
-                                            {chat.unread}
-                                        </span>
-                                    )}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">{chat.name}</h3>
+                                        <span className={`text-[11px] font-medium shrink-0 ml-2 ${chat.unread > 0 ? 'text-blue-600 dark:text-purple-400' : 'text-slate-500 dark:text-slate-400'}`}>{chat.time}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-2">
+                                        <p className={`text-xs truncate ${chat.unread > 0 ? 'font-semibold text-slate-800 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}`}>
+                                            {chat.lastMessage}
+                                        </p>
+                                        {chat.unread > 0 && (
+                                            <span className="w-4 h-4 rounded-full bg-blue-600 dark:bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                {chat.unread}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </Skeleton>
                 </div>
             </aside>
 
@@ -356,54 +380,56 @@ export default function RecruiterChatPage() {
                     className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-white/20"
                     style={{ overflowAnchor: "auto" }}
                 >
-                    <div className="flex justify-center mb-8">
-                        <span className="px-3 py-1 bg-slate-200/50 dark:bg-white/5 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                            {currentBotId ? "Live session — responses powered by AI" : "Demo — click Chat on a candidate to start a real session"}
-                        </span>
-                    </div>
-
-                    {messages.length === 0 && (
-                        <div className="flex justify-center">
-                            <p className="text-sm text-slate-400 dark:text-slate-500">Send a message to start the conversation.</p>
+                    <Skeleton name="chat-messages" loading={!mounted || (messages.length === 0 && !!currentBotId)}>
+                        <div className="flex justify-center mb-8">
+                            <span className="px-3 py-1 bg-slate-200/50 dark:bg-white/5 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                                {currentBotId ? "Live session — responses powered by AI" : "Demo — click Chat on a candidate to start a real session"}
+                            </span>
                         </div>
-                    )}
 
-                    {messages.map((msg: ChatMsg, i: number) => (
-                        msg.role === "user" ? (
-                            <div key={i} className="flex flex-col items-end">
-                                <div className="bg-blue-600 dark:bg-purple-600 text-white rounded-[20px] rounded-br-sm px-5 py-3 text-[15px] leading-relaxed max-w-[80%] shadow-sm">
-                                    {msg.text}
-                                </div>
-                                <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 mr-1 font-medium tracking-wide">You • Now</span>
+                        {messages.length === 0 && (
+                            <div className="flex justify-center">
+                                <p className="text-sm text-slate-400 dark:text-slate-500">Send a message to start the conversation.</p>
                             </div>
-                        ) : (
-                            <div key={i} className="flex flex-col items-start">
-                                <div className="flex gap-3 max-w-[80%]">
-                                    <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shrink-0 mt-auto hidden sm:block">
-                                        <Image src={activeChat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={activeChat.name} width={32} height={32} className="w-full h-full object-cover" />
+                        )}
+
+                        {messages.map((msg: ChatMsg, i: number) => (
+                            msg.role === "user" ? (
+                                <div key={i} className="flex flex-col items-end">
+                                    <div className="bg-blue-600 dark:bg-purple-600 text-white rounded-[20px] rounded-br-sm px-5 py-3 text-[15px] leading-relaxed max-w-[80%] shadow-sm">
+                                        {msg.text}
                                     </div>
-                                    <div className="flex flex-col">
-                                        <div className="bg-white dark:bg-[#1C2128] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-[20px] rounded-bl-sm px-5 py-3 text-[15px] leading-relaxed shadow-sm">
-                                            {msg.text ? (
-                                                <div className="prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-800 prose-pre:text-slate-100">
-                                                    <ReactMarkdown>
-                                                        {msg.text}
-                                                    </ReactMarkdown>
-                                                </div>
-                                            ) : (
-                                                <span className="flex gap-1.5 py-1">
-                                                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
-                                                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }} />
-                                                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }} />
-                                                </span>
-                                            )}
+                                    <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 mr-1 font-medium tracking-wide">You • Now</span>
+                                </div>
+                            ) : (
+                                <div key={i} className="flex flex-col items-start">
+                                    <div className="flex gap-3 max-w-[80%]">
+                                        <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shrink-0 mt-auto hidden sm:block">
+                                            <Image src={activeChat.avatar || "https://api.dicebear.com/7.x/notionists/svg?seed=fallback"} alt={activeChat.name} width={32} height={32} className="w-full h-full object-cover" />
                                         </div>
-                                        <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 ml-1 font-medium tracking-wide">{activeChat.name} AI • Now</span>
+                                        <div className="flex flex-col">
+                                            <div className="bg-white dark:bg-[#1C2128] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-[20px] rounded-bl-sm px-5 py-3 text-[15px] leading-relaxed shadow-sm">
+                                                {msg.text ? (
+                                                    <div className="prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-800 prose-pre:text-slate-100">
+                                                        <ReactMarkdown>
+                                                            {msg.text}
+                                                        </ReactMarkdown>
+                                                    </div>
+                                                ) : (
+                                                    <span className="flex gap-1.5 py-1">
+                                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
+                                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }} />
+                                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }} />
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 ml-1 font-medium tracking-wide">{activeChat.name} AI • Now</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )
-                    ))}
+                            )
+                        ))}
+                    </Skeleton>
                     <div ref={chatEndRef} />
                 </div>
 
@@ -437,6 +463,7 @@ export default function RecruiterChatPage() {
                     </p>
                 </div>
             </main>
-        </div>
+            </div>
+        </Skeleton>
     );
 }

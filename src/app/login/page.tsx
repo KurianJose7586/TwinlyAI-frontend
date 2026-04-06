@@ -8,6 +8,7 @@ import { ArrowRight, Mail, Lock, Check, Loader2, Eye, EyeOff } from "lucide-reac
 import { Navbar } from "@/components/layout/navbar";
 import { useAuth } from "@/context/AuthContext";
 import { BotService } from "@/services/bot.service";
+import { Skeleton } from 'boneyard-js/react';
 
 const isProd = process.env.NODE_ENV === "production";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://k632cnxhg3.ap-south-1.awsapprunner.com" : "http://localhost:8000");
@@ -134,7 +135,8 @@ function LoginForm() {
             <Navbar />
 
             <main className="w-full max-w-lg relative z-10">
-                {/* Premium White Panel */}
+                <Skeleton name="login-form" loading={isLoading}>
+                    {/* Premium White Panel */}
                 <div className="bg-white dark:bg-[#161B22] border border-white dark:border-white/10 rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] dark:shadow-2xl transition-all duration-300 relative overflow-hidden">
                     {/* Subtle Inner Glow */}
                     <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white dark:via-white/20 to-transparent"></div>
@@ -286,6 +288,7 @@ function LoginForm() {
                         </p>
                     </div>
                 </div>
+                </Skeleton>
 
                 <div className="mt-8 flex justify-center items-center gap-6 text-[10px] uppercase tracking-[0.2em] text-slate-300 dark:text-white/20 font-medium flex-wrap">
                     <button onClick={() => alert("Privacy Policy coming soon.")} className="hover:text-white dark:hover:text-white/40 transition-colors bg-transparent border-0 p-0 cursor-pointer uppercase tracking-widest font-medium">Privacy Policy</button>

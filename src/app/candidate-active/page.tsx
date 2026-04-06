@@ -35,6 +35,7 @@ import { useToast } from "@/components/ui/toast";
 import { Project } from "@/types";
 import { AvatarCustomizer, AvatarConfig, buildAvatarUrl, DEFAULT_AVATAR_CONFIG } from "@/components/ui/avatar-customizer";
 import { HistoryTab } from "@/components/history/HistoryTab";
+import { Skeleton } from 'boneyard-js/react';
 
 type APIKey = { id: string; prefix: string };
 
@@ -328,10 +329,20 @@ export default function CandidateActiveDashboard() {
         }
     };
 
-    if (!mounted) return null;
-
     return (
-        <div className="flex h-screen overflow-hidden bg-white dark:bg-[#111318] text-slate-900 dark:text-white font-sans antialiased">
+        <Skeleton name="candidate-dashboard" loading={!mounted} fixture={
+            <div className="flex h-screen bg-white dark:bg-[#111318]">
+                <aside className="w-64 border-r border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#111318]" />
+                <div className="flex-1 p-10 space-y-10">
+                    <div className="h-10 w-48 bg-slate-100 dark:bg-white/5 rounded-lg" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="h-64 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-200 dark:border-white/5" />
+                        <div className="h-64 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-200 dark:border-white/5" />
+                    </div>
+                </div>
+            </div>
+        }>
+            <div className="flex h-screen overflow-hidden bg-white dark:bg-[#111318] text-slate-900 dark:text-white font-sans antialiased">
 
             {/* ── Avatar Editor Modal ── */}
             {showAvatarEditor && (
@@ -1186,5 +1197,6 @@ export default function CandidateActiveDashboard() {
                 </button>
             </nav>
         </div>
+        </Skeleton>
     );
 }

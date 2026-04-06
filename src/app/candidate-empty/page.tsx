@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Footer } from "@/components/layout/footer";
 import api from "@/lib/api";
+import { Skeleton } from 'boneyard-js/react';
 
 const PIPELINE_STEPS = [
     { id: "reading", title: "Reading Document", desc: "Extracting raw text and entities" },
@@ -144,8 +145,8 @@ export default function CandidateEmptyDashboard() {
                     {userName}
                 </div>
             </header>
-
-            <div className="flex-1 flex flex-col w-full max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+            <Skeleton name="candidate-empty-content" loading={!botId}>
+                <div className="flex-1 flex flex-col w-full max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
                     {/* Left: Typography & Dropzone */}
                     <div className="flex flex-col gap-8">
@@ -282,6 +283,7 @@ export default function CandidateEmptyDashboard() {
                     </div>
                 </div>
             </div>
+            </Skeleton>
 
             <div className="mt-auto border-t border-slate-200 dark:border-white/5">
                 <Footer />

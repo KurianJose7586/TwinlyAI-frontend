@@ -1,0 +1,5 @@
+{
+  "breakpoints": [390, 768, 1440],
+  "out": "./src/bones",
+  "wait": 2000
+}

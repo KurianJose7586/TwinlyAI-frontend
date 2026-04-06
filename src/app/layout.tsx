@@ -8,6 +8,8 @@ import { LoadingProvider } from "@/context/LoadingContext";
 import { ColdStartLoader } from "@/components/ui/cold-start-loader";
 import { QueryProvider } from "@/providers/query-provider";
 import { ToastProvider } from "@/components/ui/toast";
+// Import the generated skeleton registry
+import "../bones/registry";
 
 const inter = Inter({ subsets: ["latin"] });
 
