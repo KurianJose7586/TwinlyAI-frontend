@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
     LayoutDashboard,
@@ -39,7 +40,9 @@ import { Skeleton } from 'boneyard-js/react';
 
 type APIKey = { id: string; prefix: string };
 
-export default function CandidateActiveDashboard() {
+function CandidateActiveDashboardContent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const { user, logout } = useAuth();
     const { comingSoon } = useToast();
     const { setTheme, resolvedTheme } = useTheme();
@@ -330,7 +333,7 @@ export default function CandidateActiveDashboard() {
     };
 
     return (
-        <Skeleton name="candidate-dashboard" loading={!mounted} fixture={
+        <Skeleton name="candidate-dashboard" loading={!mounted || searchParams.get('demo') === 'skeleton'} fixture={
             <div className="flex h-screen bg-white dark:bg-[#111318]">
                 <aside className="w-64 border-r border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#111318]" />
                 <div className="flex-1 p-10 space-y-10">
@@ -1198,5 +1201,13 @@ export default function CandidateActiveDashboard() {
             </nav>
         </div>
         </Skeleton>
+    );
+}
+
+export default function CandidateActiveDashboard() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#111318]"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>}>
+            <CandidateActiveDashboardContent />
+        </Suspense>
     );
 }

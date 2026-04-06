@@ -3,9 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-// Removed unused useRouter import
-// Removed motion and AnimatePresence imports as they are unused
-
+import { useSearchParams } from "next/navigation";
 import {
     Upload,
     Lock,
@@ -27,7 +25,9 @@ const PIPELINE_STEPS = [
 
 export default function CandidateEmptyDashboard() {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const searchParams = useSearchParams();
 
+    const [mounted, setMounted] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [activeStepIndex, setActiveStepIndex] = useState(-1);
@@ -38,6 +38,7 @@ export default function CandidateEmptyDashboard() {
 
     // On mount: fetch fresh from server to stay in sync
     useEffect(() => {
+        setMounted(true);
         const stored = typeof window !== "undefined" ? localStorage.getItem("twinly_botId") : null;
 
         // Always re-fetch from server to get the canonical bot ID
@@ -56,14 +57,12 @@ export default function CandidateEmptyDashboard() {
                         }
                     }
                 } else {
-                    // Server confirmed user has no bots. Wipe stale local state to avoid 403s.
                     localStorage.removeItem("twinly_botId");
                     localStorage.removeItem("twinly_userName");
                     setBotId(null);
                 }
             })
             .catch(() => {
-                // Only fallback if the network request itself fails, not if returning 0 bots.
                 if (stored) setBotId(stored);
             });
     }, []);
@@ -71,13 +70,11 @@ export default function CandidateEmptyDashboard() {
     const doUpload = async (file: File) => {
         if (isUploading || !botId) return;
         setIsUploading(true);
-        setActiveStepIndex(0); // Step 1: Reading Document starts
+        setActiveStepIndex(0);
 
         try {
             const formData = new FormData();
             formData.append("file", file);
-
-            // Move to step 2 after a short delay (UI feel)
             const step2Timer = setTimeout(() => setActiveStepIndex(1), 2000);
 
             const res = await api.post(`/api/v1/bots/${botId}/upload`, formData, {
@@ -85,17 +82,12 @@ export default function CandidateEmptyDashboard() {
             });
 
             clearTimeout(step2Timer);
-
             const data = res.data;
-
-            // Persist candidate name returned by the backend
             const candidateName = data?.extracted_data?.name || data?.candidate_name;
             if (candidateName) {
                 localStorage.setItem("twinly_userName", candidateName);
-                localStorage.setItem("userName", candidateName);
             }
 
-            // Animate remaining pipeline steps quickly now that we have data
             setActiveStepIndex(2);
             await delay(1200);
             setActiveStepIndex(3);
@@ -103,11 +95,6 @@ export default function CandidateEmptyDashboard() {
 
             setUploadDone(true);
             await delay(1000);
-
-            // Invalidate the globally cached bots so candidate-active fetches the updated profile
-            // We reload the window anyway to ensure fresh state.
-
-            // Simpler solution: Just reload the window entirely. This is safest for global React states.
             window.location.href = "/candidate-active";
 
         } catch (err: unknown) {
@@ -145,146 +132,126 @@ export default function CandidateEmptyDashboard() {
                     {userName}
                 </div>
             </header>
-            <Skeleton name="candidate-empty-content" loading={!botId}>
-                <div className="flex-1 flex flex-col w-full max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                    {/* Left: Typography & Dropzone */}
-                    <div className="flex flex-col gap-8">
-                        <div>
-                            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4">
-                                Add your experience
-                            </h1>
-                            <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                                Upload your resume. We&apos;ll parse the document and build your interactive digital profile.
-                            </p>
+
+            <Skeleton name="candidate-empty-content" loading={!mounted || !botId || searchParams.get('demo') === 'skeleton'} fixture={
+                <div className="flex-1 flex flex-col w-full max-w-5xl mx-auto px-4 py-16 animate-pulse">
+                    <div className="h-10 w-64 bg-slate-100 dark:bg-white/5 rounded-lg mb-8" />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div className="space-y-6">
+                            <div className="h-8 w-48 bg-slate-50 dark:bg-white/5 rounded-md" />
+                            <div className="h-32 w-full bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5" />
                         </div>
-
-                        {!botId && (
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-sm text-amber-700 dark:text-amber-400">
-                                <AlertCircle size={18} className="shrink-0" />
-                                <span>No bot found. <Link href="/onboarding" className="underline font-medium hover:text-amber-800 dark:hover:text-amber-300">Restart onboarding</Link>.</span>
-                            </div>
-                        )}
-
-                        {/* Interactive Drop Zone */}
-                        <div
-                            className="relative group w-full"
-                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                            onDragLeave={() => setIsDragging(false)}
-                            onDrop={handleDrop}
-                        >
-                            <div className={`relative flex flex-col items-center justify-center gap-4 rounded-2xl border ${uploadDone ? 'border-green-500 bg-green-50 dark:bg-green-500/5' :
-                                isDragging || isUploading ? 'border-slate-400 dark:border-slate-500 bg-slate-50 dark:bg-white/5' :
-                                    'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50 dark:hover:bg-white/5'
-                                } p-8 sm:p-12 transition-colors cursor-pointer min-h-[180px]`}
-                                onClick={() => !isUploading && !uploadDone && botId && fileInputRef.current?.click()}
-                            >
-
-                                <div className={`flex items-center justify-center w-12 h-12 rounded-xl mb-2 ${uploadDone ? 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400' :
-                                    isUploading ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white' :
-                                        'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'
-                                    }`}>
-                                    {uploadDone ? (
-                                        <CheckCircle size={24} />
-                                    ) : isUploading ? (
-                                        <Loader2 size={24} className="animate-spin" />
-                                    ) : (
-                                        <Upload size={24} />
-                                    )}
-                                </div>
-
-                                <div className="flex flex-col items-center gap-1 text-center">
-                                    <h3 className={`text-base font-semibold ${uploadDone ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
-                                        {uploadDone
-                                            ? "Parsing Complete"
-                                            : isUploading
-                                                ? "Processing Document..."
-                                                : "Click or drag file to upload"}
-                                    </h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                                        {uploadDone
-                                            ? "Redirecting..."
-                                            : isUploading
-                                                ? "Please wait a moment."
-                                                : "PDF, DOCX, or TXT"}
-                                    </p>
-                                </div>
-
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    className="hidden"
-                                    accept=".pdf,.doc,.docx,.txt,.json"
-                                    onChange={handleChange}
-                                    disabled={isUploading || !botId}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-slate-400">
-                            <span className="flex items-center gap-1.5"><Lock size={14} /> Private & Secure</span>
-                            <span className="flex items-center gap-1.5"><EyeOff size={14} /> Will not train public models</span>
-                        </div>
+                        <div className="h-64 bg-white dark:bg-[#1C2128] rounded-2xl border border-slate-200 dark:border-white/10 p-8" />
                     </div>
-
-                    {/* Right: Pipeline Tracker */}
-                    <div className="w-full lg:pl-12">
-                        <div className="bg-white dark:bg-[#1C2128] rounded-2xl p-8 border border-slate-200 dark:border-white/10 shadow-sm">
-                            <div className="mb-8 flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                                    Status
-                                </h3>
-                                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${uploadDone ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400' :
-                                    isUploading ? 'bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300' :
-                                        'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'
-                                    }`}>
-                                    {uploadDone ? 'Complete' : isUploading ? 'Processing' : 'Waiting'}
-                                </span>
+                </div>
+            }>
+                <div className="flex-1 flex flex-col w-full max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                        {/* Left: Typography & Dropzone */}
+                        <div className="flex flex-col gap-8">
+                            <div>
+                                <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white mb-4">
+                                    Add your experience
+                                </h1>
+                                <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    Upload your resume. We&apos;ll parse the document and build your interactive digital profile.
+                                </p>
                             </div>
 
-                            <div className="relative flex flex-col gap-8">
-                                {/* Connecting Line */}
-                                <div className="absolute left-[9px] top-3 bottom-3 w-[1px] bg-slate-200 dark:bg-white/10" />
+                            {!botId && (
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-sm text-amber-700 dark:text-amber-400">
+                                    <AlertCircle size={18} className="shrink-0" />
+                                    <span>No bot found. <Link href="/onboarding" className="underline font-medium hover:text-amber-800 dark:hover:text-amber-300">Restart onboarding</Link>.</span>
+                                </div>
+                            )}
 
-                                {PIPELINE_STEPS.map((step, index) => {
-                                    const isActive = activeStepIndex === index;
-                                    const isCompleted = activeStepIndex > index || uploadDone;
-                                    const isPending = activeStepIndex < index && !isActive && !isCompleted;
+                            {/* Interactive Drop Zone */}
+                            <div
+                                className="relative group w-full"
+                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={() => setIsDragging(false)}
+                                onDrop={handleDrop}
+                            >
+                                <div className={`relative flex flex-col items-center justify-center gap-4 rounded-2xl border ${uploadDone ? 'border-green-500 bg-green-50 dark:bg-green-500/5' :
+                                    isDragging || isUploading ? 'border-slate-400 dark:border-slate-500 bg-slate-50 dark:bg-white/5' :
+                                        'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50 dark:hover:bg-white/5'
+                                    } p-8 sm:p-12 transition-colors cursor-pointer min-h-[180px]`}
+                                    onClick={() => !isUploading && !uploadDone && botId && fileInputRef.current?.click()}
+                                >
+                                    <div className={`flex items-center justify-center w-12 h-12 rounded-xl mb-2 ${uploadDone ? 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400' :
+                                        isUploading ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white' :
+                                            'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'
+                                        }`}>
+                                        {uploadDone ? <CheckCircle size={24} /> : isUploading ? <Loader2 size={24} className="animate-spin" /> : <Upload size={24} />}
+                                    </div>
 
-                                    return (
-                                        <div key={step.id} className="relative flex items-start gap-4">
-                                            {/* Node Status Dot */}
-                                            <div className="relative z-10 flex items-center justify-center w-5 h-5 rounded-full mt-0.5 bg-white dark:bg-[#1C2128]">
-                                                {isCompleted ? (
-                                                    <div className="w-5 h-5 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center">
-                                                        <CheckCircle size={12} className="text-white dark:text-black" strokeWidth={3} />
-                                                    </div>
-                                                ) : isActive ? (
-                                                    <div className="w-3 h-3 rounded-full bg-slate-900 dark:bg-white border-[3px] border-white dark:border-[#1C2128] ring-1 ring-slate-900 dark:ring-white" />
-                                                ) : (
-                                                    <div className="w-2 h-2 rounded-full bg-slate-200 dark:bg-white/20" />
-                                                )}
+                                    <div className="flex flex-col items-center gap-1 text-center">
+                                        <h3 className={`text-base font-semibold ${uploadDone ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
+                                            {uploadDone ? "Parsing Complete" : isUploading ? "Processing Document..." : "Click or drag file to upload"}
+                                        </h3>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                                            {uploadDone ? "Redirecting..." : isUploading ? "Please wait a moment." : "PDF, DOCX, or TXT"}
+                                        </p>
+                                    </div>
+
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        className="hidden"
+                                        accept=".pdf,.doc,.docx,.txt,.json"
+                                        onChange={handleChange}
+                                        disabled={isUploading || !botId}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right: Pipeline Tracker */}
+                        <div className="w-full lg:pl-12">
+                            <div className="bg-white dark:bg-[#1C2128] rounded-2xl p-8 border border-slate-200 dark:border-white/10 shadow-sm">
+                                <div className="mb-8 flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Status</h3>
+                                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${uploadDone ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400' :
+                                        isUploading ? 'bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300' :
+                                            'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'
+                                        }`}>
+                                        {uploadDone ? 'Complete' : isUploading ? 'Processing' : 'Waiting'}
+                                    </span>
+                                </div>
+
+                                <div className="relative flex flex-col gap-8">
+                                    <div className="absolute left-[9px] top-3 bottom-3 w-[1px] bg-slate-200 dark:bg-white/10" />
+                                    {PIPELINE_STEPS.map((step, index) => {
+                                        const isActive = activeStepIndex === index;
+                                        const isCompleted = activeStepIndex > index || uploadDone;
+                                        const isPending = activeStepIndex < index && !isActive && !isCompleted;
+
+                                        return (
+                                            <div key={step.id} className="relative flex items-start gap-4">
+                                                <div className="relative z-10 flex items-center justify-center w-5 h-5 rounded-full mt-0.5 bg-white dark:bg-[#1C2128]">
+                                                    {isCompleted ? (
+                                                        <div className="w-5 h-5 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center">
+                                                            <CheckCircle size={12} className="text-white dark:text-black" strokeWidth={3} />
+                                                        </div>
+                                                    ) : isActive ? (
+                                                        <div className="w-3 h-3 rounded-full bg-slate-900 dark:bg-white border-[3px] border-white dark:border-[#1C2128] ring-1 ring-slate-900 dark:ring-white" />
+                                                    ) : (
+                                                        <div className="w-2 h-2 rounded-full bg-slate-200 dark:bg-white/20" />
+                                                    )}
+                                                </div>
+                                                <div className={`${isPending ? 'opacity-40' : 'opacity-100'}`}>
+                                                    <p className={`text-sm font-medium ${isCompleted || isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>{step.title}</p>
+                                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{isActive ? 'Processing...' : step.desc}</p>
+                                                </div>
                                             </div>
-
-                                            {/* Step Content */}
-                                            <div className={`${isPending ? 'opacity-40' : 'opacity-100'}`}>
-                                                <p className={`text-sm font-medium ${isCompleted || isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>
-                                                    {step.title}
-                                                </p>
-                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                                    {isActive ? 'Processing...' : step.desc}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </Skeleton>
-
             <div className="mt-auto border-t border-slate-200 dark:border-white/5">
                 <Footer />
             </div>

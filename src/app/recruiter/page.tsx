@@ -381,8 +381,11 @@ function RecruiterDashboardContent() {
         setSearchError(null);
     };
 
+    const isDemo = searchParams.get('demo') === 'skeleton';
+    const isLoading = !initialSearchDone || isSearching;
+
     return (
-        <Skeleton name="recruiter-dashboard" loading={!mounted} fixture={
+        <Skeleton name="recruiter-dashboard" loading={!mounted || isLoading || isDemo} fixture={
             <div className="flex h-screen bg-slate-50 dark:bg-[#0B0E14]">
                 <div className="flex-1 max-w-7xl mx-auto w-full px-8 py-12">
                     <div className="h-8 w-48 bg-slate-200 dark:bg-white/10 rounded-md mb-2" />

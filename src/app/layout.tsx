@@ -8,8 +8,7 @@ import { LoadingProvider } from "@/context/LoadingContext";
 import { ColdStartLoader } from "@/components/ui/cold-start-loader";
 import { QueryProvider } from "@/providers/query-provider";
 import { ToastProvider } from "@/components/ui/toast";
-// Import the generated skeleton registry
-import "../bones/registry";
+import { BoneyardProvider } from "@/components/boneyard-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,9 +45,11 @@ export default function RootLayout({
             <AuthProvider>
               <LoadingProvider>
                 <ToastProvider>
-                  <CustomCursor />
-                  <ColdStartLoader />
-                  {children}
+                  <BoneyardProvider>
+                    <CustomCursor />
+                    <ColdStartLoader />
+                    {children}
+                  </BoneyardProvider>
                 </ToastProvider>
               </LoadingProvider>
             </AuthProvider>

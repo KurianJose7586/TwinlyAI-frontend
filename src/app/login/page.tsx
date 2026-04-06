@@ -135,7 +135,7 @@ function LoginForm() {
             <Navbar />
 
             <main className="w-full max-w-lg relative z-10">
-                <Skeleton name="login-form" loading={isLoading}>
+                <Skeleton name="login-form" loading={isLoading || searchParams.get('demo') === 'skeleton'}>
                     {/* Premium White Panel */}
                 <div className="bg-white dark:bg-[#161B22] border border-white dark:border-white/10 rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] dark:shadow-2xl transition-all duration-300 relative overflow-hidden">
                     {/* Subtle Inner Glow */}
