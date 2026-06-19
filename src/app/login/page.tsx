@@ -8,10 +8,10 @@ import { ArrowRight, Mail, Lock, Check, Loader2, Eye, EyeOff } from "lucide-reac
 import { Navbar } from "@/components/layout/navbar";
 import { useAuth } from "@/context/AuthContext";
 import { BotService } from "@/services/bot.service";
+import { getApiBase } from "@/lib/getApiBase";
 import { Skeleton } from 'boneyard-js/react';
 
-const isProd = process.env.NODE_ENV === "production";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://k632cnxhg3.ap-south-1.awsapprunner.com" : "http://localhost:8000");
+const API_BASE = getApiBase();
 
 function LoginForm() {
     const router = useRouter();

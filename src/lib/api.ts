@@ -2,9 +2,7 @@
 // Central axios instance that auto-attaches the JWT Bearer token to every request.
 
 import axios from "axios";
-
-const isProd = process.env.NODE_ENV === "production";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://joserman-twinlybackend2-0.hf.space" : "http://localhost:8000");
+import { API_BASE_URL } from "@/lib/getApiBase";
 
 // Helper to trigger global loading events
 const triggerLoading = (show: boolean, message?: string) => {

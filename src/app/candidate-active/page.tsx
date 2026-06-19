@@ -33,6 +33,7 @@ import { IntegrationHub } from "@/components/ui/integration-hub";
 import { useApiKeys, useCreateApiKey, useDeleteApiKey } from "@/hooks/useApiKeys";
 import { useBots, useUpdateBot } from "@/hooks/useBots";
 import { useToast } from "@/components/ui/toast";
+import { getApiBase } from "@/lib/getApiBase";
 import { Project } from "@/types";
 import { AvatarCustomizer, AvatarConfig, buildAvatarUrl, DEFAULT_AVATAR_CONFIG } from "@/components/ui/avatar-customizer";
 import { HistoryTab } from "@/components/history/HistoryTab";
@@ -270,8 +271,7 @@ function CandidateActiveDashboardContent() {
 
         try {
             const token = localStorage.getItem("twinly_token");
-            const isProd = process.env.NODE_ENV === "production";
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://k632cnxhg3.ap-south-1.awsapprunner.com" : "http://localhost:8000");
+            const apiBase = getApiBase();
             const res = await fetch(
                 `${apiBase}/api/v1/bots/${botId}/chat/stream`,
                 {
@@ -724,7 +724,7 @@ function CandidateActiveDashboardContent() {
   (function() {
     var botId = "${botId}";
     var apiKey = "${newKeyValue}";
-    var backendBase = "${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://k632cnxhg3.ap-south-1.awsapprunner.com' : 'http://localhost:8000')}";
+    var backendBase = "${getApiBase()}";
 
     if (!botId || !apiKey || !backendBase) return;
 

@@ -28,8 +28,8 @@ type Repository = {
     updated_at?: string;
 };
 
-const isProd = process.env.NODE_ENV === "production";
-const apiBase = process.env.NEXT_PUBLIC_API_URL || (isProd ? "https://k632cnxhg3.ap-south-1.awsapprunner.com" : "http://localhost:8000");
+import { getApiBase } from "@/lib/getApiBase";
+const apiBase = getApiBase();
 
 export function IntegrationHub() {
     const { user } = useAuth();

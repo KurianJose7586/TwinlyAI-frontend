@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getApiBase } from "@/lib/getApiBase";
 import {
     Mic,
     MessageSquare,
@@ -92,10 +93,8 @@ export default function VoiceInterviewPage() {
 
     const connectWebSocket = (id: string) => {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const isProd = process.env.NODE_ENV === "production";
-        const wsHost = process.env.NEXT_PUBLIC_API_URL
-            ? process.env.NEXT_PUBLIC_API_URL.replace(/^https?:\/\//, '')
-            : (isProd ? "k632cnxhg3.ap-south-1.awsapprunner.com" : "localhost:8000");
+        const apiBase = getApiBase();
+        const wsHost = apiBase.replace(/^https?:\/\//, '');
 
         const wsUrl = `${protocol}//${wsHost}/api/v1/bots/ws/${id}/voice`;
 

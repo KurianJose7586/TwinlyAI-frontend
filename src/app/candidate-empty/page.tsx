@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { Suspense, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -12,6 +12,7 @@ import {
     Loader2,
     AlertCircle
 } from "lucide-react";
+// Loader2 is used in the Suspense fallback below
 import { Footer } from "@/components/layout/footer";
 import api from "@/lib/api";
 import { Skeleton } from 'boneyard-js/react';
@@ -23,7 +24,7 @@ const PIPELINE_STEPS = [
     { id: "twin", title: "Digital Twin Generation", desc: "Finalizing AI agent profile" }
 ];
 
-export default function CandidateEmptyDashboard() {
+function CandidateEmptyDashboardInner() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const searchParams = useSearchParams();
 
@@ -261,4 +262,12 @@ export default function CandidateEmptyDashboard() {
 
 function delay(ms: number) {
     return new Promise(res => setTimeout(res, ms));
+}
+
+export default function CandidateEmptyDashboard() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0B0E14]"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>}>
+            <CandidateEmptyDashboardInner />
+        </Suspense>
+    );
 }
