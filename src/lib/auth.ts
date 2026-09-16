@@ -50,6 +50,28 @@ export function setStoredUser(user: StoredUser): void {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
+/**
+ * Read a token handed over by the OAuth callback. The backend puts it in the URL fragment
+ * (#token=...) so it never reaches servers or logs; ?token= is still accepted for older backends.
+ */
+export function readOAuthToken(searchParams: URLSearchParams): string | null {
+    if (typeof window === "undefined") return null;
+    const fromHash = new URLSearchParams(window.location.hash.slice(1)).get("token");
+    return fromHash || searchParams.get("token");
+}
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+    oauth_failed: "Sign-in with your provider failed. Please try again.",
+    email_not_verified: "Your provider account has no verified email address.",
+    google_login_unavailable: "Google sign-in isn't available right now.",
+    github_login_unavailable: "GitHub sign-in isn't available right now.",
+};
+
+export function oauthErrorMessage(code: string | null): string | null {
+    if (!code) return null;
+    return OAUTH_ERROR_MESSAGES[code] ?? "Sign-in failed. Please try again.";
+}
+
 /** Decode role from JWT payload (base64) without external libs. */
 export function decodeTokenPayload(token: string): Record<string, unknown> | null {
     try {

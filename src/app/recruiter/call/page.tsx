@@ -102,6 +102,8 @@ export default function VoiceInterviewPage() {
         ws.binaryType = "arraybuffer";
 
         ws.onopen = () => {
+            // Browsers can't send auth headers on WebSockets, so authenticate with the first message
+            ws.send(JSON.stringify({ type: "auth", token: localStorage.getItem("twinly_token") }));
             setIsConnected(true);
             setStatus("Ready");
             setLastTranscript("Connection established. Hold the microphone button to speak.");

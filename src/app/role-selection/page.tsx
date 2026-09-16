@@ -8,7 +8,7 @@ import { ArrowRight, Brain, Search, Loader2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
-import { setToken, setStoredUser, decodeTokenPayload } from "@/lib/auth";
+import { setToken, setStoredUser, decodeTokenPayload, readOAuthToken } from "@/lib/auth";
 
 function RoleSelectionContent() {
     const router = useRouter();
@@ -19,9 +19,9 @@ function RoleSelectionContent() {
     const [selectingRole, setSelectingRole] = useState<"candidate" | "recruiter" | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // If redirected here from OAuth with ?token=..., store the token
+    // If redirected here from OAuth with #token=..., store the token
     useEffect(() => {
-        const token = searchParams.get("token");
+        const token = readOAuthToken(searchParams);
         if (token) {
             setAuthFromToken(token);
             router.replace("/role-selection", { scroll: false });

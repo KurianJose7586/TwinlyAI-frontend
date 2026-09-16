@@ -9,6 +9,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { useAuth } from "@/context/AuthContext";
 import { BotService } from "@/services/bot.service";
 import { getApiBase } from "@/lib/getApiBase";
+import { readOAuthToken, oauthErrorMessage } from "@/lib/auth";
 import { Skeleton } from 'boneyard-js/react';
 
 const API_BASE = getApiBase();
@@ -42,13 +43,19 @@ function LoginForm() {
         validateEmail(val);
     };
 
-    // Handle OAuth callback: ?token=...
+    // Handle OAuth callback: #token=... (or ?error=... when the provider sign-in failed)
     useEffect(() => {
-        const token = searchParams.get("token");
+        const token = readOAuthToken(searchParams);
         if (token) {
             setAuthFromToken(token);
             // Clear the token from URL cleanly
             router.replace("/login");
+            return;
+        }
+        const oauthError = oauthErrorMessage(searchParams.get("error"));
+        if (oauthError) {
+            // Schedule state update outside the synchronous effect body
+            setTimeout(() => setError(oauthError), 0);
         }
     }, [searchParams, setAuthFromToken, router]);
 

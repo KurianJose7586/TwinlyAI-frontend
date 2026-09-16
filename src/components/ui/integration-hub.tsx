@@ -102,9 +102,23 @@ export function IntegrationHub() {
         }
     };
 
-    const handleConnectGithub = () => {
+    const handleConnectGithub = async () => {
+        // Exchange the login token for a short-lived connect URL so the token never appears in a URL
         const token = localStorage.getItem("twinly_token");
-        window.location.href = `${apiBase}/api/v1/connectors/github/authorize?token=${token}`;
+        try {
+            const res = await fetch(`${apiBase}/api/v1/connectors/github/connect-ticket`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data?.authorize_url) {
+                toast(data?.detail || "Couldn't start the GitHub connection.", 'error');
+                return;
+            }
+            window.location.href = data.authorize_url;
+        } catch {
+            toast("Couldn't start the GitHub connection. Please try again.", 'error');
+        }
     };
 
     const handleDisconnectGithub = async () => {
