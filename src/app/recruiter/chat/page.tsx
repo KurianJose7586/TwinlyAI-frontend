@@ -1,17 +1,18 @@
 "use client";
 
-import { Suspense, useState, useRef, useEffect, startTransition } from "react";
+import { Suspense, useState, useRef, useEffect, useCallback, startTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-    ChevronLeft, Search, MoreVertical, Phone, Video, Send, Smile, Loader2
+    ChevronLeft, Search, MoreVertical, Phone, Video, Send, Smile, Loader2, MessageCircleQuestion
 } from "lucide-react";
 import { getToken } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/utils";
 import { getApiBase } from "@/lib/getApiBase";
 import ReactMarkdown from "react-markdown";
 import { HistoryService } from "@/services/history.service";
+import { RelayService, timeAgo, type Relay } from "@/services/relay.service";
 import { Skeleton } from 'boneyard-js/react';
 
 
@@ -27,7 +28,9 @@ type ChatSession = {
     botId: string | null;
 };
 
-type ChatMsg = { role: "user" | "assistant"; text: string };
+// "relay" entries are Live Relay cards (questions sent to the real candidate); they're UI-only,
+// never sent to the model as history or saved in the transcript.
+type ChatMsg = { role: "user" | "assistant" | "relay"; text: string; relayId?: string };
 
 // Strip <think> tags from streaming LLM output
 const stripThink = (t: string) => t.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
@@ -46,6 +49,10 @@ function RecruiterChatContent() {
     const [botError, setBotError] = useState<string | null>(null);
     const [activeConvId, setActiveConvId] = useState<string | null>(null);
     const [startedAt, setStartedAt] = useState<string | null>(null);
+    const [relays, setRelays] = useState<Record<string, Relay>>({});
+    const [asking, setAsking] = useState(false);
+    const streamingRef = useRef(false);
+    const botIdRef = useRef<string | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const chatScrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -100,12 +107,58 @@ function RecruiterChatContent() {
         if (isNearBottom) {
             container.scrollTop = container.scrollHeight;
         }
-    }, [messages, isStreaming]);
+    }, [messages, isStreaming, relays]);
 
     const activeChat = chatSessions.find((c: ChatSession) => c.id === activeChatId) || chatSessions[0] || {
         id: "", name: "Select a Candidate", role: "", avatar: getAvatarUrl(null), lastMessage: "", time: "", unread: 0, active: false, botId: null
     };
     const currentBotId = activeChat.botId || liveBotId;
+    const firstName = activeChat.name.split(" ")[0] || "the candidate";
+
+    // ── Live Relay: questions sent to the real candidate ─────────────────────
+    const loadRelays = useCallback(async (botId: string) => {
+        try {
+            const list = await RelayService.listForBot(botId);
+            if (botIdRef.current !== botId) return; // switched candidates while this was in flight
+            setRelays(Object.fromEntries(list.map(r => [r.id, r])));
+            // Never append mid-stream: the stream writes into the last message
+            if (streamingRef.current) return;
+            setMessages(prev => {
+                const shown = new Set(prev.map(m => m.relayId).filter(Boolean));
+                const added: ChatMsg[] = list.filter(r => !shown.has(r.id)).map(r => ({ role: "relay", text: "", relayId: r.id }));
+                return added.length ? [...prev, ...added] : prev;
+            });
+        } catch {
+            // best-effort; the next poll retries
+        }
+    }, []);
+
+    useEffect(() => {
+        botIdRef.current = currentBotId;
+        if (currentBotId) loadRelays(currentBotId);
+    }, [currentBotId, loadRelays]);
+
+    const hasPendingRelay = Object.values(relays).some(r => r.status === "pending");
+    useEffect(() => {
+        if (!currentBotId || !hasPendingRelay) return;
+        const timer = setInterval(() => loadRelays(currentBotId), 2500);
+        return () => clearInterval(timer);
+    }, [currentBotId, hasPendingRelay, loadRelays]);
+
+    const askDirectly = async () => {
+        const question = input.trim();
+        if (!question || !currentBotId || isStreaming || asking) return;
+        setAsking(true);
+        try {
+            await RelayService.ask(currentBotId, question);
+            setInput("");
+            await loadRelays(currentBotId);
+        } catch (err: unknown) {
+            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            setMessages(prev => [...prev, { role: "assistant", text: detail || `Couldn't reach ${firstName} right now. Please try again.` }]);
+        }
+        setAsking(false);
+    };
 
     const sendMessage = async () => {
         const msg = input.trim();
@@ -122,12 +175,13 @@ function RecruiterChatContent() {
         const newMessages: ChatMsg[] = [...currentMessages, { role: "user", text: msg }];
         setMessages(newMessages);
         setIsStreaming(true);
+        streamingRef.current = true;
 
         let currentAssistantText = "";
 
         try {
             const token = getToken();
-            const chatHistory = currentMessages.map((m: ChatMsg) => ({
+            const chatHistory = currentMessages.filter((m: ChatMsg) => m.role !== "relay").map((m: ChatMsg) => ({
                 role: m.role,
                 content: m.text,
             }));
@@ -178,12 +232,16 @@ function RecruiterChatContent() {
                 });
             }
 
+            // The twin may have relayed the question to the candidate while answering
+            streamingRef.current = false;
+            loadRelays(currentBotId);
+
             // Sync with backend
             try {
                 const finalHistory = [...newMessages, { role: "assistant", text: currentAssistantText }];
                 const saveRes = await HistoryService.saveConversation(currentBotId, {
                     id: activeConvId || undefined,
-                    messages: finalHistory.map(m => ({
+                    messages: finalHistory.filter(m => m.role !== "relay").map(m => ({
                         role: m.role,
                         content: m.text,
                         timestamp: new Date().toISOString()
@@ -205,6 +263,7 @@ function RecruiterChatContent() {
                 text: (err as Error).message || "Something went wrong.",
             }]);
         }
+        streamingRef.current = false;
         setIsStreaming(false);
     };
 
@@ -328,7 +387,32 @@ function RecruiterChatContent() {
                                 <h3 className="font-bold text-slate-900 dark:text-white">Start a Conversation</h3>
                             </div>
                         ) : (
-                            messages.map((msg, i) => (
+                            messages.map((msg, i) => msg.role === "relay" ? (() => {
+                                const relay = msg.relayId ? relays[msg.relayId] : undefined;
+                                if (!relay) return null;
+                                const answered = relay.status === "answered";
+                                return (
+                                    <div key={`relay-${relay.id}`} className="flex justify-start">
+                                        <div className={`max-w-[85%] rounded-[20px] rounded-bl-sm px-5 py-3 border shadow-sm transition-colors duration-500 ${answered ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20" : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20"}`}>
+                                            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Asked {firstName} directly</p>
+                                            <p className="text-[13px] italic text-slate-500 dark:text-slate-400 mb-2">&ldquo;{relay.question}&rdquo;</p>
+                                            {answered ? (
+                                                <>
+                                                    <p className="text-[15px] leading-relaxed text-slate-800 dark:text-slate-100">{relay.answer}</p>
+                                                    <span className="inline-block mt-2 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                                        from {firstName} · {timeAgo(relay.answered_at)}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <p className="flex items-center gap-2 text-[14px] text-amber-700 dark:text-amber-300">
+                                                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                                    Waiting for {firstName}…
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })() : (
                                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                     <div className={`max-w-[85%] rounded-[20px] px-5 py-3 text-[15px] leading-relaxed ${msg.role === "user" ? "bg-blue-600 dark:bg-purple-600 text-white rounded-br-sm" : "bg-white dark:bg-[#1C2128] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-bl-sm shadow-sm"}`}>
                                         {msg.role === "assistant" && msg.text ? (
@@ -356,6 +440,15 @@ function RecruiterChatContent() {
                                 rows={1}
                                 disabled={!currentBotId || isStreaming}
                             />
+                            <button
+                                onClick={askDirectly}
+                                disabled={!currentBotId || isStreaming || asking || !input.trim()}
+                                title={`Send this question straight to ${firstName}`}
+                                className="h-10 px-3 flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 text-[13px] font-medium hover:bg-white dark:hover:bg-white/5 transition-colors disabled:opacity-40 shrink-0"
+                            >
+                                {asking ? <Loader2 size={16} className="animate-spin" /> : <MessageCircleQuestion size={16} />}
+                                <span className="hidden sm:inline">Ask {firstName}</span>
+                            </button>
                             <button
                                 onClick={sendMessage}
                                 disabled={!currentBotId || isStreaming || !input.trim()}

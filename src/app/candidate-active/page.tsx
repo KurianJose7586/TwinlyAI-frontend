@@ -23,7 +23,8 @@ import {
     Moon,
     X,
     Sparkles,
-    Plug
+    Plug,
+    Inbox
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
@@ -37,6 +38,8 @@ import { getApiBase } from "@/lib/getApiBase";
 import { Project } from "@/types";
 import { AvatarCustomizer, AvatarConfig, buildAvatarUrl, DEFAULT_AVATAR_CONFIG } from "@/components/ui/avatar-customizer";
 import { HistoryTab } from "@/components/history/HistoryTab";
+import { RelayInbox } from "@/components/relays/RelayInbox";
+import { useRelayInbox } from "@/hooks/useRelays";
 import { Skeleton } from 'boneyard-js/react';
 
 type APIKey = { id: string; prefix: string };
@@ -110,6 +113,8 @@ function CandidateActiveDashboardContent() {
 
     const { data: fetchedBots } = useBots();
     const { mutateAsync: updateBotMutation } = useUpdateBot();
+    const { data: relayInbox } = useRelayInbox();
+    const pendingQuestions = relayInbox?.relays.filter(r => r.status === "pending").length ?? 0;
 
     React.useEffect(() => {
         setMounted(true);
@@ -403,6 +408,7 @@ function CandidateActiveDashboardContent() {
                 <nav className="flex-1 px-3 py-2 space-y-0.5">
                     {([
                         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+                        { id: 'inbox', icon: Inbox, label: 'Inbox' },
                         { id: 'analytics', icon: BarChart3, label: 'Analytics' },
                         { id: 'history', icon: History, label: 'History' },
                         { id: 'connectors', icon: Plug, label: 'Connectors' },
@@ -420,6 +426,11 @@ function CandidateActiveDashboardContent() {
                             {activeTab === id && <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-slate-900 dark:bg-white rounded-full" />}
                             <Icon size={17} />
                             <span className="hidden lg:block">{label}</span>
+                            {id === 'inbox' && pendingQuestions > 0 && (
+                                <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                    {pendingQuestions}
+                                </span>
+                            )}
                         </button>
                     ))}
                 </nav>
@@ -1057,6 +1068,9 @@ function CandidateActiveDashboardContent() {
                             <HistoryTab botId={botId} />
                         )}
 
+                        {/* Tab: Inbox (Live Relay questions) */}
+                        {activeTab === 'inbox' && <RelayInbox />}
+
                         {/* Tab: Settings */}
                         {activeTab === 'settings' && (
                             <div className="max-w-2xl space-y-8 animate-in fade-in duration-300 pb-12">
@@ -1173,6 +1187,17 @@ function CandidateActiveDashboardContent() {
                 >
                     <Sparkles size={22} />
                     <span className="text-[10px] font-semibold">Mirror</span>
+                </button>
+                <button
+                    onClick={() => safeTabChange('inbox')}
+                    className={`relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors min-h-[44px] ${activeTab === 'inbox' ? 'text-blue-600 dark:text-purple-400' : 'text-slate-400 dark:text-slate-500'}`}
+                    aria-label="Inbox"
+                >
+                    <Inbox size={22} />
+                    <span className="text-[10px] font-semibold">Inbox</span>
+                    {pendingQuestions > 0 && (
+                        <span className="absolute top-2 right-1/4 w-2 h-2 rounded-full bg-amber-500" />
+                    )}
                 </button>
                 <button
                     onClick={() => safeTabChange('analytics')}
